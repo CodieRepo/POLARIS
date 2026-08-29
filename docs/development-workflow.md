@@ -95,6 +95,7 @@ All commit messages must adhere to Conventional Commits format:
 
 ## 7. Migration Principles
 - **Versioned Migrations**: All schema, table, index, and RLS policy modifications must be defined through sequential, versioned SQL migration files located in `supabase/migrations/`.
+- **CLI Workflow**: New migrations are generated using `npx supabase migration new <migration_name>` and version-controlled.
 - **No Undocumented Changes**: Manual or direct database alterations via database consoles are strictly prohibited without a corresponding migration script.
 - **Separation of Scientific Data**: Never embed massive scientific datasets, reanalysis arrays, or large spatial rasters directly into SQL migration scripts.
 - **Ingestion Workflows**: External scientific and reference data must be imported via dedicated, reproducible data ingestion scripts or background workflows.
