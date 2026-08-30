@@ -622,7 +622,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_user_person_id: { Args: never; Returns: string }
+      current_user_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      is_admin: { Args: never; Returns: boolean }
+      is_expedition_manager_for: {
+        Args: { target_expedition_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
