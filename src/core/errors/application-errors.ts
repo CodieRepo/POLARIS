@@ -4,6 +4,7 @@
  */
 export type ApplicationErrorCode =
   | "STATION_NOT_FOUND"
+  | "EXPEDITION_NOT_FOUND"
   | "INFRASTRUCTURE_ERROR"
   | "UNAUTHENTICATED"
   | "UNAUTHORIZED"
