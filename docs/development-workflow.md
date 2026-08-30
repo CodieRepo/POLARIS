@@ -85,7 +85,7 @@ All commit messages must adhere to Conventional Commits format:
 - **Explicit Dependencies**: Avoid implicit globals, ambient mutations, or tight hidden couplings.
 - **Type Safety**: Leverage TypeScript strict mode; avoid `any` or untyped casts.
 - **Runtime Validation**: Runtime input validation will use a schema-validation approach at application boundaries. The specific validation library will be selected when the first API/domain boundary is implemented, based on actual requirements.
-- **Predictable Errors**: Use structured domain errors (`src/core/errors/`) rather than unstructured exceptions.
+- **Predictable Errors**: Use structured domain errors and discriminated result types (`UseCaseResult<T, E>`) in `src/core/errors/` with compile-time constrained error codes, rather than unstructured exceptions across application boundaries.
 - **Maintainable Code**: Optimize for readability and straightforward maintenance over clever abstractions.
 - **Testable Business Logic**: Keep business and domain rules pure and independent from framework transport layers.
 - **Minimal Unnecessary Abstraction**: Avoid speculative abstractions, generic wrappers, and premature optimizations.

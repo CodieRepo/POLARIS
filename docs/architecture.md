@@ -60,8 +60,10 @@ src/
 │   └── simulation/        # What-if scenario projections
 ├── core/                  # Core & Shared Reference Data
 │   ├── station/           # Research station reference data (NOT a business module)
+│   │   ├── use-cases/     # Station-specific application use cases
+│   │   └── station-repository.ts
 │   ├── geography/         # Geographic coordinates, regions, and spatial constants
-│   ├── errors/            # Standardized application error definitions
+│   ├── errors/            # Standardized application error definitions (`application-errors.ts`)
 │   └── types/             # Shared system-wide types and primitives
 ├── integrations/          # External Data Adapters
 │   ├── npdc/              # National Polar Data Center integration
@@ -78,6 +80,13 @@ src/
     ├── storage/           # Object storage handlers (S3 / Supabase Storage)
     └── observability/     # Logging, metrics, and tracing
 ```
+
+### 4.1 Application Use-Case Layer Conventions
+- **Module Ownership**: Use cases reside directly inside their owning feature/core module under a `use-cases/` directory (e.g., `src/core/station/use-cases/`).
+- **Pattern**: Class-based with a single public `execute(...)` method.
+- **Dependency Injection**: Explicit constructor injection of required repositories or adapters. No global state, singletons, service locators, or DI containers.
+- **Result Contract**: Deterministic, typed discriminated union (`UseCaseResult<T, E>`) returning `{ success: true, data }` or `{ success: false, error: { code, message } }`. Use cases do not throw domain or not-found exceptions across boundaries.
+- **Transport Independence**: Use cases are completely HTTP-agnostic (no Next.js request/response objects, status codes, or header manipulations).
 
 ---
 
