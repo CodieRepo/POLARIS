@@ -4,7 +4,11 @@
  */
 export type ApplicationErrorCode =
   | "STATION_NOT_FOUND"
-  | "INFRASTRUCTURE_ERROR";
+  | "INFRASTRUCTURE_ERROR"
+  | "UNAUTHENTICATED"
+  | "UNAUTHORIZED"
+  | "ACCOUNT_DEACTIVATED"
+  | "PROFILE_NOT_FOUND";
 
 /**
  * Standard structured error representation returned by application use cases.
