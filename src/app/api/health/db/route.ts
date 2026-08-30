@@ -39,22 +39,19 @@ export async function GET() {
   try {
     const supabase = createServerClient();
 
-    // Safe, read-only probe — intentionally calls a nonexistent RPC function.
-    // The goal is to verify the client can reach the Supabase server and get
-    // a structured response. No schema or data dependency required.
-    const result = await supabase.rpc("", {}).maybeSingle();
+    // Safe, read-only typed probe — verifies connectivity and schema access.
+    const result = await supabase.from("stations").select("id").limit(1);
 
     if (result.error) {
-      // Client instantiation succeeded and server returned a structured
-      // error response — this confirms connectivity is working.
-      return NextResponse.json({
-        status: "connected",
-        message:
-          "Supabase client instantiated and server responded. " +
-          "Full database schema is not yet created (expected at this milestone).",
-        supabaseUrl,
-        serverResponse: result.error.message,
-      });
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Database query failed.",
+          supabaseUrl,
+          serverResponse: result.error.message,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
 
 /**
  * Environment variable names for Supabase configuration.
@@ -32,11 +33,11 @@ function getRequiredEnv(name: string): string {
  *
  * Throws if required environment variables are not configured.
  */
-export function createServerClient(): SupabaseClient {
+export function createServerClient(): SupabaseClient<Database> {
   const supabaseUrl = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceRoleKey = getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  return createClient<Database>(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
