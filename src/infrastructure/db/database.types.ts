@@ -632,6 +632,25 @@ export type Database = {
         Args: { target_expedition_id: string }
         Returns: boolean
       }
+      replace_expedition_leader: {
+        Args: { new_leader_person_id: string; target_expedition_id: string }
+        Returns: {
+          assignment_role: string
+          created_at: string
+          expedition_id: string
+          id: string
+          joined_at: string
+          left_at: string | null
+          person_id: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "expedition_members"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       app_role:

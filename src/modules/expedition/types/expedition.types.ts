@@ -72,3 +72,89 @@ export interface UpdateExpeditionStatusInput {
   readonly actual_start_at?: string;
   readonly actual_end_at?: string;
 }
+
+/**
+ * Validated domain assignment roles for expedition roster members.
+ * Enforced at database level via CHECK constraint.
+ */
+export type ExpeditionAssignmentRole =
+  | "EXPEDITION_LEADER"
+  | "EXPEDITION_MEMBER";
+
+/**
+ * Input contract for adding a member to an expedition roster.
+ */
+export interface AddExpeditionMemberInput {
+  readonly expedition_id: string;
+  readonly person_id: string;
+  readonly assignment_role: ExpeditionAssignmentRole;
+  readonly joined_at?: string;
+}
+
+/**
+ * Input contract for removing a member from an expedition roster (soft departure).
+ */
+export interface RemoveExpeditionMemberInput {
+  readonly expedition_id: string;
+  readonly person_id: string;
+}
+
+/**
+ * Input contract for updating a member's operational role.
+ * Restricted to non-leader role modifications.
+ */
+export interface UpdateMemberRoleInput {
+  readonly expedition_id: string;
+  readonly person_id: string;
+  readonly new_role: ExpeditionAssignmentRole;
+}
+
+/**
+ * Input contract for atomically replacing an operational expedition leader.
+ */
+export interface ReplaceExpeditionLeaderInput {
+  readonly expedition_id: string;
+  readonly new_leader_person_id: string;
+}
+
+/**
+ * Input contract for directly updating mutable fields on an expedition_members row in the repository.
+ * Strictly excludes primary key, foreign keys, and audit creation timestamps.
+ */
+export interface UpdateExpeditionMemberInput {
+  readonly assignment_role?: ExpeditionAssignmentRole;
+  readonly joined_at?: string;
+  readonly left_at?: string | null;
+}
+
+/**
+ * Public field person profile embedded within an expedition roster projection.
+ * Strictly excludes auth_user_id to prevent leaking identity linkage.
+ */
+export interface ExpeditionRosterPerson {
+  readonly id: string;
+  readonly display_name: string;
+  readonly role_title: string | null;
+  readonly organization: string | null;
+  readonly active: boolean;
+}
+
+/**
+ * Composite expedition roster member representation combining assignment metadata with operational person profile.
+ */
+export interface ExpeditionRosterMember {
+  readonly id: string;
+  readonly expedition_id: string;
+  readonly person_id: string;
+  readonly assignment_role: string;
+  readonly joined_at: string;
+  readonly left_at: string | null;
+  readonly person: ExpeditionRosterPerson | null;
+}
+
+/**
+ * Filter options for querying expedition roster records.
+ */
+export interface GetExpeditionRosterFilters {
+  readonly includeDeparted?: boolean;
+}

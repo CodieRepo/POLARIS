@@ -6,6 +6,8 @@ import type {
   ExpeditionMemberRow,
   ExpeditionRow,
   ExpeditionStatus,
+  ReplaceExpeditionLeaderInput,
+  UpdateExpeditionMemberInput,
   UpdateExpeditionMetadataInput,
 } from "./types/expedition.types";
 
@@ -41,6 +43,17 @@ export class ExpeditionStateViolationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "ExpeditionStateViolationError";
+  }
+}
+
+/**
+ * Custom error indicating an authorization or privilege rejection from PostgreSQL (e.g. 42501).
+ */
+export class UnauthorizedDatabaseError extends Error {
+  readonly code = "42501";
+  constructor(message: string) {
+    super(message);
+    this.name = "UnauthorizedDatabaseError";
   }
 }
 
@@ -291,6 +304,157 @@ export class ExpeditionRepository {
   }
 
   /**
+   * Retrieves an active member record for a specific expedition and person (left_at IS NULL).
+   */
+  async getActiveMember(
+    expeditionId: string,
+    personId: string
+  ): Promise<ExpeditionMemberRow | null> {
+    const normalizedExpeditionId = expeditionId?.trim();
+    const normalizedPersonId = personId?.trim();
+    if (!normalizedExpeditionId || !normalizedPersonId) {
+      return null;
+    }
+
+    const { data, error } = await this.client
+      .from("expedition_members")
+      .select(EXPEDITION_MEMBER_SELECT_COLUMNS)
+      .eq("expedition_id", normalizedExpeditionId)
+      .eq("person_id", normalizedPersonId)
+      .is("left_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(
+        `Failed to fetch active member for expedition '${normalizedExpeditionId}' and person '${normalizedPersonId}': ${error.message}`
+      );
+    }
+
+    return (data as ExpeditionMemberRow | null) ?? null;
+  }
+
+  /**
+   * Retrieves the currently active EXPEDITION_LEADER for an expedition (left_at IS NULL).
+   * Guaranteed to be at most one by PostgreSQL partial unique index.
+   */
+  async getActiveLeader(
+    expeditionId: string
+  ): Promise<ExpeditionMemberRow | null> {
+    const normalizedExpeditionId = expeditionId?.trim();
+    if (!normalizedExpeditionId) {
+      return null;
+    }
+
+    const { data, error } = await this.client
+      .from("expedition_members")
+      .select(EXPEDITION_MEMBER_SELECT_COLUMNS)
+      .eq("expedition_id", normalizedExpeditionId)
+      .eq("assignment_role", "EXPEDITION_LEADER")
+      .is("left_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(
+        `Failed to fetch active leader for expedition '${normalizedExpeditionId}': ${error.message}`
+      );
+    }
+
+    return (data as ExpeditionMemberRow | null) ?? null;
+  }
+
+  /**
+   * Soft-removes an active member by setting left_at = now().
+   * Preserves full operational roster history.
+   */
+  async removeMember(
+    expeditionId: string,
+    personId: string
+  ): Promise<ExpeditionMemberRow | null> {
+    const normalizedExpeditionId = expeditionId?.trim();
+    const normalizedPersonId = personId?.trim();
+    if (!normalizedExpeditionId || !normalizedPersonId) {
+      return null;
+    }
+
+    const nowIso = new Date().toISOString();
+    const { data, error } = await this.client
+      .from("expedition_members")
+      .update({
+        left_at: nowIso,
+        updated_at: nowIso,
+      })
+      .eq("expedition_id", normalizedExpeditionId)
+      .eq("person_id", normalizedPersonId)
+      .is("left_at", null)
+      .select(EXPEDITION_MEMBER_SELECT_COLUMNS)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(
+        `Failed to remove member '${normalizedPersonId}' from expedition '${normalizedExpeditionId}': ${error.message}`
+      );
+    }
+
+    return (data as ExpeditionMemberRow | null) ?? null;
+  }
+
+  /**
+   * Updates mutable fields on an expedition member record (assignment_role, joined_at, left_at).
+   * Supports role changes and rejoining departed members (clearing left_at).
+   */
+  async updateMember(
+    expeditionId: string,
+    personId: string,
+    updates: UpdateExpeditionMemberInput
+  ): Promise<ExpeditionMemberRow | null> {
+    const normalizedExpeditionId = expeditionId?.trim();
+    const normalizedPersonId = personId?.trim();
+    if (!normalizedExpeditionId || !normalizedPersonId) {
+      return null;
+    }
+
+    const updatePayload: Database["public"]["Tables"]["expedition_members"]["Update"] = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (updates.assignment_role !== undefined) {
+      updatePayload.assignment_role = updates.assignment_role;
+    }
+    if (updates.joined_at !== undefined) {
+      updatePayload.joined_at = updates.joined_at;
+    }
+    if (updates.left_at !== undefined) {
+      updatePayload.left_at = updates.left_at;
+    }
+
+    const { data, error } = await this.client
+      .from("expedition_members")
+      .update(updatePayload)
+      .eq("expedition_id", normalizedExpeditionId)
+      .eq("person_id", normalizedPersonId)
+      .select(EXPEDITION_MEMBER_SELECT_COLUMNS)
+      .maybeSingle();
+
+    if (error) {
+      if (error.code === "23505") {
+        throw new ExpeditionConflictError(
+          `Expedition member conflict for person '${normalizedPersonId}' in expedition '${normalizedExpeditionId}': ${error.message}`
+        );
+      }
+      if (error.code === "23514" || error.code === "22000") {
+        throw new ExpeditionStateViolationError(
+          `Invalid expedition member update: ${error.message}`
+        );
+      }
+      throw new Error(
+        `Failed to update expedition member '${normalizedPersonId}' in expedition '${normalizedExpeditionId}': ${error.message}`
+      );
+    }
+
+    return (data as ExpeditionMemberRow | null) ?? null;
+  }
+
+  /**
    * Adds a member to an expedition roster.
    */
   async addMember(input: {
@@ -311,9 +475,57 @@ export class ExpeditionRepository {
       .single();
 
     if (error) {
+      if (error.code === "23505") {
+        throw new ExpeditionConflictError(
+          `Expedition member conflict for person '${input.person_id}' in expedition '${input.expedition_id}': ${error.message}`
+        );
+      }
+      if (error.code === "23514" || error.code === "22000") {
+        throw new ExpeditionStateViolationError(
+          `Invalid expedition member insert: ${error.message}`
+        );
+      }
       throw new Error(`Failed to add expedition member: ${error.message}`);
     }
 
     return data as ExpeditionMemberRow;
+  }
+
+  /**
+   * Invokes the PostgreSQL SECURITY DEFINER RPC `replace_expedition_leader`
+   * to atomically replace an active operational expedition leader.
+   */
+  async callReplaceLeaderRpc(
+    input: ReplaceExpeditionLeaderInput
+  ): Promise<ExpeditionMemberRow> {
+    const { data, error } = await this.client.rpc("replace_expedition_leader", {
+      target_expedition_id: input.expedition_id,
+      new_leader_person_id: input.new_leader_person_id,
+    });
+
+    if (error) {
+      if (error.code === "42501") {
+        throw new UnauthorizedDatabaseError(error.message);
+      }
+      if (error.code === "22000") {
+        throw new ExpeditionStateViolationError(error.message);
+      }
+      if (error.code === "23505") {
+        throw new ExpeditionConflictError(error.message);
+      }
+      throw new Error(`Failed to replace expedition leader: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      throw new Error("RPC returned no records after leader replacement.");
+    }
+
+    if (data.length > 1) {
+      throw new Error(
+        "RPC returned unexpected multiple rows for active leader replacement."
+      );
+    }
+
+    return data[0] as ExpeditionMemberRow;
   }
 }
