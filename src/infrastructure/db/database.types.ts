@@ -531,6 +531,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stations: {
         Row: {
           capacity: number | null
@@ -601,6 +625,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      app_role:
+        | "SUPER_ADMIN"
+        | "COMMAND_ADMIN"
+        | "EXPEDITION_MANAGER"
+        | "STATION_OPERATOR"
+        | "VIEWER"
       asset_condition: "EXCELLENT" | "GOOD" | "ATTENTION_REQUIRED" | "CRITICAL"
       asset_status:
         | "AVAILABLE"
@@ -767,6 +797,13 @@ export const Constants = {
   },
   public: {
     Enums: {
+      app_role: [
+        "SUPER_ADMIN",
+        "COMMAND_ADMIN",
+        "EXPEDITION_MANAGER",
+        "STATION_OPERATOR",
+        "VIEWER",
+      ],
       asset_condition: ["EXCELLENT", "GOOD", "ATTENTION_REQUIRED", "CRITICAL"],
       asset_status: [
         "AVAILABLE",
