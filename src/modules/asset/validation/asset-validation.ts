@@ -8,10 +8,10 @@ import type {
 } from "../types/asset.types";
 
 /**
- * Regex for standard UUID v4 format.
+ * Regex for standard UUID format (supports v1-v5 and deterministic identifiers).
  */
 const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Regex for polar asset code format (e.g., GEN-01, PISTEN-04, COMMS-HF-02).
