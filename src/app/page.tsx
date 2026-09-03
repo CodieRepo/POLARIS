@@ -145,7 +145,11 @@ export default async function DashboardPage() {
 
         {/* Tactical Polar Spatial Map Component */}
         <div className="mb-8">
-          <PolarOperationalMap stations={stations} expeditions={expeditions} />
+          <PolarOperationalMap
+            stations={stations}
+            expeditions={expeditions}
+            weatherTelemetry={weatherTelemetry}
+          />
         </div>
 
         {/* Operational Metrics Grid */}
