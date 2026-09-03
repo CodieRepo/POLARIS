@@ -28,6 +28,11 @@ export default function AssetDetailPage({ params }: PageProps) {
 
   // Assignment Modal / Form state
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [maintenanceType, setMaintenanceType] = useState<"PREVENTIVE" | "CORRECTIVE" | "INSPECTION">("PREVENTIVE");
+  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().slice(0, 16));
+  const [maintenanceDesc, setMaintenanceDesc] = useState("");
+  const [maintenanceCost, setMaintenanceCost] = useState("");
   const [assignType, setAssignType] = useState<
     "STATION_DEPLOYMENT" | "EXPEDITION_FIELD_OPERATION"
   >("EXPEDITION_FIELD_OPERATION");
@@ -122,6 +127,49 @@ export default function AssetDetailPage({ params }: PageProps) {
       } else {
         setSuccessMsg("Asset successfully assigned via PostgreSQL atomic RPC.");
         setShowAssignModal(false);
+        await refreshAsset();
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMsg(`Workflow exception: ${msg}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleMaintenanceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assetHistory?.asset) return;
+
+    setActionLoading(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const payload = {
+        asset_id: assetHistory.asset.id,
+        maintenance_type: maintenanceType,
+        scheduled_at: new Date(scheduledDate).toISOString(),
+        description: maintenanceDesc || undefined,
+        cost: maintenanceCost ? parseFloat(maintenanceCost) : undefined,
+        notes: "Scheduled via POLARIS Asset Operations Portal",
+      };
+
+      const res = await fetch("/api/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(`Maintenance order rejected: ${json.error || "Engine error"}`);
+      } else {
+        setSuccessMsg(`Work order scheduled successfully (${maintenanceType}).`);
+        setShowMaintenanceModal(false);
+        setMaintenanceDesc("");
+        setMaintenanceCost("");
         await refreshAsset();
       }
     } catch (err: unknown) {
@@ -301,6 +349,16 @@ export default function AssetDetailPage({ params }: PageProps) {
                   className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   🔓 Release Active Assignment
+                </button>
+              )}
+
+              {asset?.status !== "RETIRED" && (
+                <button
+                  onClick={() => setShowMaintenanceModal(true)}
+                  disabled={actionLoading}
+                  className="rounded-lg bg-indigo-500/20 border border-indigo-500/40 px-3 py-2 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  🛠️ Schedule Maintenance
                 </button>
               )}
 
@@ -571,6 +629,108 @@ export default function AssetDetailPage({ params }: PageProps) {
                   className="rounded-lg bg-cyan-500 px-4 py-2 font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? "Executing RPC..." : "Confirm Assignment"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Maintenance Modal */}
+      {showMaintenanceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <span>🛠️</span> Schedule Maintenance Work Order
+              </h3>
+              <button
+                onClick={() => setShowMaintenanceModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleMaintenanceSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Maintenance Type
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["PREVENTIVE", "CORRECTIVE", "INSPECTION"] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setMaintenanceType(type)}
+                      className={`p-2 rounded-lg border text-center font-bold transition-colors cursor-pointer ${
+                        maintenanceType === type
+                          ? "border-cyan-500 bg-cyan-500/10 text-cyan-400"
+                          : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Scheduled Service Date &amp; Time
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={scheduledDate}
+                  onChange={(e) => setScheduledDate(e.target.value)}
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Work Order Description / Sub-Zero Scope
+                </label>
+                <textarea
+                  required
+                  rows={2}
+                  value={maintenanceDesc}
+                  onChange={(e) => setMaintenanceDesc(e.target.value)}
+                  placeholder="e.g. 250-hr cold-weather fluid flush, hydraulic track inspection"
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Estimated Servicing Cost ($ USD, Optional)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={maintenanceCost}
+                  onChange={(e) => setMaintenanceCost(e.target.value)}
+                  placeholder="e.g. 750.00"
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowMaintenanceModal(false)}
+                  className="rounded-lg bg-slate-800 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-700 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="rounded-lg bg-indigo-500 px-4 py-2 font-bold text-white hover:bg-indigo-400 disabled:opacity-50 cursor-pointer"
+                >
+                  {actionLoading ? "Logging Order..." : "Schedule Work Order"}
                 </button>
               </div>
             </form>

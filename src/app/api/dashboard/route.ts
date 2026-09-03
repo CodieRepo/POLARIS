@@ -1,4 +1,5 @@
 import { createServerClient } from "@/infrastructure/db/supabase-server";
+import { calculateOperationalReadiness } from "@/core/readiness/operational-readiness";
 import { NextResponse } from "next/server";
 
 /**
@@ -57,10 +58,13 @@ export async function GET() {
       ).length,
     };
 
+    const readiness = calculateOperationalReadiness(assets, maintenance, stations);
+
     return NextResponse.json(
       {
         data: {
           stats,
+          readiness,
           stations,
           expeditions,
           assets,

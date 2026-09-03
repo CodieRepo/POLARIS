@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { PolarisHeader } from "../components/polaris-header";
 import { StatusBadge } from "../components/status-badge";
 import { createServerClient } from "@/infrastructure/db/supabase-server";
@@ -90,6 +91,15 @@ export default async function ExpeditionsPage() {
                       : "Pending Field Deployment"}
                   </span>
                 </div>
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <Link
+                  href={`/expeditions/${exp.code}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-400 hover:text-cyan-300"
+                >
+                  View Mission Roster &amp; Assigned Gear →
+                </Link>
               </div>
             </div>
           ))}

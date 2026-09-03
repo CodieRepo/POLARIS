@@ -2,7 +2,9 @@ import React from "react";
 import Link from "next/link";
 import { PolarisHeader } from "./components/polaris-header";
 import { StatusBadge } from "./components/status-badge";
+import PolarOperationalMap from "./components/polar-operational-map";
 import { createServerClient } from "@/infrastructure/db/supabase-server";
+import { calculateOperationalReadiness } from "@/core/readiness/operational-readiness";
 import type { AssetRow } from "@/modules/asset/types/asset.types";
 
 export const dynamic = "force-dynamic";
@@ -16,29 +18,55 @@ export default async function DashboardPage() {
     maintenanceActiveCount: 1,
   };
 
+  let stations: {
+    id: string;
+    code: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+    status: string;
+    capacity: number | null;
+    region: string | null;
+  }[] = [];
+  let expeditions: {
+    id: string;
+    code: string;
+    name: string;
+    status: string;
+    data_classification: string;
+  }[] = [];
   let assets: AssetRow[] = [];
+  let maintenance: {
+    id: string;
+    status: string;
+    maintenance_type: string;
+  }[] = [];
 
   try {
     const supabase = createServerClient();
-    const [stRes, exRes, asRes] = await Promise.all([
-      supabase.from("stations").select("id, status"),
-      supabase.from("expeditions").select("id, status"),
+    const [stRes, exRes, asRes, mnRes] = await Promise.all([
+      supabase.from("stations").select("id, code, name, latitude, longitude, status, capacity, region").order("code"),
+      supabase.from("expeditions").select("id, code, name, status, data_classification").order("code"),
       supabase.from("assets").select("*").order("asset_code", { ascending: true }),
+      supabase.from("maintenance_records").select("id, status, maintenance_type"),
     ]);
 
-    if (stRes.data && stRes.data.length > 0) {
-      stats.stations.total = stRes.data.length;
-      stats.stations.active = stRes.data.filter((s) => s.status === "ACTIVE").length;
-      stats.stations.historical = stRes.data.filter((s) => s.status === "HISTORICAL").length;
-    }
-    if (exRes.data && exRes.data.length > 0) {
-      stats.expeditions.total = exRes.data.length;
-      stats.expeditions.active = exRes.data.filter((e) => e.status === "ACTIVE").length;
-      stats.expeditions.planned = exRes.data.filter((e) => e.status === "PLANNED").length;
-      stats.expeditions.draft = exRes.data.filter((e) => e.status === "DRAFT").length;
-    }
-    if (asRes.data && asRes.data.length > 0) assets = asRes.data;
+    if (stRes.data) stations = stRes.data;
+    if (exRes.data) expeditions = exRes.data;
+    if (asRes.data) assets = asRes.data;
+    if (mnRes.data) maintenance = mnRes.data;
 
+    if (stations.length > 0) {
+      stats.stations.total = stations.length;
+      stats.stations.active = stations.filter((s) => s.status === "ACTIVE").length;
+      stats.stations.historical = stations.filter((s) => s.status === "HISTORICAL").length;
+    }
+    if (expeditions.length > 0) {
+      stats.expeditions.total = expeditions.length;
+      stats.expeditions.active = expeditions.filter((e) => e.status === "ACTIVE").length;
+      stats.expeditions.planned = expeditions.filter((e) => e.status === "PLANNED").length;
+      stats.expeditions.draft = expeditions.filter((e) => e.status === "DRAFT").length;
+    }
     if (assets.length > 0) {
       stats.assets.total = assets.length;
       stats.assets.available = assets.filter((a) => a.status === "AVAILABLE").length;
@@ -49,17 +77,19 @@ export default async function DashboardPage() {
       stats.assets.critical = assets.filter((a) => a.criticality === "CRITICAL").length;
     }
   } catch {
-    // Fallback to initial representation if DB is empty or initializing
+    // Graceful fallback if database connection has temporary latency
   }
+
+  const readiness = calculateOperationalReadiness(assets, maintenance, stations);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <PolarisHeader currentPath="/" />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        {/* Mission Banner */}
-        <div className="mb-8 rounded-xl border border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 p-6 sm:p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        {/* Command Mission Banner with Readiness Gauge */}
+        <div className="mb-8 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 p-6 sm:p-8 shadow-2xl">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-bold text-cyan-400 border border-cyan-500/40">
@@ -68,26 +98,45 @@ export default async function DashboardPage() {
                 <span className="text-xs text-slate-400">SIH 2026 Production Baseline</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                Integrated Polar Expedition Logistics &amp; Asset Management
+                Integrated Polar Expedition Logistics &amp; Asset Command Suite
               </h1>
-              <p className="mt-1 max-w-3xl text-sm sm:text-base text-slate-300">
-                Authoritative real-time coordination for Indian Antarctic &amp; Arctic research programs. Enforces strict PostgreSQL transactional lifecycle boundaries and immutable asset integrity across Antarctic stations and active field expeditions.
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+                Authoritative real-time coordination for Indian Antarctic &amp; Arctic research programs.
+                Enforces PostgreSQL transactional lifecycle boundaries, row-level locking, and immutable asset integrity across Antarctic research bases and active field campaigns.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href="/assets"
-                className="rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
-              >
-                Inspect Asset Inventory →
-              </Link>
+
+            {/* Operational Readiness Gauge Widget */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5 text-center min-w-[240px] shadow-xl">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Polar Operational Readiness
+              </span>
+              <div className="mt-2 flex items-baseline justify-center gap-1.5">
+                <span className="text-4xl font-black font-mono text-emerald-400">
+                  {readiness.score}
+                </span>
+                <span className="text-sm font-bold text-slate-500">/ 100</span>
+              </div>
+              <div className="mt-1">
+                <span className="inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  STATUS: {readiness.status}
+                </span>
+              </div>
+              <p className="mt-2 text-[11px] text-slate-400 leading-tight">
+                {readiness.summary}
+              </p>
             </div>
           </div>
         </div>
 
+        {/* Tactical Polar Spatial Map Component */}
+        <div className="mb-8">
+          <PolarOperationalMap stations={stations} expeditions={expeditions} />
+        </div>
+
         {/* Operational Metrics Grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
-          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Total Assets Tracked
             </span>
@@ -102,7 +151,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Active Research Stations
             </span>
@@ -111,11 +160,11 @@ export default async function DashboardPage() {
               <span className="text-xs text-cyan-400 font-medium">Antarctica &amp; Arctic</span>
             </div>
             <div className="mt-2 text-xs text-slate-400">
-              Bharati, Maitri, Himadri (1 Historical)
+              Bharati, Maitri, Himadri ({stats.stations.historical} Historical)
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Expeditions Active
             </span>
@@ -128,7 +177,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Maintenance Work Orders
             </span>
@@ -142,15 +191,15 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Launch & Vertical Slice Sections */}
+        {/* Operational Tables & Readiness Breakdown */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 mb-8">
-          {/* Recent Asset Statuses */}
-          <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/40 p-6">
+          {/* Recent Asset Statuses (2 cols) */}
+          <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/40 p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-white">Live Asset Operational Registry</h2>
                 <p className="text-xs text-slate-400">
-                  Select an asset to test the atomic Assignment and Release state machine workflow.
+                  Select an asset to test the atomic Assignment, Release, and Maintenance state machine.
                 </p>
               </div>
               <Link href="/assets" className="text-xs text-cyan-400 hover:underline">
@@ -199,27 +248,34 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Expedition & Station Topology */}
+          {/* Readiness Factor Breakdown & Invariant Boundary (1 col) */}
           <div className="flex flex-col gap-6">
-            {/* Active Expedition Card */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-              <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
-                Operational Expedition
-              </span>
-              <h3 className="mt-1 text-base font-bold text-white">
-                44th Indian Scientific Expedition (ISEA-44)
+            {/* Readiness Factors Checklist */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 shadow-lg">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-1.5">
+                <span>📊</span> Readiness Factor Breakdown
               </h3>
-              <p className="mt-1 text-xs text-slate-300">
-                Primary field science &amp; deep continental radar sounding campaign.
-              </p>
-              <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3 text-xs">
-                <span className="text-slate-400">Origin: Bharati Station</span>
-                <StatusBadge status="ACTIVE" type="expedition" />
+              <div className="space-y-2.5 text-xs">
+                {readiness.factors.map((f, i) => (
+                  <div key={i} className="flex items-start justify-between gap-2 border-b border-slate-800/60 pb-2">
+                    <div>
+                      <div className="font-semibold text-slate-200">{f.label}</div>
+                      <div className="text-[11px] text-slate-400">{f.reason}</div>
+                    </div>
+                    <span
+                      className={`font-mono font-bold ${
+                        f.impact > 0 ? "text-emerald-400" : f.impact < 0 ? "text-rose-400" : "text-slate-500"
+                      }`}
+                    >
+                      {f.impact > 0 ? `+${f.impact}` : f.impact === 0 ? "0" : `${f.impact}`}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Invariant Security Box */}
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-5">
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-5 shadow-lg">
               <div className="flex items-center gap-2">
                 <span className="text-emerald-400 font-bold text-sm">🔒 Database Boundary Active</span>
               </div>
