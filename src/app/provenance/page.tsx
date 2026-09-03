@@ -7,7 +7,7 @@ export default function ProvenancePage() {
     {
       tier: "AUTHORITATIVE_OBSERVED",
       title: "Direct In-Situ Physical Sensor Observations",
-      source: "National Centre for Polar & Ocean Research (NCPOR) / MoES, Govt. of India",
+      source: "National Centre for Polar & Ocean Research (NCPOR) / Ministry of Earth Sciences, Govt. of India",
       sourceUrl: "https://data.ncpor.res.in",
       description:
         "Primary ground-truth telemetry gathered by automated weather stations (AWS) deployed directly at Bharati and Maitri bases in Antarctica and Himadri in Ny-Ålesund, Svalbard. Includes measured surface temperature, relative humidity, pressure, and wind sensors.",

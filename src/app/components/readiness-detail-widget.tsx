@@ -132,9 +132,14 @@ export function ReadinessDetailWidget({ readiness }: ReadinessModalBreakdownProp
 
       {/* Transparent Deduction & Audit Logs */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-          <span>🔍</span> Explainable Deductions &amp; Environmental Aggregation Audit
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <span>🔍</span> Explainable Deductions &amp; Environmental Aggregation Audit
+          </h3>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+            AGGREGATION: WORST_CASE_ACTIVE_STATION
+          </span>
+        </div>
 
         <div className="space-y-2">
           {cats.flatMap((c) => (c.breakdown?.deductions || []).map((d, i) => (
