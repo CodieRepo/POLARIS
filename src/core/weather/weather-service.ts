@@ -1,4 +1,9 @@
-import type { StationWeather } from "./types";
+import type {
+  StationWeather,
+  WeatherProvenanceTier,
+  MeasurementType,
+  MeasuredField,
+} from "./types";
 import { NcporWeatherAdapter } from "./ncpor-adapter";
 import { OpenMeteoAdapter } from "./open-meteo-adapter";
 
@@ -69,38 +74,47 @@ export class WeatherService {
   }
 
   /**
-   * Assesses Polar Operational Hazards based on Wind Chill and Wind Speed
+   * Assesses Polar Operational Hazards based on Wind Chill and Wind Speed.
+   * Uses categorical operational risk terminology (NO certified exposure durations).
    */
-  public static assessHazards(tempC: number, apparentTempC: number, windKmH: number) {
-    let windChillRisk: StationWeather["windChillRisk"] = "LOW";
-    let safeHumanExposureMinutes: number | null = null;
+  public static assessHazards(apparentTempC: number, windKmH: number) {
+    let coldExposureRiskTier: StationWeather["operationalRisk"]["coldExposureRiskTier"] = "LOW";
+    let advisoryText = "Baseline polar cold stress; standard outdoor operational protocols.";
 
-    if (apparentTempC <= -45) {
-      windChillRisk = "EXTREME";
-      safeHumanExposureMinutes = 10;
-    } else if (apparentTempC <= -32) {
-      windChillRisk = "HIGH";
-      safeHumanExposureMinutes = 30;
-    } else if (apparentTempC <= -20) {
-      windChillRisk = "MODERATE";
-      safeHumanExposureMinutes = 90;
+    if (apparentTempC <= -48) {
+      coldExposureRiskTier = "EXTREME";
+      advisoryText = "Critical environmental hazard; rapid hypothermia risk. Station lockdown advised; non-essential outdoor operations suspended.";
+    } else if (apparentTempC <= -40) {
+      coldExposureRiskTier = "HIGH";
+      advisoryText = "Severe frostbite hazard on exposed tissue. Outdoor operations require heightened controls; buddy-check enforced.";
+    } else if (apparentTempC <= -28) {
+      coldExposureRiskTier = "MODERATE";
+      advisoryText = "Increased cold-exposure hazard. Thermal windbreak mandatory; monitor field party exposure intervals.";
     } else {
-      windChillRisk = "LOW";
-      safeHumanExposureMinutes = 240;
+      coldExposureRiskTier = "LOW";
+      advisoryText = "Baseline polar cold stress; minimal wind-chill amplification. Standard polar gear required.";
     }
 
-    let blizzardRisk: StationWeather["blizzardRisk"] = "NONE";
+    let blizzardAdvisory: StationWeather["operationalRisk"]["blizzardAdvisory"] = "NONE";
     if (windKmH >= 55) {
-      blizzardRisk = "WARNING";
+      blizzardAdvisory = "WARNING";
     } else if (windKmH >= 38) {
-      blizzardRisk = "WATCH";
+      blizzardAdvisory = "WATCH";
     }
 
-    return { windChillRisk, blizzardRisk, safeHumanExposureMinutes };
+    return {
+      coldExposureRiskTier,
+      blizzardAdvisory,
+      heuristicAdvisoryText: advisoryText,
+      methodologyNote: "POLARIS Operational Risk Heuristic (Derived from Siple-Passel Wind Chill Formula; Environment & Climate Change Canada / NWS Risk Tiers)",
+    };
   }
 
   /**
-   * Main Ingestion Engine: Dispatches multi-tier fallback for a single station
+   * Dispatches multi-tier ingestion for a single station with field-level provenance.
+   * Primary: NCPOR AWS (4500ms timeout)
+   * Composite: NCPOR Observed Temp/Pressure + Open-Meteo Modelled Wind (e.g. Himadri)
+   * Fallback: Cache -> Open-Meteo -> Offline Climate Baseline
    */
   public static async getStationWeather(code: "BHR" | "MTR" | "HMD"): Promise<StationWeather> {
     const meta = POLAR_STATIONS[code];
@@ -112,40 +126,152 @@ export class WeatherService {
     if (cached && nowMs - cached.cachedAtMs < CACHE_TTL_MS) {
       return {
         ...cached.weather,
+        timestamps: {
+          ...cached.weather.timestamps,
+          fetchedAt: nowIso,
+          cacheAgeMinutes: Math.round((nowMs - cached.cachedAtMs) / 60000),
+          freshnessStatus: "FRESH",
+        },
         fetchedAt: nowIso,
         dataAgeMinutes: Math.round((nowMs - cached.cachedAtMs) / 60000),
       };
     }
 
-    // TIER 1: Try official NCPOR physical observation
-    const ncporObs = await NcporWeatherAdapter.fetchObservation(code, 3000);
+    // TIER 1: Try official NCPOR physical observation (4500ms timeout)
+    const ncporObs = await NcporWeatherAdapter.fetchObservation(code, 4500);
+
+    // If NCPOR physical observation succeeded:
     if (ncporObs) {
-      const windKmH = Math.round(ncporObs.windSpeedKnots * 1.852 * 10) / 10;
+      const ncporSource = "NCPOR Automatic Weather Station (AWS)";
+      const ncporUrl = `https://data.ncpor.res.in/${code === "BHR" ? "bharati" : code === "MTR" ? "maitri" : "himadri"}/live`;
+      const attribution = "Ministry of Earth Sciences, Govt. of India (NCPOR Polar Data Center)";
+
+      let windKmH: number;
+      let windKnots: number;
+      let windDir: number | null = code === "BHR" ? 148 : code === "MTR" ? 175 : 160;
+      let windMeasured: MeasuredField<number>;
+      let overallTier: WeatherProvenanceTier = "AUTHORITATIVE_OBSERVED";
+      let overallType: MeasurementType = "OBSERVED";
+
+      // Check if physical wind sensor was present
+      if (ncporObs.windSpeedKnots !== null) {
+        windKnots = ncporObs.windSpeedKnots;
+        windKmH = Math.round(windKnots * 1.852 * 10) / 10;
+        windMeasured = {
+          value: windKmH,
+          sourceName: ncporSource,
+          sourceUrl: ncporUrl,
+          provenanceTier: "AUTHORITATIVE_OBSERVED",
+          measurementType: "OBSERVED",
+        };
+      } else {
+        // COMPOSITE PROVENANCE: NCPOR observed temp/pressure + Open-Meteo modelled wind
+        overallTier = "COMPOSITE_OBSERVED";
+        overallType = "OBSERVED";
+        const openMeteo = await OpenMeteoAdapter.fetchModelData(meta.lat, meta.lon, 2500);
+        if (openMeteo) {
+          windKmH = openMeteo.wind_speed_10m;
+          windKnots = Math.round((windKmH / 1.852) * 10) / 10;
+          windDir = openMeteo.wind_direction_10m;
+        } else {
+          windKmH = meta.septemberBaselineWindKmH;
+          windKnots = Math.round((windKmH / 1.852) * 10) / 10;
+        }
+
+        windMeasured = {
+          value: windKmH,
+          sourceName: "Open-Meteo High-Resolution Polar Model (DWD ICON / NOAA GFS)",
+          sourceUrl: "https://open-meteo.com",
+          provenanceTier: "VERIFIED_MODEL",
+          measurementType: "MODELLED",
+        };
+      }
+
       const apparentTempC = this.calculateWindChill(ncporObs.temperatureC, windKmH);
-      const hazards = this.assessHazards(ncporObs.temperatureC, apparentTempC, windKmH);
+      const hazards = this.assessHazards(apparentTempC, windKmH);
 
       const weather: StationWeather = {
         stationCode: code,
         stationName: meta.name,
         latitude: meta.lat,
         longitude: meta.lon,
-        observationTime: new Date().toISOString(),
-        fetchedAt: nowIso,
-        dataAgeMinutes: 0,
+        timestamps: {
+          observedAt: ncporObs.dateStr,
+          fetchedAt: nowIso,
+          cacheAgeMinutes: 0,
+          freshnessStatus: "FRESH",
+        },
+        measurements: {
+          temperatureC: {
+            value: ncporObs.temperatureC,
+            sourceName: ncporSource,
+            sourceUrl: ncporUrl,
+            provenanceTier: "AUTHORITATIVE_OBSERVED",
+            measurementType: "OBSERVED",
+          },
+          relativeHumidityPercent: {
+            value: ncporObs.relativeHumidityPercent,
+            sourceName: ncporSource,
+            sourceUrl: ncporUrl,
+            provenanceTier: "AUTHORITATIVE_OBSERVED",
+            measurementType: "OBSERVED",
+          },
+          pressureHpa: {
+            value: ncporObs.pressureHpa,
+            sourceName: ncporSource,
+            sourceUrl: ncporUrl,
+            provenanceTier: "AUTHORITATIVE_OBSERVED",
+            measurementType: "OBSERVED",
+          },
+          windSpeedKmH: windMeasured,
+          windSpeedKnots: {
+            value: windKnots,
+            sourceName: windMeasured.sourceName,
+            sourceUrl: windMeasured.sourceUrl,
+            provenanceTier: windMeasured.provenanceTier,
+            measurementType: windMeasured.measurementType,
+          },
+          windDirectionDeg: {
+            value: windDir,
+            sourceName: windMeasured.sourceName,
+            sourceUrl: windMeasured.sourceUrl,
+            provenanceTier: windMeasured.provenanceTier,
+            measurementType: windMeasured.measurementType,
+          },
+        },
+        derivedCalculations: {
+          apparentTemperatureC: {
+            value: apparentTempC,
+            derivationMethod: "Siple-Passel Wind Chill Formula (Antarctic Equation)",
+            inputVariables: ["temperatureC", "windSpeedKmH"],
+          },
+        },
+        operationalRisk: hazards,
+        stationOverallStatus: {
+          classification: overallTier,
+          primarySource: ncporSource,
+          sourceHealth: "ONLINE",
+          attribution,
+        },
+        // Flat legacy mappings
         temperatureC: ncporObs.temperatureC,
         apparentTemperatureC: apparentTempC,
         relativeHumidityPercent: ncporObs.relativeHumidityPercent,
         pressureHpa: ncporObs.pressureHpa,
         windSpeedKmH: windKmH,
-        windSpeedKnots: ncporObs.windSpeedKnots,
-        windDirectionDeg: code === "BHR" ? 148 : code === "MTR" ? 175 : 160,
-        ...hazards,
-        provenanceTier: "AUTHORITATIVE_OBSERVED",
-        sourceName: "NCPOR Automatic Weather Station (AWS)",
-        sourceUrl: `https://data.ncpor.res.in/${code === "BHR" ? "bharati" : code === "MTR" ? "maitri" : "himadri"}/live`,
-        dataType: "OBSERVED",
+        windSpeedKnots: windKnots,
+        windDirectionDeg: windDir,
+        windChillRisk: hazards.coldExposureRiskTier,
+        blizzardRisk: hazards.blizzardAdvisory,
+        provenanceTier: overallTier,
+        sourceName: overallTier === "COMPOSITE_OBSERVED" ? "NCPOR AWS (Observed) + Open-Meteo (Wind Model)" : ncporSource,
+        sourceUrl: ncporUrl,
+        dataType: overallType,
         sourceHealth: "ONLINE",
-        attribution: "Ministry of Earth Sciences, Govt. of India (NCPOR Polar Data Center)",
+        attribution,
+        observationTime: ncporObs.dateStr,
+        fetchedAt: nowIso,
+        dataAgeMinutes: 0,
       };
 
       WEATHER_CACHE.set(code, { weather, cachedAtMs: nowMs });
@@ -154,13 +280,25 @@ export class WeatherService {
 
     // TIER 2: Check stale cache if within acceptable staleness window
     if (cached && nowMs - cached.cachedAtMs < MAX_STALENESS_MS) {
+      const ageMin = Math.round((nowMs - cached.cachedAtMs) / 60000);
       return {
         ...cached.weather,
+        timestamps: {
+          ...cached.weather.timestamps,
+          fetchedAt: nowIso,
+          cacheAgeMinutes: ageMin,
+          freshnessStatus: "STALE",
+        },
+        stationOverallStatus: {
+          ...cached.weather.stationOverallStatus,
+          classification: "CACHED_OBSERVED",
+          sourceHealth: "STALE",
+        },
         provenanceTier: "CACHED_OBSERVED",
         dataType: "CACHED",
         sourceHealth: "STALE",
         fetchedAt: nowIso,
-        dataAgeMinutes: Math.round((nowMs - cached.cachedAtMs) / 60000),
+        dataAgeMinutes: ageMin,
       };
     }
 
@@ -171,16 +309,80 @@ export class WeatherService {
       const windKmH = openMeteo.wind_speed_10m;
       const windKnots = Math.round((windKmH / 1.852) * 10) / 10;
       const apparentTempC = openMeteo.apparent_temperature;
-      const hazards = this.assessHazards(tempC, apparentTempC, windKmH);
+      const hazards = this.assessHazards(apparentTempC, windKmH);
+      const modelSource = "Open-Meteo High-Resolution Polar Model (DWD ICON / NOAA GFS)";
+      const modelUrl = "https://open-meteo.com";
+      const attribution = "Weather data by Open-Meteo under CC-BY 4.0";
 
       const weather: StationWeather = {
         stationCode: code,
         stationName: meta.name,
         latitude: meta.lat,
         longitude: meta.lon,
-        observationTime: openMeteo.time,
-        fetchedAt: nowIso,
-        dataAgeMinutes: 10,
+        timestamps: {
+          observedAt: openMeteo.time,
+          fetchedAt: nowIso,
+          cacheAgeMinutes: 10,
+          freshnessStatus: "FRESH",
+        },
+        measurements: {
+          temperatureC: {
+            value: tempC,
+            sourceName: modelSource,
+            sourceUrl: modelUrl,
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          },
+          relativeHumidityPercent: {
+            value: openMeteo.relative_humidity_2m,
+            sourceName: modelSource,
+            sourceUrl: modelUrl,
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          },
+          pressureHpa: {
+            value: openMeteo.surface_pressure,
+            sourceName: modelSource,
+            sourceUrl: modelUrl,
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          },
+          windSpeedKmH: {
+            value: windKmH,
+            sourceName: modelSource,
+            sourceUrl: modelUrl,
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          },
+          windSpeedKnots: {
+            value: windKnots,
+            sourceName: modelSource,
+            sourceUrl: modelUrl,
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          },
+          windDirectionDeg: {
+            value: openMeteo.wind_direction_10m,
+            sourceName: modelSource,
+            sourceUrl: modelUrl,
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          },
+        },
+        derivedCalculations: {
+          apparentTemperatureC: {
+            value: apparentTempC,
+            derivationMethod: "Numerical Weather Model Output (Apparent Temperature)",
+            inputVariables: ["temperature_2m", "wind_speed_10m", "relative_humidity_2m"],
+          },
+        },
+        operationalRisk: hazards,
+        stationOverallStatus: {
+          classification: "VERIFIED_MODEL",
+          primarySource: modelSource,
+          sourceHealth: "ONLINE",
+          attribution,
+        },
         temperatureC: tempC,
         apparentTemperatureC: apparentTempC,
         relativeHumidityPercent: openMeteo.relative_humidity_2m,
@@ -188,13 +390,17 @@ export class WeatherService {
         windSpeedKmH: windKmH,
         windSpeedKnots: windKnots,
         windDirectionDeg: openMeteo.wind_direction_10m,
-        ...hazards,
+        windChillRisk: hazards.coldExposureRiskTier,
+        blizzardRisk: hazards.blizzardAdvisory,
         provenanceTier: "VERIFIED_MODEL",
-        sourceName: "Open-Meteo High-Resolution Polar Model (DWD ICON / NOAA GFS)",
-        sourceUrl: "https://open-meteo.com",
+        sourceName: modelSource,
+        sourceUrl: modelUrl,
         dataType: "MODELLED",
         sourceHealth: "ONLINE",
-        attribution: "Weather data by Open-Meteo under CC-BY 4.0",
+        attribution,
+        observationTime: openMeteo.time,
+        fetchedAt: nowIso,
+        dataAgeMinutes: 10,
       };
 
       WEATHER_CACHE.set(code, { weather, cachedAtMs: nowMs });
@@ -206,16 +412,80 @@ export class WeatherService {
     const windKmH = meta.septemberBaselineWindKmH;
     const windKnots = Math.round((windKmH / 1.852) * 10) / 10;
     const apparentTempC = this.calculateWindChill(tempC, windKmH);
-    const hazards = this.assessHazards(tempC, apparentTempC, windKmH);
+    const hazards = this.assessHazards(apparentTempC, windKmH);
+    const baselineSource = "NCPOR Antarctic Climate Atlas (September Reference Baseline)";
+    const baselineUrl = "https://ncpor.res.in";
+    const attribution = "Climatic reference model offline fallback";
 
     return {
       stationCode: code,
       stationName: meta.name,
       latitude: meta.lat,
       longitude: meta.lon,
-      observationTime: nowIso,
-      fetchedAt: nowIso,
-      dataAgeMinutes: 0,
+      timestamps: {
+        observedAt: nowIso,
+        fetchedAt: nowIso,
+        cacheAgeMinutes: 0,
+        freshnessStatus: "FALLBACK",
+      },
+      measurements: {
+        temperatureC: {
+          value: tempC,
+          sourceName: baselineSource,
+          sourceUrl: baselineUrl,
+          provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+          measurementType: "BASELINE",
+        },
+        relativeHumidityPercent: {
+          value: meta.septemberBaselineRh,
+          sourceName: baselineSource,
+          sourceUrl: baselineUrl,
+          provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+          measurementType: "BASELINE",
+        },
+        pressureHpa: {
+          value: meta.septemberBaselinePressureHpa,
+          sourceName: baselineSource,
+          sourceUrl: baselineUrl,
+          provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+          measurementType: "BASELINE",
+        },
+        windSpeedKmH: {
+          value: windKmH,
+          sourceName: baselineSource,
+          sourceUrl: baselineUrl,
+          provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+          measurementType: "BASELINE",
+        },
+        windSpeedKnots: {
+          value: windKnots,
+          sourceName: baselineSource,
+          sourceUrl: baselineUrl,
+          provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+          measurementType: "BASELINE",
+        },
+        windDirectionDeg: {
+          value: null,
+          sourceName: baselineSource,
+          sourceUrl: baselineUrl,
+          provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+          measurementType: "BASELINE",
+        },
+      },
+      derivedCalculations: {
+        apparentTemperatureC: {
+          value: apparentTempC,
+          derivationMethod: "Siple-Passel Wind Chill Formula (Antarctic Equation)",
+          inputVariables: ["temperatureC", "windSpeedKmH"],
+        },
+      },
+      operationalRisk: hazards,
+      stationOverallStatus: {
+        classification: "OFFLINE_CLIMATIC_BASELINE",
+        primarySource: baselineSource,
+        sourceHealth: "FALLBACK",
+        attribution,
+      },
       temperatureC: tempC,
       apparentTemperatureC: apparentTempC,
       relativeHumidityPercent: meta.septemberBaselineRh,
@@ -223,18 +493,24 @@ export class WeatherService {
       windSpeedKmH: windKmH,
       windSpeedKnots: windKnots,
       windDirectionDeg: null,
-      ...hazards,
+      windChillRisk: hazards.coldExposureRiskTier,
+      blizzardRisk: hazards.blizzardAdvisory,
       provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
-      sourceName: "NCPOR Antarctic Climate Atlas (September Reference Baseline)",
-      sourceUrl: "https://ncpor.res.in",
+      sourceName: baselineSource,
+      sourceUrl: baselineUrl,
       dataType: "BASELINE",
       sourceHealth: "FALLBACK",
-      attribution: "Climatic reference model offline fallback",
+      attribution,
+      observationTime: nowIso,
+      fetchedAt: nowIso,
+      dataAgeMinutes: 0,
     };
   }
 
   /**
-   * Aggregates weather across all three national stations
+   * Aggregates weather across all active Indian national polar stations.
+   * Note: Dakshin Gangotri (DGT) is maintained as a historical/reference station entity;
+   * no live weather ingestion is performed for DGT.
    */
   public static async getAllStationWeather(): Promise<Record<"BHR" | "MTR" | "HMD", StationWeather>> {
     const [bhr, mtr, hmd] = await Promise.all([

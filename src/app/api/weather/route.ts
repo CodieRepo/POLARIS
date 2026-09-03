@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
  * - Direct NCPOR AWS physical observations (Tier 1)
  * - Supplementary Open-Meteo polar numerical model (Tier 3)
  * - Transparent fallback to seasonal climate baselines (Tier 4)
- * - Decision Intelligence: Wind Chill, Hazard Level, Safe Exposure Duration
+ * - Decision Intelligence: Categorical Cold Exposure Risk & Blizzard Advisory
+ * - Explicit scope: Bharati, Maitri, Himadri (DGT maintained as historical site; no live ingestion)
  */
 export async function GET() {
   try {
@@ -22,18 +23,19 @@ export async function GET() {
     const windiest = stationList.reduce((max, s) => (s.windSpeedKmH > max.windSpeedKmH ? s : max), stationList[0]);
 
     let operationalAdvisory = "Environmental conditions within normal polar operating baselines across all active stations.";
-    if (coldest.apparentTemperatureC <= -35) {
-      operationalAdvisory = `CRITICAL COLD ALERT: High wind chill at ${coldest.stationName} (${coldest.apparentTemperatureC}°C). Limit outdoor activities to <30 minutes.`;
+    if (coldest.apparentTemperatureC <= -40) {
+      operationalAdvisory = `CRITICAL COLD ALERT: Severe cold stress at ${coldest.stationName} (Apparent: ${coldest.apparentTemperatureC}°C). Outdoor operations require heightened controls.`;
     } else if (windiest.windSpeedKmH >= 40) {
-      operationalAdvisory = `GALE ADVISORY: High surface winds at ${windiest.stationName} (${windiest.windSpeedKmH} km/h). Traverse windows restricted.`;
+      operationalAdvisory = `GALE ADVISORY: Elevated surface winds at ${windiest.stationName} (${windiest.windSpeedKmH} km/h). Traverse windows restricted.`;
     }
 
     const payload: WeatherApiResponse = {
       success: true,
       timestamp: new Date().toISOString(),
       stations,
+      stationCoverageNote: "Active weather telemetry encompasses Bharati (BHR), Maitri (MTR), and Himadri (HMD). Dakshin Gangotri (DGT) is maintained as a historical/reference station entity; no live weather ingestion is performed.",
       summary: {
-        coldestStation: `${coldest.stationName} (${coldest.temperatureC}°C, Chill: ${coldest.apparentTemperatureC}°C)`,
+        coldestStation: `${coldest.stationName} (${coldest.temperatureC}°C, Apparent: ${coldest.apparentTemperatureC}°C)`,
         highestWindStation: `${windiest.stationName} (${windiest.windSpeedKmH} km/h)`,
         operationalAdvisory,
       },
