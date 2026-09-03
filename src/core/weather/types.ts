@@ -47,11 +47,13 @@ export interface StationWeather {
 
   // Derived calculations (Deterministic local mathematical models)
   derivedCalculations: {
-    apparentTemperatureC: DerivedField<number>; // Siple-Passel Wind Chill Formula
-    solarElevationDeg: DerivedField<number>;     // Spencer (1971) / NOAA Position
-    solarDeclinationDeg: DerivedField<number>;   // Spencer (1971) Equation
-    solarRegime: DerivedField<"POLAR_DAY" | "POLAR_NIGHT" | "CIVIL_TWILIGHT">;
-    fieldOperatingWindowStatus: DerivedField<"OPTIMAL" | "RESTRICTED" | "SUSPENDED">;
+    apparentTemperatureC: DerivedField<number>;    // Siple-Passel Wind Chill Formula
+    currentSolarElevationDeg: DerivedField<number>;// Instantaneous solar elevation at timestamp
+    dailySolarMinimumDeg: DerivedField<number>;    // Solar elevation minimum across 24h trajectory
+    dailySolarMaximumDeg: DerivedField<number>;    // Solar elevation maximum across 24h trajectory
+    solarDeclinationDeg: DerivedField<number>;      // Spencer (1971) fractional-year equation
+    solarRegime: DerivedField<"POLAR_DAY" | "POLAR_NIGHT" | "CIVIL_TWILIGHT">; // Daily trajectory regime
+    operationalVisibilityHeuristic: DerivedField<"NORMAL_DAYLIGHT" | "REDUCED_VISIBILITY" | "DARKNESS_CONDITION">;
   };
 
   // Categorical Decision Support (POLARIS Operational Risk Heuristic)
@@ -70,7 +72,7 @@ export interface StationWeather {
     attribution: string;
   };
 
-  // Legacy flat properties for backward compatibility with existing views
+  // Legacy flat properties for backward compatibility
   temperatureC: number;
   apparentTemperatureC: number;
   relativeHumidityPercent: number;

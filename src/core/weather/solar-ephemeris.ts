@@ -1,24 +1,27 @@
 import type { DerivedField } from "./types";
 
 export type SolarRegime = "POLAR_DAY" | "POLAR_NIGHT" | "CIVIL_TWILIGHT";
-export type FieldOperatingWindowStatus = "OPTIMAL" | "RESTRICTED" | "SUSPENDED";
+export type OperationalVisibilityHeuristic = "NORMAL_DAYLIGHT" | "REDUCED_VISIBILITY" | "DARKNESS_CONDITION";
 
 export interface SolarEphemerisResult {
-  solarElevationDeg: DerivedField<number>;
+  currentSolarElevationDeg: DerivedField<number>;
+  dailySolarMinimumDeg: DerivedField<number>;
+  dailySolarMaximumDeg: DerivedField<number>;
   solarDeclinationDeg: DerivedField<number>;
   solarRegime: DerivedField<SolarRegime>;
-  fieldOperatingWindowStatus: DerivedField<FieldOperatingWindowStatus>;
+  operationalVisibilityHeuristic: DerivedField<OperationalVisibilityHeuristic>;
   methodologyNote: string;
 }
 
 /**
  * Deterministic Local Astronomical Solar Ephemeris Calculator
- * Pure mathematical model based on Spencer (1971) / NOAA Solar Position Algorithm.
+ * Pure mathematical model based on the Spencer (1971) fractional-year solar declination & equation-of-time equations.
+ * Evaluates the full 24-hour daily solar trajectory to classify true astronomical Polar Day and Polar Night.
  * Zero external network dependencies, 0ms execution latency.
  */
 export class SolarEphemerisCalculator {
   /**
-   * Computes solar position and astronomical regime for any geodetic coordinate.
+   * Evaluates instantaneous solar elevation for a specific point in time.
    *
    * Formulas:
    * 1. Day of Year (DOY) & Fractional Year (gamma):
@@ -37,22 +40,17 @@ export class SolarEphemerisCalculator {
    *    sin(alpha) = sin(lat)*sin(delta) + cos(lat)*cos(delta)*cos(H)
    *    alpha = arcsin(sin(alpha))
    */
-  public static calculate(
+  public static calculateInstantaneousElevation(
     lat: number,
     lon: number,
-    utcDate: Date = new Date()
-  ): SolarEphemerisResult {
-    const calcTimestamp = utcDate.toISOString();
-
-    // 1. Day of year (1 - 366)
+    utcDate: Date
+  ): { elevationDeg: number; declinationDeg: number } {
     const startOfYear = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
     const dayOfYear = Math.floor((utcDate.getTime() - startOfYear.getTime()) / 86400000) + 1;
     const utcHours = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60 + utcDate.getUTCSeconds() / 3600;
 
-    // 2. Fractional year in radians
     const gamma = (2 * Math.PI / 365.25) * (dayOfYear - 1 + (utcHours - 12) / 24);
 
-    // 3. Solar declination angle (radians)
     const deltaRad =
       0.006918 -
       0.399912 * Math.cos(gamma) +
@@ -62,7 +60,6 @@ export class SolarEphemerisCalculator {
 
     const declinationDeg = Math.round((deltaRad * 180 / Math.PI) * 100) / 100;
 
-    // 4. Equation of time (minutes)
     const eotMin =
       229.18 *
       (0.000075 +
@@ -71,16 +68,13 @@ export class SolarEphemerisCalculator {
         0.014615 * Math.cos(2 * gamma) -
         0.040849 * Math.sin(2 * gamma));
 
-    // 5. True solar time and hour angle
     const timeOffsetMin = eotMin + 4 * lon;
     const trueSolarTimeMin = (utcHours * 60 + timeOffsetMin + 1440) % 1440;
     const hourAngleDeg = trueSolarTimeMin / 4 - 180;
     const hourAngleRad = (hourAngleDeg * Math.PI) / 180;
 
-    // 6. Geodetic latitude to radians
     const latRad = (lat * Math.PI) / 180;
 
-    // 7. Solar elevation angle
     const sinElevation =
       Math.sin(latRad) * Math.sin(deltaRad) +
       Math.cos(latRad) * Math.cos(deltaRad) * Math.cos(hourAngleRad);
@@ -88,57 +82,106 @@ export class SolarEphemerisCalculator {
     const elevationRad = Math.asin(Math.max(-1.0, Math.min(1.0, sinElevation)));
     const elevationDeg = Math.round((elevationRad * 180 / Math.PI) * 100) / 100;
 
-    // 8. Determine Astronomical Solar Regime
-    // - POLAR_DAY (Midnight Sun): Sun continuously above astronomical horizon (> 0 deg)
-    // - CIVIL_TWILIGHT: Sun between -6 deg and 0 deg (adequate natural light for outdoor activities)
-    // - POLAR_NIGHT: Sun continuously below civil twilight (< -6 deg, artificial illumination required)
-    let solarRegime: SolarRegime;
-    if (elevationDeg > 0) {
-      solarRegime = "POLAR_DAY";
-    } else if (elevationDeg >= -6.0) {
-      solarRegime = "CIVIL_TWILIGHT";
-    } else {
-      solarRegime = "POLAR_NIGHT";
+    return { elevationDeg, declinationDeg };
+  }
+
+  /**
+   * Computes solar ephemeris by sampling the full 24-hour solar trajectory across the given UTC day.
+   * This rigorously classifies daily astronomical regime (POLAR_DAY vs POLAR_NIGHT vs CIVIL_TWILIGHT).
+   */
+  public static calculate(
+    lat: number,
+    lon: number,
+    utcDate: Date = new Date()
+  ): SolarEphemerisResult {
+    const calcTimestamp = utcDate.toISOString();
+
+    // 1. Compute instantaneous elevation at given timestamp
+    const current = this.calculateInstantaneousElevation(lat, lon, utcDate);
+
+    // 2. Sample 24-hour trajectory across the UTC date (sampled at 15-minute intervals = 96 steps)
+    // to find true daily solar minimum and maximum elevation
+    const year = utcDate.getUTCFullYear();
+    const month = utcDate.getUTCMonth();
+    const day = utcDate.getUTCDate();
+
+    let dailyMin = 90.0;
+    let dailyMax = -90.0;
+
+    for (let step = 0; step < 96; step++) {
+      const stepMinutes = step * 15;
+      const sampleDate = new Date(Date.UTC(year, month, day, 0, stepMinutes, 0));
+      const sample = this.calculateInstantaneousElevation(lat, lon, sampleDate);
+      if (sample.elevationDeg < dailyMin) dailyMin = sample.elevationDeg;
+      if (sample.elevationDeg > dailyMax) dailyMax = sample.elevationDeg;
     }
 
-    // 9. Operational Heuristic for Field Daylight Window
-    // Labelled strictly as an engineering heuristic, not certified expedition SOP
-    let fieldOperatingWindowStatus: FieldOperatingWindowStatus;
-    if (solarRegime === "POLAR_DAY") {
-      fieldOperatingWindowStatus = "OPTIMAL";
-    } else if (solarRegime === "CIVIL_TWILIGHT") {
-      fieldOperatingWindowStatus = "RESTRICTED"; // Auxiliary lighting and convoy limits advised
+    dailyMin = Math.round(dailyMin * 100) / 100;
+    dailyMax = Math.round(dailyMax * 100) / 100;
+
+    // 3. True Daily Astronomical Regime Classification:
+    // - POLAR_DAY (Midnight Sun): Daily minimum solar elevation > 0° (Sun remains above horizon 24h)
+    // - POLAR_NIGHT: Daily maximum solar elevation < -6° (Sun remains below civil twilight 24h)
+    // - CIVIL_TWILIGHT: All other transitional / diurnal cases (Sun crosses horizon or civil twilight)
+    let solarRegime: SolarRegime;
+    if (dailyMin > 0) {
+      solarRegime = "POLAR_DAY";
+    } else if (dailyMax < -6.0) {
+      solarRegime = "POLAR_NIGHT";
     } else {
-      fieldOperatingWindowStatus = "SUSPENDED"; // Night traversal restrictions apply
+      solarRegime = "CIVIL_TWILIGHT";
+    }
+
+    // 4. POLARIS Operational Visibility Heuristic:
+    // Strictly classified as an advisory lighting/visibility heuristic, not an authoritative expedition SOP
+    let operationalVisibilityHeuristic: OperationalVisibilityHeuristic;
+    if (current.elevationDeg > 0) {
+      operationalVisibilityHeuristic = "NORMAL_DAYLIGHT";
+    } else if (current.elevationDeg >= -6.0) {
+      operationalVisibilityHeuristic = "REDUCED_VISIBILITY"; // Natural twilight illumination
+    } else {
+      operationalVisibilityHeuristic = "DARKNESS_CONDITION";  // Continuous darkness requiring auxiliary lighting
     }
 
     return {
-      solarElevationDeg: {
-        value: elevationDeg,
-        derivationMethod: "Spencer (1971) / NOAA Solar Position Algorithm",
+      currentSolarElevationDeg: {
+        value: current.elevationDeg,
+        derivationMethod: "Spencer (1971) Fractional-Year Solar Position Formulation",
         inputVariables: ["latitude", "longitude", "utcTimestamp"],
         calculationTimestamp: calcTimestamp,
       },
+      dailySolarMinimumDeg: {
+        value: dailyMin,
+        derivationMethod: "24-Hour Solar Trajectory Sampled Extremum (Minimum)",
+        inputVariables: ["latitude", "longitude", "utcDate"],
+        calculationTimestamp: calcTimestamp,
+      },
+      dailySolarMaximumDeg: {
+        value: dailyMax,
+        derivationMethod: "24-Hour Solar Trajectory Sampled Extremum (Maximum)",
+        inputVariables: ["latitude", "longitude", "utcDate"],
+        calculationTimestamp: calcTimestamp,
+      },
       solarDeclinationDeg: {
-        value: declinationDeg,
-        derivationMethod: "Spencer (1971) Astronomical Solar Declination Equation",
+        value: current.declinationDeg,
+        derivationMethod: "Spencer (1971) Fractional-Year Solar Declination Equation",
         inputVariables: ["dayOfYear", "utcHour"],
         calculationTimestamp: calcTimestamp,
       },
       solarRegime: {
         value: solarRegime,
-        derivationMethod: "Astronomical Horizon & Civil Twilight Boundary Classification (-6°)",
-        inputVariables: ["solarElevationDeg"],
+        derivationMethod: "Astronomical 24h Trajectory Regime: POLAR_DAY (min > 0°), POLAR_NIGHT (max < -6°), CIVIL_TWILIGHT (transitional)",
+        inputVariables: ["dailySolarMinimumDeg", "dailySolarMaximumDeg"],
         calculationTimestamp: calcTimestamp,
       },
-      fieldOperatingWindowStatus: {
-        value: fieldOperatingWindowStatus,
-        derivationMethod: "POLARIS Operational Risk Heuristic (Solar Illumination Operating Window)",
-        inputVariables: ["solarRegime"],
+      operationalVisibilityHeuristic: {
+        value: operationalVisibilityHeuristic,
+        derivationMethod: "POLARIS Operational Visibility Heuristic (NORMAL_DAYLIGHT: > 0°, REDUCED_VISIBILITY: -6° to 0°, DARKNESS_CONDITION: < -6°)",
+        inputVariables: ["currentSolarElevationDeg"],
         calculationTimestamp: calcTimestamp,
       },
       methodologyNote:
-        "Deterministic local astronomical calculation derived from NOAA Solar Position Equations. Decision guidance represents an internal operational heuristic, not an authoritative expedition SOP.",
+        "Astronomical calculations derived from Spencer (1971) fractional-year solar formulation. Regime is classified from the 24-hour continuous trajectory. Visibility status represents an internal operational heuristic, not an authoritative expedition SOP.",
     };
   }
 }
