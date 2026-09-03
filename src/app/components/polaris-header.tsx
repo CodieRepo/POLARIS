@@ -51,12 +51,13 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300">
+          <Link
+            href="/login"
+            className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:border-cyan-500/40 transition-colors"
+          >
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-semibold text-slate-200">SUPER_ADMIN</span>
-            <span className="text-slate-500">|</span>
-            <span className="text-cyan-400">NCPOR Polar Net</span>
-          </div>
+            <span className="font-semibold text-slate-200">Switch Identity / Login</span>
+          </Link>
         </div>
       </div>
     </header>

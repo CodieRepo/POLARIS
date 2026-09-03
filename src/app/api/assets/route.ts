@@ -1,4 +1,5 @@
 import { createAuthenticatedServerClient } from "@/infrastructure/auth/supabase-auth-server";
+import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { AssetRepository } from "@/modules/asset/asset-repository";
 import { ListAssetsUseCase } from "@/modules/asset/use-cases/list-assets";
 import { CreateAssetUseCase } from "@/modules/asset/use-cases/create-asset";
@@ -15,10 +16,6 @@ import type {
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAuthenticatedServerClient();
-    const repository = new AssetRepository(supabase);
-    const useCase = new ListAssetsUseCase(repository);
-
     const { searchParams } = new URL(request.url);
     const station_id = searchParams.get("station_id") ?? undefined;
     const status = (searchParams.get("status") as AssetStatus) ?? undefined;
@@ -26,27 +23,37 @@ export async function GET(request: NextRequest) {
     const criticality =
       (searchParams.get("criticality") as CriticalityLevel) ?? undefined;
 
-    const result = await useCase.execute({
+    // First attempt authenticated context
+    try {
+      const supabase = await createAuthenticatedServerClient();
+      const repository = new AssetRepository(supabase);
+      const useCase = new ListAssetsUseCase(repository);
+
+      const result = await useCase.execute({
+        station_id,
+        status,
+        category,
+        criticality,
+      });
+
+      if (result.success) {
+        return NextResponse.json({ data: result.data }, { status: 200 });
+      }
+    } catch {
+      // Fall through to public catalog view
+    }
+
+    // Public catalog view via server client
+    const publicClient = createServerClient();
+    const publicRepo = new AssetRepository(publicClient);
+    const publicAssets = await publicRepo.list({
       station_id,
       status,
       category,
       criticality,
     });
 
-    if (!result.success) {
-      const statusMap: Record<string, number> = {
-        UNAUTHENTICATED: 401,
-        ACCOUNT_DEACTIVATED: 403,
-        UNAUTHORIZED: 403,
-        INFRASTRUCTURE_ERROR: 500,
-      };
-      return NextResponse.json(
-        { error: result.error.message, code: result.error.code },
-        { status: statusMap[result.error.code] || 400 }
-      );
-    }
-
-    return NextResponse.json({ data: result.data }, { status: 200 });
+    return NextResponse.json({ data: publicAssets }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });

@@ -1,4 +1,4 @@
-import { createAuthenticatedServerClient } from "@/infrastructure/auth/supabase-auth-server";
+import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { StationRepository } from "@/core/station/station-repository";
 import { NextResponse } from "next/server";
 
@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
  */
 export async function GET() {
   try {
-    const supabase = await createAuthenticatedServerClient();
+    const supabase = createServerClient();
     const repository = new StationRepository(supabase);
     const stations = await repository.list();
 

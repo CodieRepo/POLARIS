@@ -1,4 +1,5 @@
 import { createAuthenticatedServerClient } from "@/infrastructure/auth/supabase-auth-server";
+import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { AssetRepository } from "@/modules/asset/asset-repository";
 import { GetAssetByCodeUseCase } from "@/modules/asset/use-cases/get-asset-by-code";
 import { GetAssetHistoryUseCase } from "@/modules/asset/use-cases/get-asset-history";
@@ -18,49 +19,53 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const includeHistory = searchParams.get("history") === "true";
 
-    const supabase = await createAuthenticatedServerClient();
-    const repository = new AssetRepository(supabase);
+    // Attempt authenticated context first
+    try {
+      const supabase = await createAuthenticatedServerClient();
+      const repository = new AssetRepository(supabase);
 
-    if (includeHistory) {
-      // First get asset to find its UUID
-      const assetRes = await new GetAssetByCodeUseCase(repository).execute(code);
-      if (!assetRes.success) {
-        return NextResponse.json(
-          { error: assetRes.error.message, code: assetRes.error.code },
-          { status: assetRes.error.code === "ASSET_NOT_FOUND" ? 404 : 400 }
-        );
+      if (includeHistory) {
+        const assetRes = await new GetAssetByCodeUseCase(repository).execute(code);
+        if (assetRes.success) {
+          const historyRes = await new GetAssetHistoryUseCase(repository).execute(assetRes.data.id);
+          if (historyRes.success) {
+            return NextResponse.json({ data: historyRes.data }, { status: 200 });
+          }
+        }
+      } else {
+        const result = await new GetAssetByCodeUseCase(repository).execute(code);
+        if (result.success) {
+          return NextResponse.json({ data: result.data }, { status: 200 });
+        }
       }
-
-      const historyUseCase = new GetAssetHistoryUseCase(repository);
-      const result = await historyUseCase.execute(assetRes.data.id);
-
-      if (!result.success) {
-        return NextResponse.json(
-          { error: result.error.message, code: result.error.code },
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json({ data: result.data }, { status: 200 });
+    } catch {
+      // Fall through to public catalog inspection
     }
 
-    const useCase = new GetAssetByCodeUseCase(repository);
-    const result = await useCase.execute(code);
+    // Public catalog inspection via server client
+    const publicClient = createServerClient();
+    const publicRepo = new AssetRepository(publicClient);
 
-    if (!result.success) {
-      const statusMap: Record<string, number> = {
-        UNAUTHENTICATED: 401,
-        ACCOUNT_DEACTIVATED: 403,
-        ASSET_NOT_FOUND: 404,
-        INFRASTRUCTURE_ERROR: 500,
-      };
+    const asset = await publicRepo.getByCode(code);
+    if (!asset) {
       return NextResponse.json(
-        { error: result.error.message, code: result.error.code },
-        { status: statusMap[result.error.code] || 400 }
+        { error: `Asset '${code}' not found`, code: "ASSET_NOT_FOUND" },
+        { status: 404 }
       );
     }
 
-    return NextResponse.json({ data: result.data }, { status: 200 });
+    if (includeHistory) {
+      const [assignments, maintenance] = await Promise.all([
+        publicRepo.getAssignmentHistory(asset.id),
+        publicRepo.getMaintenanceHistory(asset.id),
+      ]);
+      return NextResponse.json(
+        { data: { asset, assignments, maintenance } },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json({ data: asset }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });

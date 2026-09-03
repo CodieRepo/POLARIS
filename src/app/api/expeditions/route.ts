@@ -1,4 +1,4 @@
-import { createAuthenticatedServerClient } from "@/infrastructure/auth/supabase-auth-server";
+import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { ExpeditionRepository } from "@/modules/expedition/expedition-repository";
 import type { ExpeditionStatus } from "@/modules/expedition/types/expedition.types";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAuthenticatedServerClient();
+    const supabase = createServerClient();
     const repository = new ExpeditionRepository(supabase);
 
     const { searchParams } = new URL(request.url);
