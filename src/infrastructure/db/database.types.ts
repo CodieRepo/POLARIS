@@ -632,6 +632,54 @@ export type Database = {
         Args: { target_expedition_id: string }
         Returns: boolean
       }
+      assign_asset: {
+        Args: {
+          p_asset_id: string
+          p_assignment_type: string
+          p_station_id?: string
+          p_expedition_id?: string
+          p_notes?: string
+        }
+        Returns: {
+          asset_id: string
+          assigned_at: string
+          assignment_type: string
+          created_at: string
+          expedition_id: string | null
+          id: string
+          notes: string | null
+          released_at: string | null
+          station_id: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "asset_assignments"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      release_asset_assignment: {
+        Args: { p_assignment_id: string }
+        Returns: {
+          asset_id: string
+          assigned_at: string
+          assignment_type: string
+          created_at: string
+          expedition_id: string | null
+          id: string
+          notes: string | null
+          released_at: string | null
+          station_id: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "asset_assignments"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       replace_expedition_leader: {
         Args: { new_leader_person_id: string; target_expedition_id: string }
         Returns: {

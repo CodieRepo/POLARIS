@@ -4,6 +4,7 @@ import type {
   AssetAssignmentRow,
   AssetListFilters,
   AssetRow,
+  AssignAssetInput,
   CreateAssetInput,
   MaintenanceRecordRow,
   UpdateAssetMetadataInput,
@@ -36,6 +37,19 @@ export class AssetConflictError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "AssetConflictError";
+  }
+}
+
+/**
+ * Error indicating a PostgreSQL RPC workflow failure (assign_asset / release_asset_assignment).
+ * Preserves the original PostgreSQL error code for upstream mapping.
+ */
+export class AssetWorkflowError extends Error {
+  readonly pgCode: string;
+  constructor(message: string, pgCode: string) {
+    super(message);
+    this.name = "AssetWorkflowError";
+    this.pgCode = pgCode;
   }
 }
 
@@ -308,4 +322,72 @@ export class AssetRepository {
 
     return (data as MaintenanceRecordRow[]) ?? [];
   }
+
+  /**
+   * Atomically assigns an AVAILABLE asset to a station or expedition
+   * via the assign_asset() SECURITY DEFINER RPC.
+   *
+   * @param input - Assignment input contract.
+   * @returns The created assignment row.
+   * @throws AssetWorkflowError if the RPC returns a domain error.
+   */
+  async assignAsset(input: AssignAssetInput): Promise<AssetAssignmentRow> {
+    const { data, error } = await this.client.rpc("assign_asset", {
+      p_asset_id: input.asset_id,
+      p_assignment_type: input.assignment_type,
+      p_station_id: input.station_id ?? undefined,
+      p_expedition_id: input.expedition_id ?? undefined,
+      p_notes: input.notes ?? undefined,
+    });
+
+    if (error) {
+      throw new AssetWorkflowError(error.message, error.code);
+    }
+
+    const rows = data as AssetAssignmentRow[] | AssetAssignmentRow | null;
+    const result = Array.isArray(rows) ? rows[0] : rows;
+
+    if (!result) {
+      throw new AssetWorkflowError(
+        "assign_asset RPC returned no data",
+        "PGRST000"
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Atomically releases an active asset assignment via the
+   * release_asset_assignment() SECURITY DEFINER RPC.
+   *
+   * @param assignmentId - The UUID of the active assignment to release.
+   * @returns The closed assignment row with released_at populated.
+   * @throws AssetWorkflowError if the RPC returns a domain error.
+   */
+  async releaseAssignment(assignmentId: string): Promise<AssetAssignmentRow> {
+    const { data, error } = await this.client.rpc(
+      "release_asset_assignment",
+      {
+        p_assignment_id: assignmentId,
+      }
+    );
+
+    if (error) {
+      throw new AssetWorkflowError(error.message, error.code);
+    }
+
+    const rows = data as AssetAssignmentRow[] | AssetAssignmentRow | null;
+    const result = Array.isArray(rows) ? rows[0] : rows;
+
+    if (!result) {
+      throw new AssetWorkflowError(
+        "release_asset_assignment RPC returned no data",
+        "PGRST000"
+      );
+    }
+
+    return result;
+  }
 }
+
