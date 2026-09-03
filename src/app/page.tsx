@@ -3,8 +3,12 @@ import Link from "next/link";
 import { PolarisHeader } from "./components/polaris-header";
 import { StatusBadge } from "./components/status-badge";
 import PolarOperationalMap from "./components/polar-operational-map";
+import { WeatherTelemetryPanel } from "./components/weather-telemetry-panel";
+import { ReadinessDetailWidget } from "./components/readiness-detail-widget";
 import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { calculateOperationalReadiness } from "@/core/readiness/operational-readiness";
+import { WeatherService } from "@/core/weather/weather-service";
+import type { StationWeather } from "@/core/weather/types";
 import type { AssetRow } from "@/modules/asset/types/asset.types";
 
 export const dynamic = "force-dynamic";
@@ -42,19 +46,23 @@ export default async function DashboardPage() {
     maintenance_type: string;
   }[] = [];
 
+  let weatherTelemetry: Record<string, StationWeather> | null = null;
+
   try {
     const supabase = createServerClient();
-    const [stRes, exRes, asRes, mnRes] = await Promise.all([
+    const [stRes, exRes, asRes, mnRes, weatherRes] = await Promise.all([
       supabase.from("stations").select("id, code, name, latitude, longitude, status, capacity, region").order("code"),
       supabase.from("expeditions").select("id, code, name, status, data_classification").order("code"),
       supabase.from("assets").select("*").order("asset_code", { ascending: true }),
       supabase.from("maintenance_records").select("id, status, maintenance_type"),
+      WeatherService.getAllStationWeather().catch(() => null),
     ]);
 
     if (stRes.data) stations = stRes.data;
     if (exRes.data) expeditions = exRes.data;
     if (asRes.data) assets = asRes.data;
     if (mnRes.data) maintenance = mnRes.data;
+    if (weatherRes) weatherTelemetry = weatherRes;
 
     if (stations.length > 0) {
       stats.stations.total = stations.length;
@@ -80,7 +88,7 @@ export default async function DashboardPage() {
     // Graceful fallback if database connection has temporary latency
   }
 
-  const readiness = calculateOperationalReadiness(assets, maintenance, stations);
+  const readiness = calculateOperationalReadiness(assets, maintenance, stations, weatherTelemetry);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
@@ -128,6 +136,12 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* POLARIS Operational Readiness Heuristic Breakdown Widget */}
+        <ReadinessDetailWidget readiness={readiness} />
+
+        {/* Polar Meteorological Telemetry & Provenance Feeds */}
+        <WeatherTelemetryPanel weather={weatherTelemetry} />
 
         {/* Tactical Polar Spatial Map Component */}
         <div className="mb-8">
