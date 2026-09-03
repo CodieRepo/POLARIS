@@ -1,20 +1,34 @@
 import type { StationWeather, WeatherProvenanceTier } from "@/core/weather/types";
 
-export type ReadinessQualityStatus = "AUTHORITATIVE_VERIFIED" | "COMPOSITE_OBSERVED" | "DEGRADED_MODEL" | "DEGRADED_BASELINE" | "DATA_UNAVAILABLE";
+export type ReadinessQualityStatus =
+  | "AUTHORITATIVE_VERIFIED"
+  | "COMPOSITE_OBSERVED"
+  | "DEGRADED_MODEL"
+  | "DEGRADED_BASELINE"
+  | "DATA_UNAVAILABLE";
+
+export interface ReadinessDeduction {
+  readonly reason: string;
+  readonly pointsDeducted: number;
+  readonly inputField: string;
+  readonly provenance: string;
+  readonly methodology: string;
+  readonly triggeringStation?: string;
+  readonly triggeringValue?: number | string;
+}
 
 export interface CategoryBreakdown {
-  readonly category: "CRITICAL_ASSET_HEALTH" | "STATION_POWER_REDUNDANCY" | "MAINTENANCE_BACKLOG_HEALTH" | "ENVIRONMENTAL_HAZARD_SEVERITY";
+  readonly category:
+    | "CRITICAL_ASSET_HEALTH"
+    | "STATION_POWER_REDUNDANCY"
+    | "MAINTENANCE_BACKLOG_HEALTH"
+    | "ENVIRONMENTAL_HAZARD_SEVERITY";
   readonly score: number;
   readonly maxScore: number;
   readonly inputs: Record<string, unknown>;
-  readonly deductions: Array<{
-    readonly reason: string;
-    readonly pointsDeducted: number;
-    readonly inputField: string;
-    readonly provenance: string;
-    readonly methodology: string;
-  }>;
+  readonly deductions: ReadinessDeduction[];
   readonly qualityStatus: ReadinessQualityStatus;
+  readonly aggregationMethod?: string;
 }
 
 export interface ReadinessFactor {
@@ -43,7 +57,7 @@ export interface OperationalReadinessResult {
 
 export interface RawAssetMetrics {
   readonly status: string;
-  readonly criticality: string;
+  readonly criticality?: string | null;
   readonly category: string;
   readonly condition: string;
 }
@@ -58,25 +72,20 @@ export interface RawStationMetrics {
 }
 
 /**
- * POLARIS Operational Readiness Heuristic Engine
+ * POLARIS Operational Readiness Heuristic Engine (Phase 3D.1 Refined)
  *
- * Architecture:
- * - Deterministic, category-weighted mathematical heuristic.
- * - Score range: Strictly clamped [0, 100].
- * - Weights:
- *   1. Critical Asset Health (35 pts)
- *   2. Station Power Redundancy (25 pts)
- *   3. Maintenance Backlog Health (20 pts)
- *   4. Environmental Hazard Risk (20 pts)
+ * Weight Distribution:
+ * 1. Critical Asset Health: 35 pts
+ * 2. Station Power Redundancy: 25 pts
+ * 3. Maintenance Backlog Health: 20 pts
+ * 4. Environmental Hazard Severity: 20 pts
  *
- * Missing / Degraded Data Rule:
- * - Unknown or missing inputs are NEVER assumed healthy.
- * - If asset counts are null/empty, asset score degrades to 0 with UNKNOWN_DATA status.
- * - If generators are 0 or unverified, power score degrades to 0.
- * - If environmental weather telemetry is missing/stale, environmental score degrades to 10/20 with DEGRADED status.
- *
- * Governance:
- * - Strictly decision-support heuristic; NOT a medical, safety, or government-certified standard.
+ * Refined Governance & Semantics:
+ * - Differentiates between Verified Zero vs Missing/Unavailable data across all categories.
+ * - Power redundancy framed as "Configured Power Redundancy Heuristic" (avoids certifying N+1 load capacity).
+ * - "Single-generator / no-standby redundancy condition" replaces authoritative "Single Point of Failure" claims.
+ * - Environmental scoring explicitly exposes aggregationMethod: "WORST_CASE_ACTIVE_STATION" and pinpoints triggering stations.
+ * - Bounded [0, 100], fully deterministic, decision-support advisory.
  */
 export function calculateOperationalReadiness(
   assets: readonly RawAssetMetrics[] | null | undefined,
@@ -92,36 +101,78 @@ export function calculateOperationalReadiness(
   // 1. CRITICAL ASSET HEALTH (Max 35 points)
   // =========================================================================
   let assetScore = 0;
-  const assetDeductions: CategoryBreakdown["deductions"] = [];
+  const assetDeductions: ReadinessDeduction[] = [];
   let assetQuality: ReadinessQualityStatus = "AUTHORITATIVE_VERIFIED";
 
-  if (!assets || !Array.isArray(assets) || assets.length === 0) {
+  if (assets === null || assets === undefined) {
+    // State B: Critical asset data is missing or unavailable
     assetScore = 0;
     assetQuality = "DATA_UNAVAILABLE";
     assetDeductions.push({
-      reason: "Asset registry telemetry missing or zero assets cataloged",
+      reason: "Asset registry telemetry is unavailable; zero health assumption forbidden",
       pointsDeducted: 35,
-      inputField: "assets.length",
+      inputField: "assets",
       provenance: "DATABASE_UNAVAILABLE",
-      methodology: "Missing asset inputs default to 0 points; zero health assumption forbidden",
+      methodology: "Missing asset records score 0/35 points with DATA_UNAVAILABLE quality tier",
     });
     factors.push({
       label: "Asset Registry Unavailable",
       impact: -35,
-      reason: "Asset data unavailable; asset health score defaulted to 0",
+      reason: "Asset database records unavailable; category score set to 0",
+    });
+  } else if (assets.length === 0) {
+    // State A: Verified database state with zero assets cataloged
+    assetScore = 0;
+    assetQuality = "AUTHORITATIVE_VERIFIED";
+    assetDeductions.push({
+      reason: "Verified database state: zero operational assets cataloged in inventory",
+      pointsDeducted: 35,
+      inputField: "assets.length",
+      provenance: "DATABASE_OBSERVED",
+      methodology: "Verified empty asset registry scores 0/35 points with AUTHORITATIVE_VERIFIED quality tier",
+    });
+    factors.push({
+      label: "Zero Station Assets Cataloged",
+      impact: -35,
+      reason: "Verified 0 total assets cataloged across station bases",
     });
   } else {
+    // Assets exist in DB: inspect criticality tags
+    const classifiedAssets = assets.filter((a) => a.criticality !== null && a.criticality !== undefined && a.criticality !== "");
     const criticalAssets = assets.filter((a) => a.criticality === "CRITICAL");
     const nonRetiredCritical = criticalAssets.filter((a) => a.status !== "RETIRED");
 
-    if (nonRetiredCritical.length === 0) {
-      assetScore = 15; // Partial credit if no critical assets configured
+    if (classifiedAssets.length === 0) {
+      // Criticality classification missing from records
+      assetScore = 0;
+      assetQuality = "DATA_UNAVAILABLE";
       assetDeductions.push({
-        reason: "No active mission-critical assets designated in database",
-        pointsDeducted: 20,
+        reason: "Asset criticality classifications missing from catalog; unable to verify critical inventory health",
+        pointsDeducted: 35,
+        inputField: "assets.criticality",
+        provenance: "DATABASE_UNAVAILABLE",
+        methodology: "Absence of asset criticality tagging treated as missing data (0/35 pts)",
+      });
+      factors.push({
+        label: "Asset Criticality Unclassified",
+        impact: -35,
+        reason: "Asset records lack required criticality classification tags",
+      });
+    } else if (nonRetiredCritical.length === 0) {
+      // Verified zero non-retired critical assets exist in the active base inventory
+      assetScore = 0;
+      assetQuality = "AUTHORITATIVE_VERIFIED";
+      assetDeductions.push({
+        reason: "Verified database state: 0 active mission-critical assets cataloged",
+        pointsDeducted: 35,
         inputField: "criticalAssets.length",
         provenance: "DATABASE_OBSERVED",
-        methodology: "Absence of active critical tier assets caps category at 15 points",
+        methodology: "Verified zero active critical-tier assets yields 0/35 points with AUTHORITATIVE_VERIFIED tier",
+      });
+      factors.push({
+        label: "Zero Critical Assets Configured",
+        impact: -35,
+        reason: "Verified zero active critical-tier assets present in inventory",
       });
     } else {
       const operationalCritical = nonRetiredCritical.filter(
@@ -157,6 +208,7 @@ export function calculateOperationalReadiness(
       }
     }
   }
+
   assetScore = Math.max(0, Math.min(35, assetScore));
   breakdowns["CRITICAL_ASSET_HEALTH"] = {
     category: "CRITICAL_ASSET_HEALTH",
@@ -171,20 +223,27 @@ export function calculateOperationalReadiness(
   // 2. STATION POWER REDUNDANCY (Max 25 points)
   // =========================================================================
   let powerScore = 0;
-  const powerDeductions: CategoryBreakdown["deductions"] = [];
+  const powerDeductions: ReadinessDeduction[] = [];
   let powerQuality: ReadinessQualityStatus = "AUTHORITATIVE_VERIFIED";
 
-  if (!assets || !Array.isArray(assets)) {
+  if (assets === null || assets === undefined) {
+    // Missing generator telemetry
     powerScore = 0;
     powerQuality = "DATA_UNAVAILABLE";
     powerDeductions.push({
-      reason: "Power generation metrics unavailable",
+      reason: "Power generation telemetry unavailable from database",
       pointsDeducted: 25,
       inputField: "category.POWER_SYSTEMS",
       provenance: "DATABASE_UNAVAILABLE",
-      methodology: "Missing power telemetry defaults to 0 points (fail-safe rule)",
+      methodology: "Missing power generation records score 0/25 with DATA_UNAVAILABLE quality tier",
+    });
+    factors.push({
+      label: "Power Telemetry Unavailable",
+      impact: -25,
+      reason: "Generator status unverified; conservative score set to 0",
     });
   } else {
+    // Verified asset catalog exists: check POWER_SYSTEMS category
     const generators = assets.filter((a) => a.category === "POWER_SYSTEMS" && a.status !== "RETIRED");
     const operationalGens = generators.filter(
       (a) => (a.status === "AVAILABLE" || a.status === "IN_USE" || a.status === "ASSIGNED") && a.condition !== "POOR"
@@ -193,40 +252,43 @@ export function calculateOperationalReadiness(
     if (operationalGens.length >= 2) {
       powerScore = 25;
       factors.push({
-        label: "Power Grid Redundancy",
+        label: "Configured Power Redundancy Heuristic",
         impact: 0,
-        reason: `${operationalGens.length} primary/backup diesel generator units operational (N+1 redundant)`,
+        reason: `${operationalGens.length} primary/backup generator units operational (multi-generator heuristic met)`,
       });
     } else if (operationalGens.length === 1) {
       powerScore = 10;
       powerDeductions.push({
-        reason: "Only 1 operational power generator unit detected; redundancy buffer compromised",
+        reason: "Only 1 operational generator detected; single-generator / no-standby redundancy condition active",
         pointsDeducted: 15,
         inputField: "generators.operationalCount",
         provenance: "DATABASE_OBSERVED",
-        methodology: "Single operational generator grants 10/25 pts due to single-point-of-failure risk",
+        methodology: "Single operational generator yields 10/25 pts under configured redundancy heuristic (-15 pts)",
       });
       factors.push({
-        label: "Single Point of Failure (Power)",
+        label: "No-Standby Power Redundancy Condition",
         impact: -15,
-        reason: "Single generator operating without hot-standby redundancy",
+        reason: "Single active generator running without immediate online backup unit",
       });
     } else {
+      // Verified database state with 0 active generators
       powerScore = 0;
+      powerQuality = "AUTHORITATIVE_VERIFIED";
       powerDeductions.push({
-        reason: "Zero operational power generators available across stations",
+        reason: "Verified database state: 0 active operational power generators cataloged",
         pointsDeducted: 25,
         inputField: "generators.operationalCount",
         provenance: "DATABASE_OBSERVED",
-        methodology: "Zero generators results in complete power category forfeiture (0/25 pts)",
+        methodology: "Verified zero active generators yields 0/25 points with AUTHORITATIVE_VERIFIED quality tier",
       });
       factors.push({
-        label: "Critical Power Outage Risk",
+        label: "Zero Active Power Buffer",
         impact: -25,
-        reason: "Zero active primary generators operational",
+        reason: "Verified 0 active generators available across station bases",
       });
     }
   }
+
   powerScore = Math.max(0, Math.min(25, powerScore));
   breakdowns["STATION_POWER_REDUNDANCY"] = {
     category: "STATION_POWER_REDUNDANCY",
@@ -241,19 +303,23 @@ export function calculateOperationalReadiness(
   // 3. MAINTENANCE BACKLOG HEALTH (Max 20 points)
   // =========================================================================
   let maintenanceScore = 20;
-  const maintDeductions: CategoryBreakdown["deductions"] = [];
+  const maintDeductions: ReadinessDeduction[] = [];
   let maintQuality: ReadinessQualityStatus = "AUTHORITATIVE_VERIFIED";
 
-  if (!maintenance || !Array.isArray(maintenance)) {
-    // Missing maintenance data should not be assumed healthy
+  if (maintenance === null || maintenance === undefined) {
     maintenanceScore = 8;
     maintQuality = "DATA_UNAVAILABLE";
     maintDeductions.push({
-      reason: "Maintenance logs unavailable; assuming degraded backlog posture",
+      reason: "Maintenance logs unavailable; conservative degraded backlog posture assumed",
       pointsDeducted: 12,
       inputField: "maintenance_records",
       provenance: "DATABASE_UNAVAILABLE",
-      methodology: "Missing maintenance logs penalized by 12 points to avoid silent health assumption",
+      methodology: "Missing maintenance logs penalized by 12 points to prevent silent health assumption",
+    });
+    factors.push({
+      label: "Maintenance Logs Unavailable",
+      impact: -12,
+      reason: "Maintenance database table unavailable; score degraded to 8/20",
     });
   } else {
     const activeCorrective = maintenance.filter(
@@ -307,6 +373,7 @@ export function calculateOperationalReadiness(
       });
     }
   }
+
   maintenanceScore = Math.max(0, Math.min(20, maintenanceScore));
   breakdowns["MAINTENANCE_BACKLOG_HEALTH"] = {
     category: "MAINTENANCE_BACKLOG_HEALTH",
@@ -321,11 +388,10 @@ export function calculateOperationalReadiness(
   // 4. ENVIRONMENTAL HAZARD SEVERITY (Max 20 points)
   // =========================================================================
   let envScore = 20;
-  const envDeductions: CategoryBreakdown["deductions"] = [];
+  const envDeductions: ReadinessDeduction[] = [];
   let envQuality: ReadinessQualityStatus = "AUTHORITATIVE_VERIFIED";
 
   if (!weatherTelemetry || Object.keys(weatherTelemetry).length === 0) {
-    // Missing real-time weather: fail-safe degraded posture
     envScore = 10;
     envQuality = "DATA_UNAVAILABLE";
     envDeductions.push({
@@ -333,7 +399,7 @@ export function calculateOperationalReadiness(
       pointsDeducted: 10,
       inputField: "weatherTelemetry",
       provenance: "DATA_UNAVAILABLE",
-      methodology: "Missing meteorological inputs degrade environmental score to 10/20 pts (fail-safe posture)",
+      methodology: "Missing meteorological inputs degrade environmental score to 10/20 pts (conservative posture)",
     });
     factors.push({
       label: "Meteorological Telemetry Unavailable",
@@ -346,12 +412,17 @@ export function calculateOperationalReadiness(
     let maxWindPenalty = 0;
     let worstProvenance: WeatherProvenanceTier = "AUTHORITATIVE_OBSERVED";
 
+    let coldTriggerStation = "";
+    let coldTriggerValue = 0;
+    let windTriggerStation = "";
+    let windTriggerValue = 0;
+
     for (const st of stationsList) {
       const apparentTemp = st.derivedCalculations?.apparentTemperatureC?.value ?? st.apparentTemperatureC;
       const windKmH = st.measurements?.windSpeedKmH?.value ?? st.windSpeedKmH;
       const tier = st.stationOverallStatus?.classification ?? st.provenanceTier;
 
-      // Track provenance quality: If any station uses model or baseline, degrade overall quality
+      // Track provenance quality
       if (tier === "OFFLINE_CLIMATIC_BASELINE") {
         worstProvenance = "OFFLINE_CLIMATIC_BASELINE";
       } else if (tier === "VERIFIED_MODEL" && worstProvenance !== "OFFLINE_CLIMATIC_BASELINE") {
@@ -361,19 +432,33 @@ export function calculateOperationalReadiness(
       }
 
       // Wind chill cold stress penalty
+      let stationColdPenalty = 0;
       if (apparentTemp <= -45) {
-        maxColdPenalty = Math.max(maxColdPenalty, 8);
+        stationColdPenalty = 8;
       } else if (apparentTemp <= -35) {
-        maxColdPenalty = Math.max(maxColdPenalty, 5);
+        stationColdPenalty = 5;
       } else if (apparentTemp <= -25) {
-        maxColdPenalty = Math.max(maxColdPenalty, 2);
+        stationColdPenalty = 2;
+      }
+
+      if (stationColdPenalty > maxColdPenalty) {
+        maxColdPenalty = stationColdPenalty;
+        coldTriggerStation = st.stationCode ?? st.stationName;
+        coldTriggerValue = apparentTemp;
       }
 
       // Blizzard / high wind severity penalty
+      let stationWindPenalty = 0;
       if (windKmH >= 55) {
-        maxWindPenalty = Math.max(maxWindPenalty, 6);
+        stationWindPenalty = 6;
       } else if (windKmH >= 38) {
-        maxWindPenalty = Math.max(maxWindPenalty, 3);
+        stationWindPenalty = 3;
+      }
+
+      if (stationWindPenalty > maxWindPenalty) {
+        maxWindPenalty = stationWindPenalty;
+        windTriggerStation = st.stationCode ?? st.stationName;
+        windTriggerValue = windKmH;
       }
     }
 
@@ -388,32 +473,36 @@ export function calculateOperationalReadiness(
     if (maxColdPenalty > 0) {
       envScore -= maxColdPenalty;
       envDeductions.push({
-        reason: `Cold exposure risk penalty triggered by apparent temperatures <= -25°C`,
+        reason: `Cold exposure penalty: apparent temperature ${coldTriggerValue}°C at ${coldTriggerStation} (<= -25°C threshold)`,
         pointsDeducted: maxColdPenalty,
         inputField: "apparentTemperatureC",
         provenance: worstProvenance,
-        methodology: "Deduction derived from Siple-Passel wind chill cold stress tier",
+        methodology: "Siple-Passel wind chill cold stress tier deduction",
+        triggeringStation: coldTriggerStation,
+        triggeringValue: coldTriggerValue,
       });
       factors.push({
-        label: "Extreme Cold Hazard",
+        label: "Sub-Zero Cold Stress",
         impact: -maxColdPenalty,
-        reason: `Sub-zero wind chill (${worstProvenance}) introduces convective cold stress`,
+        reason: `Apparent chill of ${coldTriggerValue}°C at station ${coldTriggerStation} (${worstProvenance})`,
       });
     }
 
     if (maxWindPenalty > 0) {
       envScore -= maxWindPenalty;
       envDeductions.push({
-        reason: `Surface wind penalty triggered by wind speeds >= 38 km/h`,
+        reason: `Surface wind penalty: wind speed ${windTriggerValue} km/h at ${windTriggerStation} (>= 38 km/h threshold)`,
         pointsDeducted: maxWindPenalty,
         inputField: "windSpeedKmH",
         provenance: worstProvenance,
-        methodology: "Deductions applied for Blizzard Watch (>=38 km/h) or Blizzard Warning (>=55 km/h)",
+        methodology: "Surface wind penalty for Blizzard Watch (>=38 km/h) or Warning (>=55 km/h)",
+        triggeringStation: windTriggerStation,
+        triggeringValue: windTriggerValue,
       });
       factors.push({
-        label: "Elevated Polar Winds",
+        label: "Elevated Surface Winds",
         impact: -maxWindPenalty,
-        reason: `High surface wind velocity creates ground drift and traverse restrictions`,
+        reason: `Surface winds of ${windTriggerValue} km/h at station ${windTriggerStation}`,
       });
     }
 
@@ -425,6 +514,7 @@ export function calculateOperationalReadiness(
       });
     }
   }
+
   envScore = Math.max(0, Math.min(20, envScore));
   breakdowns["ENVIRONMENTAL_HAZARD_SEVERITY"] = {
     category: "ENVIRONMENTAL_HAZARD_SEVERITY",
@@ -433,6 +523,7 @@ export function calculateOperationalReadiness(
     inputs: { activeStationsCount: weatherTelemetry ? Object.keys(weatherTelemetry).length : 0 },
     deductions: envDeductions,
     qualityStatus: envQuality,
+    aggregationMethod: "WORST_CASE_ACTIVE_STATION",
   };
 
   // =========================================================================
