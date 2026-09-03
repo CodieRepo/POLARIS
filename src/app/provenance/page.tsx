@@ -54,6 +54,26 @@ export default function ProvenancePage() {
       badge: "DERIVED",
       freshnessPolicy: "Computed instantaneously in 0ms execution latency upon request.",
     },
+    {
+      tier: "DERIVED_SPATIAL",
+      title: "Deterministic Geodesic Spatial Calculations",
+      source: "POLARIS Local Spherical Geodesic Engine",
+      sourceUrl: "https://github.com/CodieRepo/POLARIS",
+      description:
+        "Great-Circle Haversine distance, forward azimuth initial bearing (0–360°), and 16-point cardinal compass directions computed locally from station master coordinates. Zero external map APIs or paid routing services.",
+      badge: "DERIVED_SPATIAL",
+      freshnessPolicy: "Static mathematical derivation evaluated at 0ms latency upon render.",
+    },
+    {
+      tier: "REFERENCE_GEOMETRY",
+      title: "Simplified Polar Basemap Geometry",
+      source: "POLARIS Cartographic Reference Geometry",
+      sourceUrl: "https://github.com/CodieRepo/POLARIS",
+      description:
+        "Simplified vector representation of the Antarctic continental shelf and coastlines (Queen Maud Land, Enderby Land, Ross/Ronne Ice Shelves) projected in Polar Stereographic (-90° to -60° S). Rendered for contextual orientation; not ingested from live authoritative GIS services.",
+      badge: "REFERENCE_GEOMETRY",
+      freshnessPolicy: "Static cartographic reference geometry.",
+    },
   ];
 
   return (

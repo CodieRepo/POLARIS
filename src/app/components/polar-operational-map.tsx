@@ -128,15 +128,19 @@ export default function PolarOperationalMap({
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Active Base (NCPOR)
+            Active Base (NCPOR AWS)
           </span>
           <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
             <span className="h-2 w-2 rounded-full bg-amber-400" />
-            DGT (Historical Reference)
+            DGT (Historical Entity)
           </span>
           <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
             <span className="h-2 w-2 rounded-full bg-indigo-400" />
-            Geodesic (Derived)
+            Geodesic Vector (DERIVED_SPATIAL)
+          </span>
+          <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
+            <span className="w-2.5 h-2 rounded bg-slate-700 border border-slate-600" />
+            Coastline (REFERENCE_GEOMETRY)
           </span>
           <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
             <span className="w-3 h-0.5 bg-cyan-400 border-b border-dashed" />
@@ -452,15 +456,16 @@ export default function PolarOperationalMap({
                 {distanceToOther && (
                   <div className="rounded bg-indigo-950/30 border border-indigo-900/50 p-2.5 text-[11px] mt-3">
                     <div className="flex items-center justify-between text-indigo-300 font-bold mb-1">
-                      <span>Derived Great-Circle Distance</span>
-                      <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-indigo-900/60 font-mono text-indigo-200">
-                        DERIVED
-                      </span>
+                      <span>Great-Circle Distance Calculation</span>
+                      <ProvenanceBadge tier="DERIVED_SPATIAL" size="xs" />
                     </div>
                     <div className="text-slate-300">
                       To <span className="font-mono font-bold text-white">{distanceToOther.targetCode}</span>:{" "}
                       <span className="font-mono font-bold text-cyan-400">{distanceToOther.distanceKm.toLocaleString()} km</span>{" "}
                       (Bearing: <span className="font-mono">{distanceToOther.bearing}</span>)
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      Method: Haversine Spherical Geodesic Formula
                     </div>
                   </div>
                 )}
@@ -494,8 +499,11 @@ export default function PolarOperationalMap({
 
               {bhrMtrSpatial && (
                 <div className="mt-4 pt-3 border-t border-slate-800/80 text-left text-xs bg-slate-900/40 p-2.5 rounded">
-                  <div className="text-[10px] uppercase font-bold text-indigo-400 mb-1">
-                    Inter-Base Baseline Metric (Derived)
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] uppercase font-bold text-indigo-400">
+                      Inter-Base Geodesic Baseline
+                    </span>
+                    <ProvenanceBadge tier="DERIVED_SPATIAL" size="xs" />
                   </div>
                   <div className="text-slate-300">
                     Bharati ↔ Maitri Distance:{" "}

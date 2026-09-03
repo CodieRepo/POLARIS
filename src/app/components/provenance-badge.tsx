@@ -32,9 +32,18 @@ export function ProvenanceBadge({
   } else if (type === "BASELINE" || tier === "OFFLINE_CLIMATIC_BASELINE") {
     label = "BASELINE";
     colorStyle = "bg-purple-500/10 text-purple-300 border-purple-500/30";
-  } else if (type === "DERIVED") {
+  } else if (type === "DERIVED" || tier === "DERIVED") {
     label = "DERIVED HEURISTIC";
     colorStyle = "bg-indigo-500/10 text-indigo-300 border-indigo-500/30";
+  } else if (type === "DERIVED_SPATIAL" || tier === "DERIVED_SPATIAL") {
+    label = "DERIVED SPATIAL";
+    colorStyle = "bg-indigo-500/10 text-indigo-300 border-indigo-500/30";
+  } else if (type === "REFERENCE_GEOMETRY" || tier === "REFERENCE_GEOMETRY" || tier === "SIMPLIFIED_BASEMAP") {
+    label = "REFERENCE GEOMETRY";
+    colorStyle = "bg-slate-700/30 text-slate-300 border-slate-600/40";
+  } else if (type === "HISTORICAL_REFERENCE" || tier === "HISTORICAL_REFERENCE") {
+    label = "HISTORICAL REFERENCE";
+    colorStyle = "bg-amber-500/10 text-amber-300 border-amber-500/30";
   }
 
   const textSizes = {
