@@ -19,6 +19,7 @@ export interface DerivedField<T> {
   value: T;
   derivationMethod: string;
   inputVariables: string[];
+  calculationTimestamp?: string;
 }
 
 export interface StationWeather {
@@ -47,6 +48,10 @@ export interface StationWeather {
   // Derived calculations (Deterministic local mathematical models)
   derivedCalculations: {
     apparentTemperatureC: DerivedField<number>; // Siple-Passel Wind Chill Formula
+    solarElevationDeg: DerivedField<number>;     // Spencer (1971) / NOAA Position
+    solarDeclinationDeg: DerivedField<number>;   // Spencer (1971) Equation
+    solarRegime: DerivedField<"POLAR_DAY" | "POLAR_NIGHT" | "CIVIL_TWILIGHT">;
+    fieldOperatingWindowStatus: DerivedField<"OPTIMAL" | "RESTRICTED" | "SUSPENDED">;
   };
 
   // Categorical Decision Support (POLARIS Operational Risk Heuristic)

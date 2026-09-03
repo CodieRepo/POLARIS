@@ -6,6 +6,7 @@ import type {
 } from "./types";
 import { NcporWeatherAdapter } from "./ncpor-adapter";
 import { OpenMeteoAdapter } from "./open-meteo-adapter";
+import { SolarEphemerisCalculator } from "./solar-ephemeris";
 
 interface StationMetadata {
   code: "BHR" | "MTR" | "HMD";
@@ -120,6 +121,7 @@ export class WeatherService {
     const meta = POLAR_STATIONS[code];
     const nowMs = Date.now();
     const nowIso = new Date(nowMs).toISOString();
+    const solar = SolarEphemerisCalculator.calculate(meta.lat, meta.lon, new Date(nowMs));
 
     // 0. Check valid in-memory cache
     const cached = WEATHER_CACHE.get(code);
@@ -245,6 +247,10 @@ export class WeatherService {
             derivationMethod: "Siple-Passel Wind Chill Formula (Antarctic Equation)",
             inputVariables: ["temperatureC", "windSpeedKmH"],
           },
+          solarElevationDeg: solar.solarElevationDeg,
+          solarDeclinationDeg: solar.solarDeclinationDeg,
+          solarRegime: solar.solarRegime,
+          fieldOperatingWindowStatus: solar.fieldOperatingWindowStatus,
         },
         operationalRisk: hazards,
         stationOverallStatus: {
@@ -375,6 +381,10 @@ export class WeatherService {
             derivationMethod: "Numerical Weather Model Output (Apparent Temperature)",
             inputVariables: ["temperature_2m", "wind_speed_10m", "relative_humidity_2m"],
           },
+          solarElevationDeg: solar.solarElevationDeg,
+          solarDeclinationDeg: solar.solarDeclinationDeg,
+          solarRegime: solar.solarRegime,
+          fieldOperatingWindowStatus: solar.fieldOperatingWindowStatus,
         },
         operationalRisk: hazards,
         stationOverallStatus: {
@@ -478,6 +488,10 @@ export class WeatherService {
           derivationMethod: "Siple-Passel Wind Chill Formula (Antarctic Equation)",
           inputVariables: ["temperatureC", "windSpeedKmH"],
         },
+        solarElevationDeg: solar.solarElevationDeg,
+        solarDeclinationDeg: solar.solarDeclinationDeg,
+        solarRegime: solar.solarRegime,
+        fieldOperatingWindowStatus: solar.fieldOperatingWindowStatus,
       },
       operationalRisk: hazards,
       stationOverallStatus: {
