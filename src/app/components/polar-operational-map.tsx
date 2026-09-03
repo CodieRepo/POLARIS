@@ -1,10 +1,39 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import proj4 from "proj4";
+import { register } from "ol/proj/proj4";
+import { get as getProjection } from "ol/proj";
+import Map from "ol/Map";
+import View from "ol/View";
+import Feature from "ol/Feature";
+import Point from "ol/geom/Point";
+import Polygon from "ol/geom/Polygon";
+import LineString from "ol/geom/LineString";
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+import { Style, Stroke, Fill, Text as TextStyle, Circle as CircleStyle } from "ol/style";
+import Graticule from "ol/layer/Graticule";
+import ScaleLine from "ol/control/ScaleLine";
+
 import { ProvenanceBadge } from "./provenance-badge";
 import { deriveSpatialMetrics, type GeodesicDistanceResult } from "@/core/spatial/geodesic";
+import { ANTARCTIC_COASTLINE_LON_LAT } from "@/core/spatial/antarctic-coastline";
 import type { StationWeather } from "@/core/weather/types";
+
+// Import OpenLayers default stylesheet for clean control rendering
+import "ol/ol.css";
+
+// ---------------------------------------------------------------------------
+// Register EPSG:3031 (WGS 84 / Antarctic Polar Stereographic)
+// True scale latitude: -71° S, Central meridian: 0°
+// ---------------------------------------------------------------------------
+proj4.defs(
+  "EPSG:3031",
+  "+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+);
+register(proj4);
 
 export interface PolarMapStation {
   readonly id: string;
@@ -30,42 +59,27 @@ interface PolarOperationalMapProps {
   readonly weatherTelemetry?: Record<string, StationWeather> | null;
 }
 
-/**
- * Converts Geodetic Coordinates (Lat, Lon) to 2D Polar Stereographic SVG Projection
- * Centered on South Pole (-90°).
- * Center: (300, 300), Radius: 240px covering from -90° (South Pole) to -60° (Antarctic Circle).
- */
-function projectAntarcticCoord(lat: number, lon: number): { x: number; y: number } {
-  const cx = 300;
-  const cy = 300;
-  const maxRadius = 240;
-
-  // Clamping latitude to valid Antarctic operational extent [-90°, -60°]
-  const clampedLat = Math.max(-90, Math.min(-60, lat));
-  const r = Math.max(15, Math.min(maxRadius, ((clampedLat - (-90)) / 30) * maxRadius));
-  const theta = (lon * Math.PI) / 180;
-
-  return {
-    x: cx + r * Math.cos(theta),
-    y: cy + r * Math.sin(theta),
-  };
-}
-
 export default function PolarOperationalMap({
   stations,
   expeditions,
   weatherTelemetry,
 }: PolarOperationalMapProps) {
-  const [selectedStation, setSelectedStation] = useState<PolarMapStation | null>(null);
-  const [showSimulatedRoute, setShowSimulatedRoute] = useState<boolean>(true);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const olMapInstance = useRef<Map | null>(null);
+  const corridorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
 
-  // Filter Antarctic vs Arctic stations
+  const [selectedStation, setSelectedStation] = useState<PolarMapStation | null>(null);
+  const [showSimulatedCorridor, setShowSimulatedCorridor] = useState<boolean>(false);
+  const [activeViewMode, setActiveViewMode] = useState<"ANTARCTICA" | "ARCTIC">("ANTARCTICA");
+
+  // Separate Antarctic vs Arctic stations
   const antarcticStations = stations.filter((s) => s.latitude < 0);
   const arcticStations = stations.filter((s) => s.latitude > 0);
 
-  // Compute reference geodesic metrics between Indian Antarctic stations (Bharati <-> Maitri)
+  // Reference geodesic baseline between Bharati and Maitri
   const bhrStation = antarcticStations.find((s) => s.code === "BHR");
   const mtrStation = antarcticStations.find((s) => s.code === "MTR");
+  const hmdStation = arcticStations.find((s) => s.code === "HMD");
 
   let bhrMtrSpatial: GeodesicDistanceResult | null = null;
   if (bhrStation && mtrStation) {
@@ -80,7 +94,7 @@ export default function PolarOperationalMap({
     ? weatherTelemetry[selectedStation.code]
     : null;
 
-  // Selected station distance to other station
+  // Selected station distance derivation
   let distanceToOther: { targetCode: string; distanceKm: number; bearing: string } | null = null;
   if (selectedStation && bhrStation && mtrStation) {
     if (selectedStation.code === "BHR") {
@@ -104,9 +118,221 @@ export default function PolarOperationalMap({
     }
   }
 
-  // Projection points for simulated route line
-  const bhrPos = bhrStation ? projectAntarcticCoord(bhrStation.latitude, bhrStation.longitude) : null;
-  const mtrPos = mtrStation ? projectAntarcticCoord(mtrStation.latitude, mtrStation.longitude) : null;
+  // -------------------------------------------------------------------------
+  // OpenLayers Map Initialization (Antarctic Polar Stereographic EPSG:3031)
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const epsg3031 = getProjection("EPSG:3031");
+    if (!epsg3031) return;
+
+    // 1. Continental Coastline Feature (Natural Earth Reference Geometry)
+    const coastlineEPSG3031 = ANTARCTIC_COASTLINE_LON_LAT.map(([lon, lat]) =>
+      proj4("EPSG:4326", "EPSG:3031", [lon, lat])
+    );
+    const coastlineFeature = new Feature({
+      geometry: new Polygon([coastlineEPSG3031]),
+    });
+    coastlineFeature.setStyle(
+      new Style({
+        fill: new Fill({
+          color: "rgba(15, 23, 42, 0.85)", // Dark operational landmass
+        }),
+        stroke: new Stroke({
+          color: "#38bdf8", // Clean cyan continental boundary
+          width: 1.5,
+        }),
+      })
+    );
+
+    // 2. Graticule Lat/Lon subtle grid
+    const graticuleLayer = new Graticule({
+      strokeStyle: new Stroke({
+        color: "rgba(51, 65, 85, 0.4)", // Very subtle slate lines
+        width: 0.8,
+        lineDash: [4, 4],
+      }),
+      showLabels: false,
+      wrapX: false,
+    });
+
+    // 3. Station Vector Features
+    const stationFeatures: Feature<Point>[] = antarcticStations.map((station) => {
+      const coords3031 = proj4("EPSG:4326", "EPSG:3031", [station.longitude, station.latitude]);
+      const feature = new Feature({
+        geometry: new Point(coords3031),
+        stationData: station,
+      });
+
+      const isDGT = station.code === "DGT";
+      const markerColor = isDGT ? "#f59e0b" : "#10b981"; // Amber for historical DGT, Emerald for Active
+
+      feature.setStyle(
+        new Style({
+          image: new CircleStyle({
+            radius: 6,
+            fill: new Fill({ color: markerColor }),
+            stroke: new Stroke({ color: "#020617", width: 2 }),
+          }),
+          text: new TextStyle({
+            text: `${station.code}${isDGT ? " [HISTORICAL]" : ""}`,
+            font: "bold 11px monospace",
+            fill: new Fill({ color: isDGT ? "#fbbf24" : "#ffffff" }),
+            backgroundFill: new Fill({ color: "rgba(2, 6, 23, 0.85)" }),
+            backgroundStroke: new Stroke({ color: isDGT ? "#d97706" : "#334155", width: 1 }),
+            padding: [2, 5, 2, 5],
+            offsetY: -16,
+          }),
+        })
+      );
+      return feature;
+    });
+
+    // 4. Simulated Mission Corridor Feature (Bharati <-> Maitri Great-Circle Segment)
+    let corridorFeatures: Feature<LineString>[] = [];
+    if (bhrStation && mtrStation) {
+      const corridorPoints: [number, number][] = [];
+      for (let i = 0; i <= 20; i++) {
+        const frac = i / 20;
+        const lon = bhrStation.longitude + frac * (mtrStation.longitude - bhrStation.longitude);
+        const lat = bhrStation.latitude + frac * (mtrStation.latitude - bhrStation.latitude);
+        corridorPoints.push(proj4("EPSG:4326", "EPSG:3031", [lon, lat]) as [number, number]);
+      }
+      const corridorFeature = new Feature({
+        geometry: new LineString(corridorPoints),
+      });
+      corridorFeature.setStyle(
+        new Style({
+          stroke: new Stroke({
+            color: "#06b6d4",
+            width: 2,
+            lineDash: [6, 6],
+          }),
+          text: new TextStyle({
+            text: "[SIMULATED SCENARIO] ISEA-44 Traverse Corridor",
+            font: "bold 10px monospace",
+            fill: new Fill({ color: "#38bdf8" }),
+            backgroundFill: new Fill({ color: "rgba(2, 6, 23, 0.9)" }),
+            backgroundStroke: new Stroke({ color: "#0891b2", width: 1 }),
+            padding: [2, 6, 2, 6],
+            placement: "line",
+          }),
+        })
+      );
+      corridorFeatures = [corridorFeature];
+    }
+
+    // Layer Assembly
+    const baseVectorSource = new VectorSource({
+      features: [coastlineFeature],
+    });
+    const baseLayer = new VectorLayer({
+      source: baseVectorSource,
+    });
+
+    const stationsSource = new VectorSource({
+      features: stationFeatures,
+    });
+    const stationsLayer = new VectorLayer({
+      source: stationsSource,
+      zIndex: 10,
+    });
+
+    const corridorSource = new VectorSource({
+      features: corridorFeatures,
+    });
+    const corridorLayer = new VectorLayer({
+      source: corridorSource,
+      visible: showSimulatedCorridor,
+      zIndex: 5,
+    });
+    corridorLayerRef.current = corridorLayer;
+
+    // Scale line control in km
+    const scaleLine = new ScaleLine({
+      units: "metric",
+      bar: true,
+      steps: 4,
+      text: true,
+      minWidth: 100,
+    });
+
+    // Map Creation
+    const map = new Map({
+      target: mapRef.current,
+      layers: [graticuleLayer, baseLayer, corridorLayer, stationsLayer],
+      controls: [scaleLine],
+      view: new View({
+        projection: "EPSG:3031",
+        center: [1200000, 1200000], // Balanced center between Bharati (~2.1M, 0.5M) and Maitri (~0.4M, 2.0M)
+        zoom: 3.2,
+        minZoom: 2,
+        maxZoom: 7,
+      }),
+    });
+
+    // Click handler for station selection
+    map.on("singleclick", (evt) => {
+      let clickedStation: PolarMapStation | null = null;
+      map.forEachFeatureAtPixel(evt.pixel, (feature) => {
+        const data = feature.get("stationData");
+        if (data) {
+          clickedStation = data;
+        }
+      });
+      if (clickedStation) {
+        setSelectedStation(clickedStation);
+      }
+    });
+
+    // Pointer cursor on hover over stations
+    map.on("pointermove", (evt) => {
+      if (evt.dragging) return;
+      const hit = map.hasFeatureAtPixel(evt.pixel, {
+        layerFilter: (l) => l === stationsLayer,
+      });
+      map.getTargetElement().style.cursor = hit ? "pointer" : "";
+    });
+
+    olMapInstance.current = map;
+
+    return () => {
+      map.setTarget(undefined);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [antarcticStations]);
+
+  // Handle Corridor Visibility Toggle
+  useEffect(() => {
+    if (corridorLayerRef.current) {
+      corridorLayerRef.current.setVisible(showSimulatedCorridor);
+    }
+  }, [showSimulatedCorridor]);
+
+  // Reset View Handler
+  const handleResetView = () => {
+    if (olMapInstance.current) {
+      olMapInstance.current.getView().animate({
+        center: [1200000, 1200000],
+        zoom: 3.2,
+        duration: 400,
+      });
+    }
+  };
+
+  // Zoom to specific station
+  const handleFocusStation = (st: PolarMapStation) => {
+    setSelectedStation(st);
+    if (st.latitude < 0 && olMapInstance.current) {
+      const coords3031 = proj4("EPSG:4326", "EPSG:3031", [st.longitude, st.latitude]);
+      olMapInstance.current.getView().animate({
+        center: coords3031,
+        zoom: 4.8,
+        duration: 400,
+      });
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 shadow-xl relative overflow-hidden">
@@ -114,242 +340,192 @@ export default function PolarOperationalMap({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+            <span className="h-2 w-2 rounded-full bg-cyan-400" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-white">
               Tactical Polar Spatial Command &amp; Geodesic Telemetry
             </h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+              EPSG:3031 POLAR STEREOGRAPHIC
+            </span>
           </div>
           <p className="text-xs text-slate-400">
-            South Polar Stereographic Basemap (-90° to -60° S, WGS84) with Arctic Svalbard Inset
+            OpenLayers GIS Engine • Antarctic Polar Stereographic projection (WGS84 true scale at -71° S)
           </p>
         </div>
 
         {/* Provenance Legend Bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 rounded bg-slate-950 border border-slate-800 px-2.5 py-1 text-[11px] text-slate-300">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             Active Base (NCPOR AWS)
           </span>
-          <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
+          <span className="inline-flex items-center gap-1.5 rounded bg-slate-950 border border-slate-800 px-2.5 py-1 text-[11px] text-slate-300">
             <span className="h-2 w-2 rounded-full bg-amber-400" />
-            DGT (Historical Entity)
+            DGT (Historical Reference)
           </span>
-          <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
+          <span className="inline-flex items-center gap-1.5 rounded bg-slate-950 border border-slate-800 px-2.5 py-1 text-[11px] text-slate-300">
             <span className="h-2 w-2 rounded-full bg-indigo-400" />
-            Geodesic Vector (DERIVED_SPATIAL)
+            Geodesic (DERIVED_SPATIAL)
           </span>
-          <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
-            <span className="w-2.5 h-2 rounded bg-slate-700 border border-slate-600" />
+          <span className="inline-flex items-center gap-1.5 rounded bg-slate-950 border border-slate-800 px-2.5 py-1 text-[11px] text-slate-300">
+            <span className="w-2.5 h-2 rounded bg-slate-800 border border-cyan-500/50" />
             Coastline (REFERENCE_GEOMETRY)
-          </span>
-          <span className="inline-flex items-center gap-1 rounded bg-slate-950 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
-            <span className="w-3 h-0.5 bg-cyan-400 border-b border-dashed" />
-            Simulated Corridor
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-        {/* Main Polar Projection SVG Canvas (7 cols) */}
-        <div className="lg:col-span-7 flex justify-center relative">
-          <div className="relative w-full max-w-[440px] aspect-square">
-            <svg
-              viewBox="0 0 600 600"
-              className="w-full h-full rounded-2xl bg-slate-950 border border-slate-800/90 shadow-inner"
-            >
-              <defs>
-                <radialGradient id="radarGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#0891b2" stopOpacity="0.18" />
-                  <stop offset="65%" stopColor="#0284c7" stopOpacity="0.06" />
-                  <stop offset="100%" stopColor="#020617" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Continental Landmass Fill Gradient */}
-                <radialGradient id="iceSheet" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#1e293b" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#0f172a" stopOpacity="0.8" />
-                </radialGradient>
-              </defs>
-
-              {/* Radar Background Glow */}
-              <circle cx="300" cy="300" r="270" fill="url(#radarGlow)" />
-
-              {/* Generalized Antarctic Continental Coastline Reference Geometry */}
-              {/* Queen Maud Land, Enderby Land, Amery Ice Shelf, Ross Sea, Ronne Shelf */}
-              <path
-                d="M 270 120 C 340 100 420 140 450 190 C 470 230 460 300 430 360 C 400 410 330 460 270 450 C 210 440 160 380 150 320 C 140 260 170 190 220 140 Z"
-                fill="url(#iceSheet)"
-                stroke="#334155"
-                strokeWidth="1.5"
-                strokeDasharray="2,2"
-                opacity="0.8"
-              />
-              <text x="320" y="380" fill="#475569" fontSize="10" fontFamily="monospace" letterSpacing="2">
-                ANTARCTIC CONTINENT
-              </text>
-
-              {/* Polar Latitude Concentric Grids (-80°, -70°, -60° S) */}
-              <circle cx="300" cy="300" r="80" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" fill="none" />
-              <circle cx="300" cy="300" r="160" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" fill="none" />
-              <circle cx="300" cy="300" r="240" stroke="#475569" strokeWidth="1.5" fill="none" />
-
-              {/* Meridian Crosshairs */}
-              <line x1="300" y1="30" x2="300" y2="570" stroke="#1e293b" strokeWidth="1" />
-              <line x1="30" y1="300" x2="570" y2="300" stroke="#1e293b" strokeWidth="1" />
-
-              {/* Latitude Labels */}
-              <text x="305" y="215" fill="#64748b" fontSize="9" fontFamily="monospace">-80° S</text>
-              <text x="305" y="135" fill="#64748b" fontSize="9" fontFamily="monospace">-70° S</text>
-              <text x="305" y="55" fill="#64748b" fontSize="9" fontFamily="monospace">-60° S (Antarctic Circle)</text>
-
-              {/* South Pole Center Marker (-90° S) */}
-              <circle cx="300" cy="300" r="4" fill="#06b6d4" />
-              <text x="310" y="304" fill="#38bdf8" fontSize="10" fontWeight="bold" fontFamily="monospace">
-                SOUTH POLE (-90° S)
-              </text>
-
-              {/* Simulated Traverse Route Corridor with Explicit SIMULATED SCENARIO Label */}
-              {showSimulatedRoute && bhrPos && mtrPos && (
-                <g>
-                  <path
-                    d={`M ${bhrPos.x} ${bhrPos.y} Q 310 180 ${mtrPos.x} ${mtrPos.y}`}
-                    stroke="#06b6d4"
-                    strokeWidth="2"
-                    strokeDasharray="6,4"
-                    fill="none"
-                    opacity="0.75"
-                  />
-                  {/* Explicit SIMULATED SCENARIO Banner on Route */}
-                  <rect
-                    x="240"
-                    y="160"
-                    width="125"
-                    height="18"
-                    rx="3"
-                    fill="#020617"
-                    stroke="#0891b2"
-                    strokeWidth="1"
-                    opacity="0.9"
-                  />
-                  <text
-                    x="245"
-                    y="172"
-                    fill="#38bdf8"
-                    fontSize="8.5"
-                    fontWeight="bold"
-                    fontFamily="monospace"
-                  >
-                    [SIMULATED SCENARIO]
-                  </text>
-                  <text
-                    x="245"
-                    y="190"
-                    fill="#64748b"
-                    fontSize="8"
-                    fontFamily="monospace"
-                  >
-                    ISEA-44 Traverse Corridor
-                  </text>
-                </g>
-              )}
-
-              {/* Antarctic Station Nodes */}
-              {antarcticStations.map((station) => {
-                const pos = projectAntarcticCoord(station.latitude, station.longitude);
-                const isSelected = selectedStation?.id === station.id;
-                const isDGT = station.code === "DGT";
-
-                return (
-                  <g
-                    key={station.id}
-                    className="cursor-pointer transition-transform hover:scale-110"
-                    onClick={() => setSelectedStation(station)}
-                  >
-                    {/* Active pulse ring */}
-                    {station.status === "ACTIVE" && (
-                      <circle
-                        cx={pos.x}
-                        cy={pos.y}
-                        r="14"
-                        fill="#10b981"
-                        opacity="0.25"
-                        className="animate-ping"
-                      />
-                    )}
-
-                    {/* Node Dot: Green for Active, Amber for DGT historical */}
-                    <circle
-                      cx={pos.x}
-                      cy={pos.y}
-                      r={isSelected ? "9" : "7"}
-                      fill={isDGT ? "#f59e0b" : "#10b981"}
-                      stroke="#020617"
-                      strokeWidth="2"
-                    />
-
-                    {/* Station Tag Box */}
-                    <rect
-                      x={pos.x + 10}
-                      y={pos.y - 12}
-                      width={isDGT ? "48" : "42"}
-                      height="18"
-                      rx="4"
-                      fill="#020617"
-                      stroke={isSelected ? "#38bdf8" : isDGT ? "#d97706" : "#334155"}
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={pos.x + 15}
-                      y={pos.y + 1}
-                      fill={isDGT ? "#fbbf24" : "#f8fafc"}
-                      fontSize="9.5"
-                      fontWeight="bold"
-                      fontFamily="monospace"
-                    >
-                      {station.code}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-
-            {/* Arctic Inset Window (Himadri at Ny-Ålesund, Svalbard +78.92° N) */}
-            {arcticStations.length > 0 && (
-              <div className="absolute top-2 right-2 rounded-xl border border-slate-700/80 bg-slate-950/95 p-3 backdrop-blur-md shadow-2xl text-left max-w-[175px]">
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <div className="text-[9.5px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
-                    <span>🌐</span> Arctic Inset
-                  </div>
-                  <span className="text-[9px] font-mono text-emerald-400 font-bold bg-emerald-950 px-1 py-0.2 rounded border border-emerald-800">
-                    SVALBARD
-                  </span>
-                </div>
-                {arcticStations.map((st) => (
-                  <div
-                    key={st.id}
-                    onClick={() => setSelectedStation(st)}
-                    className="mt-1 cursor-pointer hover:bg-slate-900 rounded p-1.5 transition-colors border border-slate-800/80"
-                  >
-                    <div className="font-mono text-xs font-bold text-white flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        {st.code} ({st.name})
-                      </span>
-                    </div>
-                    <div className="text-[9.5px] text-slate-400 font-mono mt-0.5">
-                      {st.latitude.toFixed(2)}° N, {st.longitude.toFixed(2)}° E
-                    </div>
-                    <div className="text-[9px] text-cyan-400/90 font-medium mt-0.5">
-                      Click to inspect telemetry ↗
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      {/* Map Interactive Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-xs">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveViewMode("ANTARCTICA")}
+            className={`px-3 py-1 rounded font-semibold transition-colors ${
+              activeViewMode === "ANTARCTICA"
+                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            ❄ Antarctic View (EPSG:3031)
+          </button>
+          <button
+            onClick={() => {
+              setActiveViewMode("ARCTIC");
+              if (hmdStation) setSelectedStation(hmdStation);
+            }}
+            className={`px-3 py-1 rounded font-semibold transition-colors ${
+              activeViewMode === "ARCTIC"
+                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            🌐 Arctic Inset (Ny-Ålesund, Svalbard)
+          </button>
         </div>
 
-        {/* Tactical Info Panel & Station Inspection (5 cols) */}
+        <div className="flex items-center gap-2">
+          {activeViewMode === "ANTARCTICA" && (
+            <>
+              <button
+                onClick={() => setShowSimulatedCorridor(!showSimulatedCorridor)}
+                className={`px-3 py-1 rounded font-mono text-xs font-semibold border transition-colors ${
+                  showSimulatedCorridor
+                    ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/40"
+                    : "bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200"
+                }`}
+              >
+                {showSimulatedCorridor ? "Corridor: [SIMULATED ACTIVE]" : "Corridor: OFF"}
+              </button>
+              <button
+                onClick={handleResetView}
+                className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-semibold"
+              >
+                Reset Bounds
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Main OpenLayers Map / Arctic View Container (7 cols) */}
+        <div className="lg:col-span-7 relative">
+          {activeViewMode === "ANTARCTICA" ? (
+            <div className="relative w-full h-[480px] rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-inner">
+              <div ref={mapRef} className="w-full h-full" />
+
+              {/* Geographical North Indicator */}
+              <div className="absolute top-3 left-3 bg-slate-950/90 border border-slate-800 px-2.5 py-1 rounded-lg text-[10px] font-mono text-slate-400 shadow-md pointer-events-none">
+                <span className="text-cyan-400 font-bold block">SOUTH POLE CENTER</span>
+                <span>North: Radial outward</span>
+              </div>
+
+              {/* Station Quick-Selection Floating Chips */}
+              <div className="absolute bottom-3 right-3 flex gap-1.5 bg-slate-950/90 p-1.5 rounded-lg border border-slate-800 shadow-md">
+                {antarcticStations.map((st) => (
+                  <button
+                    key={st.code}
+                    onClick={() => handleFocusStation(st)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold transition-colors ${
+                      selectedStation?.code === st.code
+                        ? "bg-cyan-500 text-slate-950"
+                        : "bg-slate-900 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    {st.code}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Arctic Svalbard Inset View */
+            <div className="w-full h-[480px] rounded-2xl bg-slate-950 border border-slate-800 p-6 flex flex-col justify-between shadow-inner">
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                  <div>
+                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-bold block">
+                      High Arctic Sector • 78°55&apos; N
+                    </span>
+                    <h3 className="text-lg font-bold text-white">
+                      Himadri Research Outpost (Ny-Ålesund, Svalbard)
+                    </h3>
+                  </div>
+                  <span className="rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-mono font-bold">
+                    OPERATIONAL (HMD)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <span className="text-slate-400 block font-semibold mb-1">Geodetic Location</span>
+                    <div className="font-mono text-slate-200 text-sm">
+                      78.9233° N, 11.9289° E
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      Kings Bay (Kongsfjorden), Spitsbergen Island, Svalbard Archipelago
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <span className="text-slate-400 block font-semibold mb-1">Authoritative Authority</span>
+                    <div className="text-slate-200 font-medium">
+                      National Centre for Polar &amp; Ocean Research (NCPOR)
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      Ministry of Earth Sciences, Govt. of India
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800 text-xs leading-relaxed text-slate-300">
+                  <span className="font-bold text-cyan-400 block mb-1">Polar Geodetic Context:</span>
+                  Himadri operates at 78°55&apos; N in the international scientific research village of Ny-Ålesund.
+                  Because Svalbard lies in the High Arctic, it is physically antipodal to Indian Antarctic operations.
+                  Great-circle distance from Maitri Station is{" "}
+                  <strong className="text-white font-mono">16,645 km</strong> (calculated via spherical geodesic formula).
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+                <button
+                  onClick={() => setActiveViewMode("ANTARCTICA")}
+                  className="text-xs text-cyan-400 hover:underline font-semibold"
+                >
+                  ← Return to Antarctic Polar Stereographic Map
+                </button>
+                <button
+                  onClick={() => {
+                    if (hmdStation) setSelectedStation(hmdStation);
+                  }}
+                  className="rounded bg-cyan-500 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-cyan-400"
+                >
+                  Inspect HMD Telemetry →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tactical Info Panel & Station Details (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           {selectedStation ? (
             <div className="rounded-xl border border-cyan-500/40 bg-slate-950 p-5 shadow-2xl">
@@ -397,7 +573,7 @@ export default function PolarOperationalMap({
                 </div>
 
                 {selectedStation.code === "DGT" ? (
-                  <div className="rounded bg-amber-950/40 border border-amber-800/60 p-2.5 text-[11px] text-amber-200 mt-2">
+                  <div className="rounded bg-amber-950/40 border border-amber-800/60 p-3 text-[11px] text-amber-200 mt-2">
                     <span className="font-bold block mb-0.5">ℹ Historical Station Entity</span>
                     Dakshin Gangotri is preserved as a historical reference entity. No active logistics, fuel storage, or live weather telemetry ingestion is performed.
                   </div>
@@ -447,6 +623,12 @@ export default function PolarOperationalMap({
                             </span>
                           </div>
                         </div>
+                        <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
+                          <span className="text-slate-500">Source:</span>
+                          <span className="text-slate-300 font-medium">
+                            {stationWeather.stationOverallStatus?.primarySource}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </>
@@ -493,8 +675,7 @@ export default function PolarOperationalMap({
               <p className="mt-1 text-xs text-slate-400 leading-relaxed">
                 Click any polar station node (<span className="text-emerald-400 font-mono">BHR</span>,{" "}
                 <span className="text-emerald-400 font-mono">MTR</span>,{" "}
-                <span className="text-cyan-400 font-mono">HMD</span>, or historical{" "}
-                <span className="text-amber-400 font-mono">DGT</span>) on the stereographic projection to inspect WGS84 coordinates, live published telemetry, and derived great-circle distances.
+                <span className="text-amber-400 font-mono">DGT</span>) directly on the OpenLayers stereographic map or switch to the Arctic Outpost tab to inspect geodetic coordinates, live telemetry snapshots, and derived great-circle baseline vectors.
               </p>
 
               {bhrMtrSpatial && (
@@ -526,10 +707,10 @@ export default function PolarOperationalMap({
                 Expedition Mission Corridors
               </h4>
               <button
-                onClick={() => setShowSimulatedRoute(!showSimulatedRoute)}
+                onClick={() => setShowSimulatedCorridor(!showSimulatedCorridor)}
                 className="text-[10px] font-mono text-cyan-400 hover:underline"
               >
-                {showSimulatedRoute ? "Hide Corridor" : "Show Corridor"}
+                {showSimulatedCorridor ? "Hide Simulated Corridor" : "Show Simulated Corridor"}
               </button>
             </div>
 
@@ -547,7 +728,7 @@ export default function PolarOperationalMap({
                     <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
                       <span className="text-amber-400/90 font-mono">[SIMULATED SCENARIO]</span>
                       <span>•</span>
-                      <span>Traverse corridor active</span>
+                      <span>Traverse corridor {showSimulatedCorridor ? "visible on map" : "hidden"}</span>
                     </div>
                   </div>
                   <Link
