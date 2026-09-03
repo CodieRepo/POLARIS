@@ -1,7 +1,22 @@
 import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { ExpeditionRepository } from "@/modules/expedition/expedition-repository";
-import { GetExpeditionRosterUseCase } from "@/modules/expedition/use-cases/get-expedition-roster";
 import { NextRequest, NextResponse } from "next/server";
+
+interface RosterMemberResult {
+  id: string;
+  expedition_id: string;
+  person_id: string;
+  assignment_role: string;
+  joined_at: string;
+  left_at: string | null;
+  person: {
+    id: string;
+    display_name: string;
+    role_title: string | null;
+    organization: string | null;
+    active: boolean;
+  } | null;
+}
 
 interface AssignedAssetResult {
   id: string;
@@ -51,22 +66,26 @@ export async function GET(
     }
 
     // 2. Fetch expedition roster (members + personnel profiles)
-    const rosterUseCase = new GetExpeditionRosterUseCase(
-      expeditionRepo,
-      supabase,
-      async () => ({
-        success: true,
-        data: {
-          userId: "system-reader",
-          email: "operations@polaris.gov.in",
-          role: "SUPER_ADMIN",
-          active: true,
-          personId: null,
-        },
-      })
-    );
-    const rosterResult = await rosterUseCase.execute(expedition.id);
-    const roster = rosterResult.success ? rosterResult.data : [];
+    let roster: RosterMemberResult[] = [];
+    const { data: memberRows } = await supabase
+      .from("expedition_members")
+      .select("id, expedition_id, person_id, assignment_role, joined_at, left_at")
+      .eq("expedition_id", expedition.id)
+      .order("joined_at", { ascending: true });
+
+    if (memberRows && memberRows.length > 0) {
+      const personIds = Array.from(new Set(memberRows.map((m) => m.person_id)));
+      const { data: personRows } = await supabase
+        .from("persons")
+        .select("id, display_name, role_title, organization, active")
+        .in("id", personIds);
+
+      const personMap = new Map((personRows || []).map((p) => [p.id, p]));
+      roster = memberRows.map((m) => ({
+        ...m,
+        person: personMap.get(m.person_id) || null,
+      }));
+    }
 
     // 3. Fetch all active asset assignments for this expedition
     const { data: assignments, error: assignErr } = await supabase
