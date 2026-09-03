@@ -1,10 +1,12 @@
 import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { calculateOperationalReadiness } from "@/core/readiness/operational-readiness";
+import { WeatherService } from "@/core/weather/weather-service";
 import { NextResponse } from "next/server";
 
 /**
  * GET /api/dashboard
- * Aggregates live operational metrics across stations, expeditions, assets, and maintenance.
+ * Aggregates live operational metrics across stations, expeditions, assets, maintenance,
+ * and live polar meteorological telemetry for the Operational Readiness Heuristic.
  * Suitable for public/authenticated high-level overview.
  */
 export async function GET() {
@@ -17,12 +19,14 @@ export async function GET() {
       assetsRes,
       maintenanceRes,
       assignmentsRes,
+      weatherTelemetry,
     ] = await Promise.all([
       supabase.from("stations").select("id, code, name, status, capacity, region"),
       supabase.from("expeditions").select("id, code, name, status, data_classification"),
       supabase.from("assets").select("id, asset_code, name, category, status, condition, criticality, station_id, data_classification"),
       supabase.from("maintenance_records").select("id, asset_id, status, maintenance_type, scheduled_at, started_at"),
       supabase.from("asset_assignments").select("id, asset_id, station_id, expedition_id, assignment_type, assigned_at, released_at").is("released_at", null),
+      WeatherService.getAllStationWeather().catch(() => null),
     ]);
 
     const stations = stationsRes.data ?? [];
@@ -58,7 +62,7 @@ export async function GET() {
       ).length,
     };
 
-    const readiness = calculateOperationalReadiness(assets, maintenance, stations);
+    const readiness = calculateOperationalReadiness(assets, maintenance, stations, weatherTelemetry);
 
     return NextResponse.json(
       {
