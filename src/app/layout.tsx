@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { PwaProvider } from "./components/pwa-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
   title: "POLARIS",
   description:
     "Polar Logistics, Operations, Resource & Asset Intelligence System",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
@@ -28,7 +31,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <PwaProvider>{children}</PwaProvider>
       </body>
     </html>
   );

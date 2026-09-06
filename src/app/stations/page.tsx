@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { PolarisHeader } from "../components/polaris-header";
 import { StatusBadge } from "../components/status-badge";
+import { HardwareTelemetryWidget } from "../components/hardware-telemetry-widget";
 import { createServerClient } from "@/infrastructure/db/supabase-server";
 import type { StationRow } from "@/core/station/station-repository";
 
@@ -76,6 +77,10 @@ export default async function ResearchStationsPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-10">
+          <HardwareTelemetryWidget />
         </div>
       </main>
     </div>

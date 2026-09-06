@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link";
 
+import { OfflineStatusBadge } from "./offline-status-badge";
+
 interface HeaderProps {
   currentPath?: string;
 }
@@ -52,7 +54,8 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <OfflineStatusBadge />
           <Link
             href="/login"
             className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:border-cyan-500/40 transition-colors"

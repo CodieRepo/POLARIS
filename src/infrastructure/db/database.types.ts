@@ -485,6 +485,202 @@ export type Database = {
           },
         ]
       }
+      gateway_credentials: {
+        Row: {
+          created_at: string
+          gateway_id: string
+          id: string
+          is_active: boolean
+          key_hash: string
+          last_seen_at: string | null
+          name: string
+          revoked_at: string | null
+          station_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gateway_id: string
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          last_seen_at?: string | null
+          name: string
+          revoked_at?: string | null
+          station_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gateway_id?: string
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          last_seen_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          station_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_credentials_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hardware_devices: {
+        Row: {
+          created_at: string
+          description: string | null
+          device_code: string
+          gateway_id: string
+          id: string
+          is_active: boolean
+          name: string
+          polling_interval_sec: number
+          protocol: Database["public"]["Enums"]["hardware_protocol"]
+          station_id: string
+          target_asset_id: string | null
+          target_tank_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          device_code: string
+          gateway_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          polling_interval_sec?: number
+          protocol?: Database["public"]["Enums"]["hardware_protocol"]
+          station_id: string
+          target_asset_id?: string | null
+          target_tank_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          device_code?: string
+          gateway_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          polling_interval_sec?: number
+          protocol?: Database["public"]["Enums"]["hardware_protocol"]
+          station_id?: string
+          target_asset_id?: string | null
+          target_tank_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hardware_devices_gateway_id_fkey"
+            columns: ["gateway_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_credentials"
+            referencedColumns: ["gateway_id"]
+          },
+          {
+            foreignKeyName: "hardware_devices_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hardware_devices_target_asset_id_fkey"
+            columns: ["target_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hardware_devices_target_tank_id_fkey"
+            columns: ["target_tank_id"]
+            isOneToOne: false
+            referencedRelation: "station_fuel_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hardware_telemetry_history: {
+        Row: {
+          boot_session_id: string
+          classification: Database["public"]["Enums"]["telemetry_classification"]
+          created_at: string
+          device_id: string
+          event_id: string
+          gateway_id: string
+          id: string
+          metric: string
+          observed_at: string
+          quality: Database["public"]["Enums"]["telemetry_quality"]
+          raw_payload: Json | null
+          received_at: string
+          sequence_number: number
+          source: Database["public"]["Enums"]["telemetry_source"]
+          unit: string
+          value: number
+        }
+        Insert: {
+          boot_session_id?: string
+          classification?: Database["public"]["Enums"]["telemetry_classification"]
+          created_at?: string
+          device_id: string
+          event_id: string
+          gateway_id: string
+          id?: string
+          metric: string
+          observed_at: string
+          quality?: Database["public"]["Enums"]["telemetry_quality"]
+          raw_payload?: Json | null
+          received_at?: string
+          sequence_number: number
+          source?: Database["public"]["Enums"]["telemetry_source"]
+          unit: string
+          value: number
+        }
+        Update: {
+          boot_session_id?: string
+          classification?: Database["public"]["Enums"]["telemetry_classification"]
+          created_at?: string
+          device_id?: string
+          event_id?: string
+          gateway_id?: string
+          id?: string
+          metric?: string
+          observed_at?: string
+          quality?: Database["public"]["Enums"]["telemetry_quality"]
+          raw_payload?: Json | null
+          received_at?: string
+          sequence_number?: number
+          source?: Database["public"]["Enums"]["telemetry_source"]
+          unit?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hardware_telemetry_history_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "hardware_devices"
+            referencedColumns: ["device_code"]
+          },
+          {
+            foreignKeyName: "hardware_telemetry_history_gateway_id_fkey"
+            columns: ["gateway_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_credentials"
+            referencedColumns: ["gateway_id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           active: boolean
@@ -650,6 +846,143 @@ export type Database = {
           },
         ]
       }
+      notification_deliveries: {
+        Row: {
+          alert_id: string | null
+          channel: Database["public"]["Enums"]["notification_channel"]
+          delivered_at: string
+          delivery_status: Database["public"]["Enums"]["delivery_status"]
+          external_reference_id: string | null
+          failure_reason: string | null
+          id: string
+          outbox_id: string
+          recipient: string
+        }
+        Insert: {
+          alert_id?: string | null
+          channel: Database["public"]["Enums"]["notification_channel"]
+          delivered_at?: string
+          delivery_status: Database["public"]["Enums"]["delivery_status"]
+          external_reference_id?: string | null
+          failure_reason?: string | null
+          id?: string
+          outbox_id: string
+          recipient: string
+        }
+        Update: {
+          alert_id?: string | null
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          delivered_at?: string
+          delivery_status?: Database["public"]["Enums"]["delivery_status"]
+          external_reference_id?: string | null
+          failure_reason?: string | null
+          id?: string
+          outbox_id?: string
+          recipient?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "operational_alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_deliveries_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "notification_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_outbox: {
+        Row: {
+          alert_id: string | null
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          id: string
+          last_error: string | null
+          max_retries: number
+          next_retry_at: string
+          payload: Json
+          recipient: string
+          retry_count: number
+          status: Database["public"]["Enums"]["outbox_status"]
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          alert_id?: string | null
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_retries?: number
+          next_retry_at?: string
+          payload: Json
+          recipient: string
+          retry_count?: number
+          status?: Database["public"]["Enums"]["outbox_status"]
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alert_id?: string | null
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_retries?: number
+          next_retry_at?: string
+          payload?: Json
+          recipient?: string
+          retry_count?: number
+          status?: Database["public"]["Enums"]["outbox_status"]
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "operational_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offline_sync_idempotency: {
+        Row: {
+          action_type: string
+          created_at: string
+          idempotency_key: string
+          request_hash: string
+          response_payload: Json
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          idempotency_key: string
+          request_hash: string
+          response_payload: Json
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          idempotency_key?: string
+          request_hash?: string
+          response_payload?: Json
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       operational_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -759,6 +1092,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh: string
+          station_id: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          station_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          station_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       safety_incidents: {
         Row: {
@@ -1075,6 +1455,11 @@ export type Database = {
         | "EXTERNAL_REAL"
         | "SIMULATED"
         | "DERIVED"
+      delivery_status:
+        | "SUCCESS"
+        | "PERMANENT_FAILURE"
+        | "RATE_LIMITED"
+        | "TEST_MODE_SIMULATED"
       expedition_status:
         | "DRAFT"
         | "PLANNED"
@@ -1083,6 +1468,13 @@ export type Database = {
         | "CANCELLED"
         | "ARCHIVED"
       fuel_type: "ARCTIC_HSD" | "JET_A1" | "LUBE_OIL" | "MOGAS"
+      hardware_protocol:
+        | "MODBUS_RTU"
+        | "MODBUS_TCP"
+        | "MQTT"
+        | "SNMP"
+        | "NMEA"
+        | "VIRTUAL"
       incident_type:
         | "COLD_INJURY"
         | "EQUIPMENT_FAILURE"
@@ -1111,12 +1503,17 @@ export type Database = {
         | "IN_PROGRESS"
         | "COMPLETED"
         | "CANCELLED"
+      notification_channel: "TELEGRAM" | "EMAIL" | "WEB_PUSH" | "MOCK"
+      outbox_status: "QUEUED" | "SENDING" | "SENT" | "FAILED" | "CANCELLED"
       outdoor_clearance_status:
         | "GREEN_NORMAL"
         | "YELLOW_RESTRICTED"
         | "RED_LOCKDOWN"
       station_status: "ACTIVE" | "INACTIVE" | "HISTORICAL"
       tank_type: "MAIN_BULK" | "DAY_TANK" | "RESERVE_CACHE" | "MOBILE_BOWSER"
+      telemetry_classification: "PHYSICAL_TELEMETRY" | "SIMULATED_TELEMETRY"
+      telemetry_quality: "GOOD" | "SUSPECT" | "BAD" | "SIMULATED"
+      telemetry_source: "MODBUS" | "MQTT" | "SNMP" | "NMEA" | "VIRTUAL"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1278,6 +1675,12 @@ export const Constants = {
         "SIMULATED",
         "DERIVED",
       ],
+      delivery_status: [
+        "SUCCESS",
+        "PERMANENT_FAILURE",
+        "RATE_LIMITED",
+        "TEST_MODE_SIMULATED",
+      ],
       expedition_status: [
         "DRAFT",
         "PLANNED",
@@ -1287,6 +1690,14 @@ export const Constants = {
         "ARCHIVED",
       ],
       fuel_type: ["ARCTIC_HSD", "JET_A1", "LUBE_OIL", "MOGAS"],
+      hardware_protocol: [
+        "MODBUS_RTU",
+        "MODBUS_TCP",
+        "MQTT",
+        "SNMP",
+        "NMEA",
+        "VIRTUAL",
+      ],
       incident_type: [
         "COLD_INJURY",
         "EQUIPMENT_FAILURE",
@@ -1319,6 +1730,8 @@ export const Constants = {
         "COMPLETED",
         "CANCELLED",
       ],
+      notification_channel: ["TELEGRAM", "EMAIL", "WEB_PUSH", "MOCK"],
+      outbox_status: ["QUEUED", "SENDING", "SENT", "FAILED", "CANCELLED"],
       outdoor_clearance_status: [
         "GREEN_NORMAL",
         "YELLOW_RESTRICTED",
@@ -1326,6 +1739,9 @@ export const Constants = {
       ],
       station_status: ["ACTIVE", "INACTIVE", "HISTORICAL"],
       tank_type: ["MAIN_BULK", "DAY_TANK", "RESERVE_CACHE", "MOBILE_BOWSER"],
+      telemetry_classification: ["PHYSICAL_TELEMETRY", "SIMULATED_TELEMETRY"],
+      telemetry_quality: ["GOOD", "SUSPECT", "BAD", "SIMULATED"],
+      telemetry_source: ["MODBUS", "MQTT", "SNMP", "NMEA", "VIRTUAL"],
     },
   },
 } as const

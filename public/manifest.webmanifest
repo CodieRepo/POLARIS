@@ -1,0 +1,19 @@
+{
+  "name": "POLARIS Polar Operations Platform",
+  "short_name": "POLARIS",
+  "description": "National Polar Operations & Research Logistics Decision Support Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/globe.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "government"]
+}
