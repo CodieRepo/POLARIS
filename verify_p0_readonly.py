@@ -19,8 +19,13 @@ print(f"   * Readiness Score: {readiness.get('score')} / 100")
 print(f"   * Status: {readiness.get('status')}")
 print(f"   * Maintenance Category Score: {readiness.get('categoryScores', {}).get('maintenanceHealth')} / 20")
 assert d_status == 200, "Dashboard must return 200"
-assert readiness.get("score") == 92, f"Expected 92, got {readiness.get('score')}"
+assert readiness.get("categoryScores", {}).get("assetHealth") == 35, "Expected Asset Health 35/35"
+assert readiness.get("categoryScores", {}).get("powerRedundancy") == 25, "Expected Power Redundancy 25/25"
 assert readiness.get("categoryScores", {}).get("maintenanceHealth") == 14, "Expected Maintenance 14/20"
+# Environmental risk dynamically reflects live Antarctic winds: 18 when wind < 38 km/h (score 92), 15 when wind >= 38 km/h (score 89)
+expected_score = 35 + 25 + 14 + readiness.get("categoryScores", {}).get("environmentalRisk", 0)
+assert readiness.get("score") == expected_score, f"Expected deterministic total {expected_score}, got {readiness.get('score')}"
+assert readiness.get("score") in (89, 92), f"Expected 89 or 92 under legitimate baseline, got {readiness.get('score')}"
 
 # 2. Stations API
 s_data, s_status = fetch_json("/api/stations")
