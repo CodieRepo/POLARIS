@@ -434,7 +434,7 @@ async function runRuntimeVerification() {
   console.log(`  [INFO] Vercel Crons configured: ${hasVercelCron} (${cronSchedule} -> ${cronPath})`);
   assert(
     hasVercelJson && hasVercelCron && cronPath === '/api/notifications/outbox',
-    'Confirmed: Autonomous background cron configured in vercel.json (*/5 * * * * -> /api/notifications/outbox)'
+    `Confirmed: Autonomous background cron configured in vercel.json (${cronSchedule} -> /api/notifications/outbox)`
   );
 
   // 5.2 Test Cron Bearer Authorization Protection
