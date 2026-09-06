@@ -5,9 +5,16 @@ import { StatusBadge } from "./components/status-badge";
 import PolarOperationalMap from "./components/polar-operational-map";
 import { WeatherTelemetryPanel } from "./components/weather-telemetry-panel";
 import { ReadinessDetailWidget } from "./components/readiness-detail-widget";
+import { OperationalAlertBanner } from "./components/operational-alert-banner";
+import { FuelAutonomyWidget } from "./components/fuel-autonomy-widget";
+import { WeatherTrendChart } from "./components/weather-trend-chart";
 import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { calculateOperationalReadiness } from "@/core/readiness/operational-readiness";
 import { WeatherService } from "@/core/weather/weather-service";
+import { FuelService } from "@/core/fuel/fuel-service";
+import { AlertEngine } from "@/core/alerts/alert-engine";
+import { TimeSeriesTelemetryService } from "@/core/telemetry/time-series-service";
+import { LogisticsService } from "@/modules/logistics/logistics-service";
 import type { StationWeather } from "@/core/weather/types";
 import type { AssetRow } from "@/modules/asset/types/asset.types";
 
@@ -89,6 +96,38 @@ export default async function DashboardPage() {
   }
 
   const readiness = calculateOperationalReadiness(assets, maintenance, stations, weatherTelemetry);
+  const fuelProfiles = FuelService.getAllStationFuelProfiles();
+  const operationalAlerts = AlertEngine.evaluateTelemetryAlerts(weatherTelemetry);
+  const activeVoyage = LogisticsService.getActiveVoyage();
+
+  const bhrWeather = weatherTelemetry?.["BHR"];
+  const mtrWeather = weatherTelemetry?.["MTR"];
+  const hmdWeather = weatherTelemetry?.["HMD"];
+
+  const weatherTrends = {
+    BHR: TimeSeriesTelemetryService.getStationTelemetryTrend(
+      "BHR",
+      bhrWeather?.measurements.temperatureC.value ?? -8.5,
+      bhrWeather?.measurements.pressureHpa.value ?? 988.2,
+      bhrWeather?.measurements.windSpeedKmH.value ?? 24
+    ),
+    MTR: TimeSeriesTelemetryService.getStationTelemetryTrend(
+      "MTR",
+      mtrWeather?.measurements.temperatureC.value ?? -12.4,
+      mtrWeather?.measurements.pressureHpa.value ?? 982.0,
+      mtrWeather?.measurements.windSpeedKmH.value ?? 38
+    ),
+    HMD: TimeSeriesTelemetryService.getStationTelemetryTrend(
+      "HMD",
+      hmdWeather?.measurements.temperatureC.value ?? -2.1,
+      hmdWeather?.measurements.pressureHpa.value ?? 1004.5,
+      hmdWeather?.measurements.windSpeedKmH.value ?? 14
+    ),
+  };
+
+  const avgDaysAutonomy = Math.round(
+    (fuelProfiles.BHR.daysOfAutonomy + fuelProfiles.MTR.daysOfAutonomy + fuelProfiles.HMD.daysOfAutonomy) / 3
+  );
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
@@ -96,7 +135,7 @@ export default async function DashboardPage() {
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         {/* Command Mission Banner with Readiness Gauge */}
-        <div className="mb-8 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 p-6 sm:p-8 shadow-2xl">
+        <div className="mb-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 p-6 sm:p-8 shadow-2xl">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -137,71 +176,107 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        {/* Active Operational Alerts & Hazardous Weather Warning Stream */}
+        <OperationalAlertBanner alerts={operationalAlerts} />
+
+        {/* PRIMARY COMMAND SURFACE: Antarctic Tactical GIS Map & Spatial Decision Bridge */}
+        <div className="mb-8">
+          <PolarOperationalMap
+            stations={stations}
+            expeditions={expeditions}
+            weatherTelemetry={weatherTelemetry}
+            readiness={readiness}
+          />
+        </div>
+
+        {/* Environmental Microclimate Trends & Fuel Autonomy Life-Support Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <WeatherTrendChart trends={weatherTrends} />
+          <FuelAutonomyWidget fuelProfiles={fuelProfiles} />
+        </div>
+
         {/* POLARIS Operational Readiness Heuristic Breakdown Widget */}
         <ReadinessDetailWidget readiness={readiness} />
 
         {/* Polar Meteorological Telemetry & Provenance Feeds */}
         <WeatherTelemetryPanel weather={weatherTelemetry} />
 
-        {/* Tactical Polar Spatial Map Component */}
-        <div className="mb-8">
-          <PolarOperationalMap
-            stations={stations}
-            expeditions={expeditions}
-            weatherTelemetry={weatherTelemetry}
-          />
-        </div>
-
         {/* Operational Metrics Grid */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 mb-8">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Total Assets Tracked
             </span>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-black text-white">{stats.assets.total}</span>
-              <span className="text-xs text-emerald-400 font-medium">Invariant Verified</span>
+              <span className="text-xs text-emerald-400 font-medium">Verified</span>
             </div>
             <div className="mt-2 flex gap-1.5 text-xs text-slate-400">
-              <span>{stats.assets.available} Available</span>
+              <span>{stats.assets.available} Avail</span>
               <span>•</span>
-              <span className="text-cyan-400">{stats.assets.assigned} Assigned</span>
+              <span className="text-cyan-400">{stats.assets.assigned} Assign</span>
             </div>
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Active Research Stations
+              Active Stations
             </span>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-black text-white">{stats.stations.active}</span>
-              <span className="text-xs text-cyan-400 font-medium">Antarctica &amp; Arctic</span>
+              <span className="text-xs text-cyan-400 font-medium">Bases</span>
             </div>
             <div className="mt-2 text-xs text-slate-400">
-              Bharati, Maitri, Himadri ({stats.stations.historical} Historical)
+              Bharati, Maitri, Himadri
             </div>
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Expeditions Active
+              Fuel Autonomy Avg
+            </span>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-3xl font-black text-emerald-400">{avgDaysAutonomy}d</span>
+              <span className="text-xs text-emerald-400 font-medium">Normal</span>
+            </div>
+            <div className="mt-2 text-xs text-slate-400">
+              Across 3 Active Stations
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Resupply Voyage
+            </span>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-3xl font-black text-sky-400">{activeVoyage.daysAtSea}d</span>
+              <span className="text-xs text-sky-400 font-medium">At Sea</span>
+            </div>
+            <div className="mt-2 text-xs text-slate-400 truncate">
+              {activeVoyage.vesselName.split(" (")[0]}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Active Expeditions
             </span>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-black text-white">{stats.expeditions.active}</span>
-              <span className="text-xs text-emerald-400 font-medium">In Field Ops</span>
+              <span className="text-xs text-emerald-400 font-medium">Field Ops</span>
             </div>
             <div className="mt-2 text-xs text-slate-400">
-              44th ISEA Summer &amp; Winter-Over
+              44th ISEA Summer/Winter
             </div>
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-md">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Maintenance Work Orders
+              Maintenance Orders
             </span>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-black text-amber-400">{stats.assets.maintenance}</span>
-              <span className="text-xs text-amber-400 font-medium">Sub-Zero Servicing</span>
+              <span className="text-xs text-amber-400 font-medium">Active</span>
             </div>
             <div className="mt-2 text-xs text-slate-400">
               {stats.assets.critical} Mission-Critical units

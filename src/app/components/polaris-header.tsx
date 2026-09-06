@@ -8,6 +8,8 @@ interface HeaderProps {
 export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
   const navItems = [
     { label: "Dashboard", href: "/" },
+    { label: "Daily SITREP", href: "/sitrep" },
+    { label: "Logistics & Cargo", href: "/logistics" },
     { label: "Asset Inventory", href: "/assets" },
     { label: "Expeditions", href: "/expeditions" },
     { label: "Research Stations", href: "/stations" },
