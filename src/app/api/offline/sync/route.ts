@@ -20,8 +20,16 @@ const STATION_ID_TO_CODE: Record<string, string> = {
   'h0000000-0000-0000-0000-000000000003': 'HMD',
 };
 
+import { requireAuthorizedRole, handleAuthError } from '@/infrastructure/auth/role-guard';
+
 export async function POST(req: NextRequest) {
   try {
+    await requireAuthorizedRole([
+      'SUPER_ADMIN',
+      'COMMAND_ADMIN',
+      'EXPEDITION_MANAGER',
+      'STATION_OPERATOR',
+    ]);
     const body = await req.json();
     const mutations: OfflineMutation[] = Array.isArray(body?.mutations)
       ? body.mutations
@@ -251,6 +259,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
+    const authRes = handleAuthError(error);
+    if (authRes) return authRes;
+
     const err = error as Error;
     console.error('Error in /api/offline/sync:', err);
     return NextResponse.json(

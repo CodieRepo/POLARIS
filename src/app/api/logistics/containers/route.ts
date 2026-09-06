@@ -32,8 +32,11 @@ export async function GET() {
   }
 }
 
+import { requireActionPermission, handleAuthError } from "@/infrastructure/auth/role-guard";
+
 export async function PATCH(request: Request) {
   try {
+    await requireActionPermission("LOGISTICS_UPDATE_STAGE");
     const body = await request.json();
     const { containerCode, newStage } = body;
 
@@ -72,6 +75,9 @@ export async function PATCH(request: Request) {
       message: `Container ${containerCode} updated to stage ${newStage}`,
     });
   } catch (error) {
+    const authRes = handleAuthError(error);
+    if (authRes) return authRes;
+
     console.error("Failed to update container transit stage:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },

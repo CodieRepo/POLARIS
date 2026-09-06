@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PolarisHeader } from "../components/polaris-header";
+import { useAuth } from "@/infrastructure/auth/auth-provider";
 import { LogisticsService } from "@/modules/logistics/logistics-service";
 import type { CargoContainer, LogisticsTransitStage, VoyageOverview } from "@/modules/logistics/types/logistics.types";
 
 export default function LogisticsPage() {
+  const { can, role } = useAuth();
   const [voyage, setVoyage] = useState<VoyageOverview>(LogisticsService.getActiveVoyage());
   const [containers, setContainers] = useState<CargoContainer[]>(() => [...LogisticsService.getAllContainers()]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -254,22 +256,34 @@ export default function LogisticsPage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <select
-                            value={c.transitStage}
-                            disabled={updatingCode === c.containerCode}
-                            onChange={(e) => handleStageChange(c.containerCode, e.target.value as LogisticsTransitStage)}
-                            className={`rounded px-2 py-1 text-[11px] font-bold border ${getStageBadge(
-                              c.transitStage
-                            )} bg-slate-950 focus:outline-none cursor-pointer disabled:opacity-50`}
-                          >
-                            <option value="GOA_MOBILIZATION">GOA MOBILIZATION</option>
-                            <option value="CAPE_TOWN_BUNKERING">CAPE TOWN BUNKERING</option>
-                            <option value="SOUTHERN_OCEAN_TRANSIT">SOUTHERN OCEAN TRANSIT</option>
-                            <option value="ICE_SHELF_BARRIER">ICE SHELF BARRIER</option>
-                            <option value="STATION_DELIVERED">STATION DELIVERED</option>
-                          </select>
+                          {can("LOGISTICS_UPDATE_STAGE") || (!role || role !== "VIEWER") ? (
+                            <select
+                              value={c.transitStage}
+                              disabled={updatingCode === c.containerCode}
+                              onChange={(e) => handleStageChange(c.containerCode, e.target.value as LogisticsTransitStage)}
+                              className={`rounded px-2 py-1 text-[11px] font-bold border ${getStageBadge(
+                                c.transitStage
+                              )} bg-slate-950 focus:outline-none cursor-pointer disabled:opacity-50`}
+                            >
+                              <option value="GOA_MOBILIZATION">GOA MOBILIZATION</option>
+                              <option value="CAPE_TOWN_BUNKERING">CAPE TOWN BUNKERING</option>
+                              <option value="SOUTHERN_OCEAN_TRANSIT">SOUTHERN OCEAN TRANSIT</option>
+                              <option value="ICE_SHELF_BARRIER">ICE SHELF BARRIER</option>
+                              <option value="STATION_DELIVERED">STATION DELIVERED</option>
+                            </select>
+                          ) : (
+                            <span
+                              className={`inline-block px-2 py-1 rounded text-[11px] font-bold border ${getStageBadge(
+                                c.transitStage
+                              )}`}
+                            >
+                              {c.transitStage.replace(/_/g, " ")}
+                            </span>
+                          )}
                           {updatingCode === c.containerCode && (
-                            <span className="text-[10px] text-cyan-400 animate-pulse">Saving...</span>
+                            <span className="text-[10px] text-cyan-400 animate-pulse font-bold">
+                              Updating...
+                            </span>
                           )}
                         </div>
                       </td>

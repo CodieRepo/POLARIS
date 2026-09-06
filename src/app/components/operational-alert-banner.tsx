@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useAuth } from "@/infrastructure/auth/auth-provider";
 import type { OperationalAlert } from "@/core/alerts/types";
 
 interface OperationalAlertBannerProps {
@@ -8,6 +9,7 @@ interface OperationalAlertBannerProps {
 }
 
 export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAlertBannerProps) {
+  const { can, role } = useAuth();
   const [alerts, setAlerts] = useState<readonly OperationalAlert[]>(initialAlerts);
   const [expanded, setExpanded] = useState<boolean>(false);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -129,13 +131,19 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
               </div>
 
               {alert.status === "ACTIVE" ? (
-                <button
-                  onClick={() => handleAcknowledge(alert.id)}
-                  disabled={actingId === alert.id}
-                  className="rounded bg-slate-950 border border-slate-800 px-3 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
-                >
-                  {actingId === alert.id ? "Updating..." : "Acknowledge"}
-                </button>
+                can("ALERT_ACKNOWLEDGE") || (!role || role !== "VIEWER") ? (
+                  <button
+                    onClick={() => handleAcknowledge(alert.id)}
+                    disabled={actingId === alert.id}
+                    className="rounded bg-slate-950 border border-slate-800 px-3 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
+                  >
+                    {actingId === alert.id ? "Updating..." : "Acknowledge"}
+                  </button>
+                ) : (
+                  <span className="text-[10px] text-amber-400 font-bold uppercase">
+                    ● Active Alert
+                  </span>
+                )
               ) : (
                 <span className="text-[10px] text-emerald-400 font-bold uppercase">
                   ✓ Acknowledged in DB

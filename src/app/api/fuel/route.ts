@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FuelRepository } from "@/core/fuel/fuel-repository";
 
+import { requireActionPermission, handleAuthError } from "@/infrastructure/auth/role-guard";
+
 export const dynamic = "force-dynamic";
 
 /**
@@ -26,9 +28,11 @@ export async function GET() {
 /**
  * POST /api/fuel
  * Records an authentic manual fuel dip measurement for a tank in PostgreSQL.
+ * Authorized Roles: SUPER_ADMIN, COMMAND_ADMIN, STATION_OPERATOR.
  */
 export async function POST(request: NextRequest) {
   try {
+    await requireActionPermission("FUEL_RECORD_DIP");
     const body = await request.json();
     const { tankCode, newLevelLiters } = body;
 
@@ -65,6 +69,9 @@ export async function POST(request: NextRequest) {
       profiles: updatedProfiles,
     });
   } catch (err) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
+
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : "Failed to record fuel dip" },
       { status: 500 }

@@ -1,0 +1,114 @@
+import type { AppRole } from "@/core/types/auth-context.types";
+
+/**
+ * Standard operational actions across POLARIS domain boundaries.
+ */
+export type PolarisAction =
+  // Asset domain
+  | "ASSET_VIEW"
+  | "ASSET_CREATE"
+  | "ASSET_ASSIGN"
+  | "ASSET_RELEASE"
+  | "ASSET_RETIRE"
+  | "ASSET_UPDATE_METADATA"
+  | "ASSET_SCHEDULE_MAINTENANCE"
+  // Station domain
+  | "STATION_VIEW"
+  | "STATION_MANAGE"
+  // Expedition domain
+  | "EXPEDITION_VIEW"
+  | "EXPEDITION_CREATE"
+  | "EXPEDITION_UPDATE"
+  | "EXPEDITION_MANAGE_ROSTER"
+  // Fuel domain
+  | "FUEL_VIEW"
+  | "FUEL_RECORD_DIP"
+  // SITREP domain
+  | "SITREP_VIEW"
+  | "SITREP_FILE"
+  | "SITREP_VERIFY"
+  // Logistics domain
+  | "LOGISTICS_VIEW"
+  | "LOGISTICS_UPDATE_STAGE"
+  // Operational alerts
+  | "ALERT_VIEW"
+  | "ALERT_ACKNOWLEDGE"
+  | "ALERT_RESOLVE"
+  // Hardware & Telemetry
+  | "HARDWARE_VIEW"
+  | "HARDWARE_SIMULATE_POLL"
+  | "HARDWARE_INGEST"
+  // Notifications & Admin
+  | "NOTIFICATION_TEST_DISPATCH"
+  | "NOTIFICATION_MANAGE_OUTBOX"
+  | "SYSTEM_ADMIN";
+
+/**
+ * Static mapping of actions to authorized application roles.
+ */
+export const ACTION_ROLE_PERMISSIONS: Record<PolarisAction, readonly AppRole[]> = {
+  // Read actions (All active roles can read)
+  ASSET_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+  STATION_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+  EXPEDITION_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+  FUEL_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+  SITREP_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+  LOGISTICS_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+  ALERT_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+  HARDWARE_VIEW: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+
+  // Cryptographic Verification (Any authenticated user can verify SITREP SHA-256 integrity)
+  SITREP_VERIFY: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR", "VIEWER"],
+
+  // Operational Field Mutations
+  FUEL_RECORD_DIP: ["SUPER_ADMIN", "COMMAND_ADMIN", "STATION_OPERATOR"],
+  SITREP_FILE: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR"],
+  LOGISTICS_UPDATE_STAGE: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR"],
+  ALERT_ACKNOWLEDGE: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR"],
+  ALERT_RESOLVE: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER", "STATION_OPERATOR"],
+  ASSET_SCHEDULE_MAINTENANCE: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER"],
+
+  // Asset Lifecycle & Operations
+  ASSET_ASSIGN: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER"],
+  ASSET_RELEASE: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER"],
+  ASSET_CREATE: ["SUPER_ADMIN", "COMMAND_ADMIN"],
+  ASSET_UPDATE_METADATA: ["SUPER_ADMIN", "COMMAND_ADMIN"],
+  ASSET_RETIRE: ["SUPER_ADMIN"], // Strictly SUPER_ADMIN
+
+  // Station & Expedition Management
+  STATION_MANAGE: ["SUPER_ADMIN", "COMMAND_ADMIN"],
+  EXPEDITION_CREATE: ["SUPER_ADMIN", "COMMAND_ADMIN"],
+  EXPEDITION_UPDATE: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER"],
+  EXPEDITION_MANAGE_ROSTER: ["SUPER_ADMIN", "COMMAND_ADMIN", "EXPEDITION_MANAGER"],
+
+  // Hardware & Edge Gateway
+  HARDWARE_SIMULATE_POLL: ["SUPER_ADMIN", "COMMAND_ADMIN", "STATION_OPERATOR"],
+  HARDWARE_INGEST: ["SUPER_ADMIN", "COMMAND_ADMIN"],
+
+  // System Administration & Outbox
+  NOTIFICATION_TEST_DISPATCH: ["SUPER_ADMIN", "COMMAND_ADMIN"],
+  NOTIFICATION_MANAGE_OUTBOX: ["SUPER_ADMIN"],
+  SYSTEM_ADMIN: ["SUPER_ADMIN"],
+};
+
+/**
+ * Pure evaluation function checking if a role is permitted to perform an action.
+ */
+export function isActionPermitted(role: AppRole, action: PolarisAction): boolean {
+  const allowed = ACTION_ROLE_PERMISSIONS[action];
+  return allowed ? allowed.includes(role) : false;
+}
+
+/**
+ * Checks whether an active user role is strictly read-only (VIEWER).
+ */
+export function isReadOnlyRole(role: AppRole): boolean {
+  return role === "VIEWER";
+}
+
+/**
+ * Checks whether an active user has administrative privilege.
+ */
+export function isAdminRole(role: AppRole): boolean {
+  return role === "SUPER_ADMIN" || role === "COMMAND_ADMIN";
+}

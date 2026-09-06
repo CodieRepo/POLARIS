@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { MutationQueue } from "@/core/offline/mutation-queue";
+import { useAuth } from "@/infrastructure/auth/auth-provider";
 import type { StationFuelProfile } from "@/core/fuel/types";
 
 interface FuelAutonomyWidgetProps {
@@ -9,6 +10,7 @@ interface FuelAutonomyWidgetProps {
 }
 
 export function FuelAutonomyWidget({ fuelProfiles: initialProfiles }: FuelAutonomyWidgetProps) {
+  const { can, role } = useAuth();
   const [fuelProfiles, setFuelProfiles] = useState<Record<string, StationFuelProfile>>(initialProfiles);
   const [selectedStationCode, setSelectedStationCode] = useState<string>("BHR");
   const [showDipModal, setShowDipModal] = useState<boolean>(false);
@@ -340,12 +342,18 @@ export function FuelAutonomyWidget({ fuelProfiles: initialProfiles }: FuelAutono
                         </div>
                       </td>
                       <td className="py-2.5 px-4 text-right">
-                        <button
-                          onClick={() => openDipModalForTank(tank.tankCode, tank.currentLevelLiters)}
-                          className="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 font-mono text-[10px] font-bold text-slate-300 transition-colors cursor-pointer border border-slate-700"
-                        >
-                          Record Dip
-                        </button>
+                        {can("FUEL_RECORD_DIP") || (!role || (role !== "VIEWER" && role !== "EXPEDITION_MANAGER")) ? (
+                          <button
+                            onClick={() => openDipModalForTank(tank.tankCode, tank.currentLevelLiters)}
+                            className="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 font-mono text-[10px] font-bold text-slate-300 transition-colors cursor-pointer border border-slate-700"
+                          >
+                            Record Dip
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-mono text-slate-500 italic">
+                            Read Only
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

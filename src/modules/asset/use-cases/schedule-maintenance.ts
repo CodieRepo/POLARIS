@@ -2,6 +2,7 @@ import type { AssetRepository } from "../asset-repository";
 import type { MaintenanceRecordRow, ScheduleMaintenanceInput } from "../types/asset.types";
 import type { UseCaseResult } from "@/core/errors/application-errors";
 import { requireUserContext } from "@/infrastructure/auth/auth-context";
+import { isActionPermitted } from "@/core/auth/rbac-permissions";
 import type { UserContextResult } from "@/core/types/auth-context.types";
 import { validateScheduleMaintenanceInput } from "../validation/asset-validation";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -52,12 +53,12 @@ export class ScheduleMaintenanceUseCase {
     }
 
     const user = authResult.data;
-    if (user.role === "VIEWER") {
+    if (!isActionPermitted(user.role, "ASSET_SCHEDULE_MAINTENANCE")) {
       return {
         success: false,
         error: {
           code: "UNAUTHORIZED",
-          message: "Unauthorized: VIEWERS cannot schedule maintenance.",
+          message: `Unauthorized: Role '${user.role}' cannot schedule maintenance.`,
         },
       };
     }

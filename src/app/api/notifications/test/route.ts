@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OutboxProcessor } from '@/core/notifications/outbox-processor';
 import { NotificationChannel, NotificationPayload } from '@/core/notifications/types';
 
+import { requireActionPermission, handleAuthError } from '@/infrastructure/auth/role-guard';
+
 export async function POST(req: NextRequest) {
   try {
+    await requireActionPermission('NOTIFICATION_TEST_DISPATCH');
     const body = await req.json().catch(() => ({}));
     const channel: NotificationChannel = body.channel || 'TELEGRAM';
     const recipient = body.recipient || (channel === 'EMAIL' ? 'ops@ncaor.gov.in' : '@polaris_ops_channel');
@@ -35,6 +38,9 @@ export async function POST(req: NextRequest) {
       dispatchSummary,
     });
   } catch (error) {
+    const authRes = handleAuthError(error);
+    if (authRes) return authRes;
+
     const err = error as Error;
     console.error('Error in POST /api/notifications/test:', err);
     return NextResponse.json(

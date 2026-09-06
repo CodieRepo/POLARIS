@@ -1,13 +1,17 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
-
 import { OfflineStatusBadge } from "./offline-status-badge";
+import { useAuth } from "@/infrastructure/auth/auth-provider";
 
 interface HeaderProps {
   currentPath?: string;
 }
 
 export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
+  const { user, role, isAuthenticated } = useAuth();
+
   const navItems = [
     { label: "Dashboard", href: "/" },
     { label: "Daily SITREP", href: "/sitrep" },
@@ -17,6 +21,22 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
     { label: "Research Stations", href: "/stations" },
     { label: "Data Provenance", href: "/provenance" },
   ];
+
+  const getRoleBadgeColor = (r: string | null) => {
+    switch (r) {
+      case "SUPER_ADMIN":
+        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
+      case "COMMAND_ADMIN":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+      case "EXPEDITION_MANAGER":
+        return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+      case "STATION_OPERATOR":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+      case "VIEWER":
+      default:
+        return "bg-slate-800 text-slate-400 border-slate-700";
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
@@ -56,13 +76,36 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
 
         <div className="flex items-center gap-3">
           <OfflineStatusBadge />
-          <Link
-            href="/login"
-            className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:border-cyan-500/40 transition-colors"
-          >
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-semibold text-slate-200">Switch Identity / Login</span>
-          </Link>
+
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border ${getRoleBadgeColor(
+                  role
+                )}`}
+              >
+                {role}
+              </span>
+              <Link
+                href="/login"
+                className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:border-cyan-500/40 transition-colors"
+                title={`Logged in as ${user.email}`}
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-semibold text-slate-200 truncate max-w-[120px] sm:max-w-[160px]">
+                  {user.email.split("@")[0]}
+                </span>
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:border-cyan-500/40 transition-colors"
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              <span className="font-semibold text-slate-200">Switch Identity / Login</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>

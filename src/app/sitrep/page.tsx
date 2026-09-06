@@ -4,9 +4,11 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PolarisHeader } from "../components/polaris-header";
 import { MutationQueue } from "@/core/offline/mutation-queue";
+import { useAuth } from "@/infrastructure/auth/auth-provider";
 import type { DailySitrepData, OutdoorClearanceStatus, IntegrityVerificationResult } from "@/core/sitrep/types";
 
 export default function SitrepPage() {
+  const { role } = useAuth();
   const [sitreps, setSitreps] = useState<readonly DailySitrepData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -270,12 +272,14 @@ export default function SitrepPage() {
               </p>
             </div>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="rounded-xl bg-cyan-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20 cursor-pointer whitespace-nowrap"
-            >
-              + File Daily SITREP
-            </button>
+            {(!role || role !== "VIEWER") && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="rounded-xl bg-cyan-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20 cursor-pointer whitespace-nowrap"
+              >
+                + File Daily SITREP
+              </button>
+            )}
           </div>
         </div>
 

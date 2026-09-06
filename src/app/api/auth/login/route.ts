@@ -14,6 +14,11 @@ export async function POST(request: NextRequest) {
     }
 
     const cookieStore = await cookies();
+    const cookiesToSetLater: Array<{
+      name: string;
+      value: string;
+      options?: Parameters<typeof cookieStore.set>[2];
+    }> = [];
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,9 +32,10 @@ export async function POST(request: NextRequest) {
             try {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options);
+                cookiesToSetLater.push({ name, value, options });
               });
             } catch {
-              // Ignore in context where cookies can't be set
+              // Ignore
             }
           },
         },
@@ -45,7 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         user: {
           id: data.user.id,
@@ -54,6 +60,13 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    // Apply all auth cookies to the response object explicitly
+    cookiesToSetLater.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options);
+    });
+
+    return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });

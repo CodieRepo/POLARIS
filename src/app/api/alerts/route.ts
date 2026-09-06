@@ -23,9 +23,12 @@ export async function GET() {
   }
 }
 
+import { requireActionPermission, handleAuthError } from "@/infrastructure/auth/role-guard";
+
 /**
  * POST /api/alerts
  * Transitions alert lifecycle: ACTIVE -> ACKNOWLEDGED -> RESOLVED.
+ * Authorized Roles: SUPER_ADMIN, COMMAND_ADMIN, EXPEDITION_MANAGER, STATION_OPERATOR.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -40,9 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "ACKNOWLEDGE") {
+      await requireActionPermission("ALERT_ACKNOWLEDGE");
       const ok = await AlertRepository.acknowledgeAlert(id);
       if (!ok) throw new Error("Failed to acknowledge alert in database");
     } else if (action === "RESOLVE") {
+      await requireActionPermission("ALERT_RESOLVE");
       const ok = await AlertRepository.resolveAlert(id);
       if (!ok) throw new Error("Failed to resolve alert in database");
     } else {
@@ -60,6 +65,9 @@ export async function POST(request: NextRequest) {
       alerts: updatedAlerts,
     });
   } catch (err) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
+
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : "Failed to update alert" },
       { status: 500 }

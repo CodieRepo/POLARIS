@@ -17,13 +17,17 @@ export async function GET(req: NextRequest) {
   }
 }
 
+import { requireActionPermission, handleAuthError } from '@/infrastructure/auth/role-guard';
+
 /**
  * POST /api/hardware/devices
  * Allows simulating a live polling tick from the Virtual Telemetry Adapter
  * for interactive demo / operational verification purposes.
+ * Authorized Roles: SUPER_ADMIN, COMMAND_ADMIN, STATION_OPERATOR.
  */
 export async function POST(req: NextRequest) {
   try {
+    await requireActionPermission('HARDWARE_SIMULATE_POLL');
     const body = await req.json().catch(() => ({}));
     const gatewayId = body.gatewayId || 'EDGE-GW-BHR-01';
 
@@ -40,6 +44,9 @@ export async function POST(req: NextRequest) {
       events,
     });
   } catch (error) {
+    const authRes = handleAuthError(error);
+    if (authRes) return authRes;
+
     const err = error as Error;
     console.error('Error in POST /api/hardware/devices:', err);
     return NextResponse.json(

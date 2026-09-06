@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("super_admin_6c6_027160@polaris.test");
   const [password, setPassword] = useState("Polaris@2026");
   const [loading, setLoading] = useState(false);
@@ -28,8 +26,7 @@ export default function LoginPage() {
       if (!res.ok) {
         setErrorMsg(json.error || "Authentication failed.");
       } else {
-        router.push("/");
-        router.refresh();
+        window.location.href = "/";
       }
     } catch {
       setErrorMsg("Network error during login.");

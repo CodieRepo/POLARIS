@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { HardwareDevice } from '@/core/hardware-gateway/types';
+import { useAuth } from '@/infrastructure/auth/auth-provider';
 
 interface HardwareTelemetryWidgetProps {
   stationId?: string;
@@ -12,6 +13,7 @@ export function HardwareTelemetryWidget({
   stationId,
   stationName = 'Station Field Hardware',
 }: HardwareTelemetryWidgetProps) {
+  const { can, role } = useAuth();
   const [devices, setDevices] = useState<HardwareDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
@@ -86,13 +88,19 @@ export function HardwareTelemetryWidget({
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30">
             SIMULATED_TELEMETRY
           </span>
-          <button
-            onClick={handleSimulatePoll}
-            disabled={polling}
-            className="px-3 py-1 text-xs font-medium rounded bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 text-white transition shadow"
-          >
-            {polling ? 'Polling Bus...' : 'Simulate Edge Poll'}
-          </button>
+          {can("HARDWARE_SIMULATE_POLL") || (!role || role !== "VIEWER") ? (
+            <button
+              onClick={handleSimulatePoll}
+              disabled={polling}
+              className="px-3 py-1 text-xs font-medium rounded bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 text-white transition shadow cursor-pointer"
+            >
+              {polling ? 'Polling Bus...' : 'Simulate Edge Poll'}
+            </button>
+          ) : (
+            <span className="text-[10px] font-mono text-slate-500 italic">
+              Monitoring Mode
+            </span>
+          )}
         </div>
       </div>
 

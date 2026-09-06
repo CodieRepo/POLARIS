@@ -4,6 +4,7 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { PolarisHeader } from "../../components/polaris-header";
 import { StatusBadge } from "../../components/status-badge";
+import { useAuth } from "@/infrastructure/auth/auth-provider";
 import type {
   AssetHistory,
   AssetAssignmentRow,
@@ -18,6 +19,7 @@ interface PageProps {
 
 export default function AssetDetailPage({ params }: PageProps) {
   const { code } = use(params);
+  const { role } = useAuth();
 
   const [assetHistory, setAssetHistory] = useState<AssetHistory | null>(null);
   const [stations, setStations] = useState<StationRow[]>([]);
@@ -339,7 +341,7 @@ export default function AssetDetailPage({ params }: PageProps) {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2">
-              {asset?.status === "AVAILABLE" && (
+              {asset?.status === "AVAILABLE" && (!role || role !== "VIEWER") && (
                 <button
                   onClick={() => setShowAssignModal(true)}
                   disabled={actionLoading}
@@ -349,7 +351,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                 </button>
               )}
 
-              {activeAssignment && (
+              {activeAssignment && (!role || role !== "VIEWER") && (
                 <button
                   onClick={() => handleReleaseSubmit(activeAssignment.id)}
                   disabled={actionLoading}
@@ -359,7 +361,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                 </button>
               )}
 
-              {asset?.status !== "RETIRED" && (
+              {asset?.status !== "RETIRED" && (role === "SUPER_ADMIN" || role === "COMMAND_ADMIN" || role === "EXPEDITION_MANAGER") && (
                 <button
                   onClick={() => setShowMaintenanceModal(true)}
                   disabled={actionLoading}
@@ -369,7 +371,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                 </button>
               )}
 
-              {asset?.status !== "RETIRED" && (
+              {asset?.status !== "RETIRED" && role === "SUPER_ADMIN" && (
                 <button
                   onClick={handleRetire}
                   disabled={actionLoading}

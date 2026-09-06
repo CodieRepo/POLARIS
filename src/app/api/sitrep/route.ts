@@ -28,12 +28,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { requireActionPermission, handleAuthError } from "@/infrastructure/auth/role-guard";
+
 /**
  * POST /api/sitrep
  * Persists a newly signed-off SITREP with canonical SHA-256 document integrity hash.
+ * Authorized Roles: SUPER_ADMIN, COMMAND_ADMIN, EXPEDITION_MANAGER, STATION_OPERATOR.
  */
 export async function POST(request: NextRequest) {
   try {
+    await requireActionPermission("SITREP_FILE");
     const body = await request.json();
     const input: SitrepDraftInput = body.input;
     const weatherSummary: DailySitrepData["weatherSummary"] = body.weatherSummary;
@@ -54,6 +58,9 @@ export async function POST(request: NextRequest) {
       data: saved,
     });
   } catch (err) {
+    const authRes = handleAuthError(err);
+    if (authRes) return authRes;
+
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : "Failed to persist SITREP" },
       { status: 500 }
