@@ -49,15 +49,24 @@ export class AlertRepository {
   /**
    * Acknowledges an alert by transitioning status to ACKNOWLEDGED in PostgreSQL.
    */
-  public static async acknowledgeAlert(id: string, userCallsign = "Command Admin"): Promise<boolean> {
+  public static async acknowledgeAlert(id: string, userUuid?: string): Promise<boolean> {
     const supabase = createServerClient();
+    const updateData: {
+      status: "ACKNOWLEDGED";
+      acknowledged_at: string;
+      acknowledged_by?: string;
+    } = {
+      status: "ACKNOWLEDGED",
+      acknowledged_at: new Date().toISOString(),
+    };
+
+    if (userUuid && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userUuid)) {
+      updateData.acknowledged_by = userUuid;
+    }
+
     const { error } = await supabase
       .from("operational_alerts")
-      .update({
-        status: "ACKNOWLEDGED",
-        acknowledged_at: new Date().toISOString(),
-        acknowledged_by: userCallsign,
-      })
+      .update(updateData)
       .eq("id", id);
 
     if (error) {
