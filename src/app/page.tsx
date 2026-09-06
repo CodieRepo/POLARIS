@@ -109,7 +109,7 @@ export default async function DashboardPage() {
                 Integrated Polar Expedition Logistics &amp; Asset Command Suite
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
-                Authoritative real-time coordination for Indian Antarctic &amp; Arctic research programs.
+                Operational command &amp; decision support for Indian Antarctic &amp; Arctic research programs.
                 Enforces PostgreSQL transactional lifecycle boundaries, row-level locking, and immutable asset integrity across Antarctic research bases and active field campaigns.
               </p>
             </div>
@@ -160,7 +160,7 @@ export default async function DashboardPage() {
             </span>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-black text-white">{stats.assets.total}</span>
-              <span className="text-xs text-emerald-400 font-medium">100% Invariant Compliant</span>
+              <span className="text-xs text-emerald-400 font-medium">Invariant Verified</span>
             </div>
             <div className="mt-2 flex gap-1.5 text-xs text-slate-400">
               <span>{stats.assets.available} Available</span>
@@ -215,7 +215,7 @@ export default async function DashboardPage() {
           <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/40 p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-white">Live Asset Operational Registry</h2>
+                <h2 className="text-lg font-bold text-white">Operational Asset Registry</h2>
                 <p className="text-xs text-slate-400">
                   Select an asset to test the atomic Assignment, Release, and Maintenance state machine.
                 </p>

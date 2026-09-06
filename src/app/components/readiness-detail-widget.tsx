@@ -19,7 +19,7 @@ export function ReadinessDetailWidget({ readiness }: ReadinessModalBreakdownProp
     },
     {
       key: "STATION_POWER_REDUNDANCY",
-      title: "Station Power Redundancy",
+      title: "Station Power Redundancy (Heuristic)",
       score: readiness.categoryScores.powerRedundancy,
       max: 25,
       weight: "25%",

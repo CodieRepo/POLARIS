@@ -10,7 +10,7 @@ export default function ProvenancePage() {
       source: "National Centre for Polar & Ocean Research (NCPOR) / Ministry of Earth Sciences, Govt. of India",
       sourceUrl: "https://data.ncpor.res.in",
       description:
-        "Primary ground-truth telemetry gathered by automated weather stations (AWS) deployed directly at Bharati and Maitri bases in Antarctica and Himadri in Ny-Ålesund, Svalbard. Includes measured surface temperature, relative humidity, pressure, and wind sensors.",
+        "Primary ground-truth telemetry gathered by automated weather stations (AWS) deployed directly at Bharati and Maitri bases in Antarctica (temperature, humidity, pressure, wind velocity) and Himadri in Ny-Ålesund, Svalbard (surface temperature, humidity, pressure).",
       badge: "AUTHORITATIVE_OBSERVED",
       freshnessPolicy: "Published observation records updated daily / periodically. Stored in high-speed in-memory cache (TTL: 15 min).",
     },

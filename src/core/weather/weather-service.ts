@@ -152,6 +152,7 @@ export class WeatherService {
       let windKnots: number;
       let windDir: number | null = code === "BHR" ? 148 : code === "MTR" ? 175 : 160;
       let windMeasured: MeasuredField<number>;
+      let windDirMeasured: MeasuredField<number | null>;
       let overallTier: WeatherProvenanceTier = "AUTHORITATIVE_OBSERVED";
       let overallType: MeasurementType = "OBSERVED";
 
@@ -166,27 +167,54 @@ export class WeatherService {
           provenanceTier: "AUTHORITATIVE_OBSERVED",
           measurementType: "OBSERVED",
         };
+        windDirMeasured = {
+          value: windDir,
+          sourceName: "POLARIS Prevailing Antarctic Katabatic Bearing (Reference Constant)",
+          sourceUrl: "https://ncpor.res.in",
+          provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+          measurementType: "BASELINE",
+        };
       } else {
         // COMPOSITE PROVENANCE: NCPOR observed temp/pressure + Open-Meteo modelled wind
         overallTier = "COMPOSITE_OBSERVED";
-        overallType = "OBSERVED";
+        overallType = "COMPOSITE";
         const openMeteo = await OpenMeteoAdapter.fetchModelData(meta.lat, meta.lon, 2500);
         if (openMeteo) {
           windKmH = openMeteo.wind_speed_10m;
           windKnots = Math.round((windKmH / 1.852) * 10) / 10;
           windDir = openMeteo.wind_direction_10m;
+          windMeasured = {
+            value: windKmH,
+            sourceName: "Open-Meteo High-Resolution Polar Model (DWD ICON / NOAA GFS)",
+            sourceUrl: "https://open-meteo.com",
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          };
+          windDirMeasured = {
+            value: windDir,
+            sourceName: "Open-Meteo High-Resolution Polar Model (DWD ICON / NOAA GFS)",
+            sourceUrl: "https://open-meteo.com",
+            provenanceTier: "VERIFIED_MODEL",
+            measurementType: "MODELLED",
+          };
         } else {
           windKmH = meta.septemberBaselineWindKmH;
           windKnots = Math.round((windKmH / 1.852) * 10) / 10;
+          windMeasured = {
+            value: windKmH,
+            sourceName: "NCPOR Antarctic Climate Atlas (September Reference Baseline)",
+            sourceUrl: "https://ncpor.res.in",
+            provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+            measurementType: "BASELINE",
+          };
+          windDirMeasured = {
+            value: windDir,
+            sourceName: "NCPOR Antarctic Climate Atlas (September Reference Baseline)",
+            sourceUrl: "https://ncpor.res.in",
+            provenanceTier: "OFFLINE_CLIMATIC_BASELINE",
+            measurementType: "BASELINE",
+          };
         }
-
-        windMeasured = {
-          value: windKmH,
-          sourceName: "Open-Meteo High-Resolution Polar Model (DWD ICON / NOAA GFS)",
-          sourceUrl: "https://open-meteo.com",
-          provenanceTier: "VERIFIED_MODEL",
-          measurementType: "MODELLED",
-        };
       }
 
       const apparentTempC = this.calculateWindChill(ncporObs.temperatureC, windKmH);
@@ -233,13 +261,7 @@ export class WeatherService {
             provenanceTier: windMeasured.provenanceTier,
             measurementType: windMeasured.measurementType,
           },
-          windDirectionDeg: {
-            value: windDir,
-            sourceName: windMeasured.sourceName,
-            sourceUrl: windMeasured.sourceUrl,
-            provenanceTier: windMeasured.provenanceTier,
-            measurementType: windMeasured.measurementType,
-          },
+          windDirectionDeg: windDirMeasured,
         },
         derivedCalculations: {
           apparentTemperatureC: {
@@ -328,7 +350,7 @@ export class WeatherService {
         latitude: meta.lat,
         longitude: meta.lon,
         timestamps: {
-          observedAt: openMeteo.time,
+          observedAt: `MODEL_RUN: ${openMeteo.time}`,
           fetchedAt: nowIso,
           cacheAgeMinutes: 10,
           freshnessStatus: "FRESH",
@@ -412,7 +434,7 @@ export class WeatherService {
         dataType: "MODELLED",
         sourceHealth: "ONLINE",
         attribution,
-        observationTime: openMeteo.time,
+        observationTime: `MODEL_RUN: ${openMeteo.time}`,
         fetchedAt: nowIso,
         dataAgeMinutes: 10,
       };
@@ -437,7 +459,7 @@ export class WeatherService {
       latitude: meta.lat,
       longitude: meta.lon,
       timestamps: {
-        observedAt: nowIso,
+        observedAt: "SEASONAL_REFERENCE (September Climatological Baseline)",
         fetchedAt: nowIso,
         cacheAgeMinutes: 0,
         freshnessStatus: "FALLBACK",
@@ -521,9 +543,9 @@ export class WeatherService {
       dataType: "BASELINE",
       sourceHealth: "FALLBACK",
       attribution,
-      observationTime: nowIso,
+      observationTime: "SEASONAL_REFERENCE",
       fetchedAt: nowIso,
-      dataAgeMinutes: 0,
+      dataAgeMinutes: null as unknown as number,
     };
   }
 

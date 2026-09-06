@@ -20,7 +20,7 @@ export function ProvenanceBadge({
   if (type === "OBSERVED" || tier === "AUTHORITATIVE_OBSERVED") {
     label = "OBSERVED";
     colorStyle = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-  } else if (tier === "COMPOSITE_OBSERVED") {
+  } else if (type === "COMPOSITE" || tier === "COMPOSITE_OBSERVED") {
     label = "COMPOSITE OBSERVED";
     colorStyle = "bg-teal-500/10 text-teal-300 border-teal-500/30";
   } else if (type === "MODELLED" || tier === "VERIFIED_MODEL") {

@@ -1,4 +1,4 @@
-export type MeasurementType = "OBSERVED" | "MODELLED" | "CACHED" | "BASELINE";
+export type MeasurementType = "OBSERVED" | "MODELLED" | "CACHED" | "BASELINE" | "COMPOSITE";
 
 export type WeatherProvenanceTier =
   | "AUTHORITATIVE_OBSERVED"  // Direct physical AWS sensor observation (NCPOR)

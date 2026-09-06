@@ -17,7 +17,7 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
           <SourceHealthIndicator health="DATA_UNAVAILABLE" />
         </div>
         <p className="text-xs text-slate-400">
-          Live polar weather feeds are temporarily unreachable. Operational systems running in conservative fail-safe posture.
+          Polar meteorological feeds are temporarily unreachable. Operational systems running in conservative fail-safe posture.
         </p>
       </div>
     );
@@ -97,7 +97,11 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
                 <div className="grid grid-cols-2 gap-2 mb-4 bg-slate-900/50 p-2.5 rounded border border-slate-800/60 text-[11px]">
                   <div>
                     <span className="text-slate-500 block text-[10px] uppercase font-bold">
-                      Latest Published Obs
+                      {st.stationOverallStatus?.classification === "VERIFIED_MODEL"
+                        ? "Model Simulation Run"
+                        : st.stationOverallStatus?.classification === "OFFLINE_CLIMATIC_BASELINE"
+                          ? "Climatic Reference Epoch"
+                          : "Latest Published Obs"}
                     </span>
                     <span className="font-mono text-slate-300">
                       {st.timestamps?.observedAt || st.observationTime}
@@ -128,9 +132,12 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
                       </span>
                     </div>
                     <div className="text-right">
-                      <ProvenanceBadge type={temp?.measurementType || "OBSERVED"} />
+                      <ProvenanceBadge
+                        type={temp?.measurementType}
+                        tier={temp?.provenanceTier}
+                      />
                       <div className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[140px]">
-                        {temp?.sourceName || "NCPOR AWS"}
+                        {temp?.sourceName || "Telemetry Source Unavailable"}
                       </div>
                     </div>
                   </div>
@@ -144,9 +151,12 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
                       </span>
                     </div>
                     <div className="text-right">
-                      <ProvenanceBadge type={press?.measurementType || "OBSERVED"} />
+                      <ProvenanceBadge
+                        type={press?.measurementType}
+                        tier={press?.provenanceTier}
+                      />
                       <div className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[140px]">
-                        {press?.sourceName || "NCPOR AWS"}
+                        {press?.sourceName || "Telemetry Source Unavailable"}
                       </div>
                     </div>
                   </div>
@@ -160,9 +170,12 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
                       </span>
                     </div>
                     <div className="text-right">
-                      <ProvenanceBadge type={wind?.measurementType || "OBSERVED"} />
+                      <ProvenanceBadge
+                        type={wind?.measurementType}
+                        tier={wind?.provenanceTier}
+                      />
                       <div className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[140px]">
-                        {wind?.sourceName || "NCPOR AWS"}
+                        {wind?.sourceName || "Telemetry Source Unavailable"}
                       </div>
                     </div>
                   </div>
@@ -176,7 +189,10 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
                       </span>
                     </div>
                     <div className="text-right">
-                      <ProvenanceBadge type={hum?.measurementType || "OBSERVED"} />
+                      <ProvenanceBadge
+                        type={hum?.measurementType}
+                        tier={hum?.provenanceTier}
+                      />
                     </div>
                   </div>
                 </div>

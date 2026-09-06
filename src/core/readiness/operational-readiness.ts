@@ -532,7 +532,7 @@ export function calculateOperationalReadiness(
   const totalScore = Math.max(0, Math.min(100, assetScore + powerScore + maintenanceScore + envScore));
 
   let status: OperationalReadinessResult["status"] = "OPTIMAL";
-  let summary = "Polar operational infrastructure fully ready for deep-field scientific traverse.";
+  let summary = "Polar operational infrastructure operating within nominal baseline parameters (advisory heuristic).";
 
   if (totalScore < 50) {
     status = "CRITICAL";

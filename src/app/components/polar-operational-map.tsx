@@ -486,7 +486,7 @@ export default function PolarOperationalMap({
                   </div>
 
                   <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                    <span className="text-slate-400 block font-semibold mb-1">Authoritative Authority</span>
+                    <span className="text-slate-400 block font-semibold mb-1">Governing Organization</span>
                     <div className="text-slate-200 font-medium">
                       National Centre for Polar &amp; Ocean Research (NCPOR)
                     </div>
@@ -539,7 +539,7 @@ export default function PolarOperationalMap({
                       tier={
                         selectedStation.code === "DGT"
                           ? "HISTORICAL_REFERENCE"
-                          : stationWeather?.stationOverallStatus?.classification || "AUTHORITATIVE_REAL"
+                          : stationWeather?.stationOverallStatus?.classification || "DATA_UNAVAILABLE"
                       }
                       size="xs"
                     />
@@ -590,9 +590,15 @@ export default function PolarOperationalMap({
                     {stationWeather && (
                       <div className="mt-3 rounded-lg bg-slate-900/90 border border-slate-800 p-3">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                            Telemetry Snapshot
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                              Telemetry Snapshot
+                            </span>
+                            <ProvenanceBadge
+                              tier={stationWeather.stationOverallStatus?.classification}
+                              size="xs"
+                            />
+                          </div>
                           <span className="text-[10px] font-mono text-slate-500">
                             {stationWeather.timestamps?.observedAt || "Published Obs"}
                           </span>
@@ -675,7 +681,7 @@ export default function PolarOperationalMap({
               <p className="mt-1 text-xs text-slate-400 leading-relaxed">
                 Click any polar station node (<span className="text-emerald-400 font-mono">BHR</span>,{" "}
                 <span className="text-emerald-400 font-mono">MTR</span>,{" "}
-                <span className="text-amber-400 font-mono">DGT</span>) directly on the OpenLayers stereographic map or switch to the Arctic Outpost tab to inspect geodetic coordinates, live telemetry snapshots, and derived great-circle baseline vectors.
+                <span className="text-amber-400 font-mono">DGT</span>) directly on the OpenLayers stereographic map or switch to the Arctic Outpost tab to inspect geodetic coordinates, operational telemetry snapshots, and derived great-circle baseline vectors.
               </p>
 
               {bhrMtrSpatial && (

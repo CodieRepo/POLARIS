@@ -58,11 +58,13 @@ export class NcporWeatherAdapter {
 
       // 3. Relative Humidity: matches id="divrh", id = "divrh"
       const rhMatch = html.match(/id\s*=\s*["']?divrh["']?[^>]*>\s*(?:&nbsp;)?\s*([0-9.]+)/i);
-      const relativeHumidityPercent = rhMatch ? parseFloat(rhMatch[1]) : 70;
+      if (!rhMatch) return null;
+      const relativeHumidityPercent = parseFloat(rhMatch[1]);
 
       // 4. Air Pressure: matches id="divap", id = "divap"
       const apMatch = html.match(/id\s*=\s*["']?divap["']?[^>]*>\s*(?:&nbsp;)?\s*([0-9.]+)/i);
-      const pressureHpa = apMatch ? parseFloat(apMatch[1]) : 990;
+      if (!apMatch) return null;
+      const pressureHpa = parseFloat(apMatch[1]);
 
       // 5. Wind Speed: matches id="divw", id = "divw"
       // Note: On Himadri AWS, wind speed cell is HTML-commented out when uncalibrated
@@ -71,8 +73,8 @@ export class NcporWeatherAdapter {
       if (wMatch && !isNaN(parseFloat(wMatch[1]))) {
         windSpeedKnots = parseFloat(wMatch[1]);
       } else if (stationCode !== "HMD") {
-        // Fallback default for Antarctic stations if wind tag present without number
-        windSpeedKnots = 5.0;
+        // If an Antarctic AWS page lacks wind data, do not fabricate 5.0 kt; trigger tiered fallback
+        return null;
       }
 
       // Range & Physical Sanity Validation
