@@ -9,6 +9,10 @@
 
 import fs from 'fs';
 import { randomUUID, createHash } from 'crypto';
+import {
+  generateDocumentIntegrityHash,
+  type SitrepSignablePayload,
+} from '../src/core/sitrep/sitrep-integrity';
 
 // 1. Environment Setup
 const envContent = fs.readFileSync('.env.production', 'utf-8');
@@ -161,8 +165,25 @@ async function runVerification() {
   const stationId = 'b0000000-0000-0000-0000-000000000001';
   const reportDate = '2026-09-08';
 
-  const canonicalString = `${stationId}:${reportDate}:Cmdr. Shekhawat:STATION_COMMANDER_BHR:24:450`;
-  const serverAuthoritativeHash = createHash('sha256').update(canonicalString).digest('hex');
+  const signablePayload: SitrepSignablePayload = {
+    stationCode: 'BHR',
+    reportDate,
+    commanderName: 'Cmdr. Shekhawat',
+    signerIdentity: 'STATION_COMMANDER_BHR',
+    winterOver: 24,
+    summerScience: 18,
+    transientAircrew: 0,
+    minTempC: -15.0,
+    maxTempC: -10.0,
+    peakWindKmh: 25.0,
+    pressureHpa: 985.0,
+    pressureTrend6h: 0.0,
+    fuelConsumed24hLiters: 450.0,
+    generatorRuntimeHours: 24.0,
+    outdoorStatus: 'GREEN_NORMAL',
+    operationalRemarks: 'Phase 2 comprehensive verification SITREP.',
+  };
+  const serverAuthoritativeHash = generateDocumentIntegrityHash(signablePayload);
 
   // 4.1 Server authoritative SITREP upsert
   const { data: sitrep } = await supabase
@@ -177,6 +198,11 @@ async function runVerification() {
         winter_over_headcount: 24,
         summer_science_headcount: 18,
         transient_headcount: 0,
+        min_temp_c: -15.0,
+        max_temp_c: -10.0,
+        peak_wind_kmh: 25.0,
+        pressure_hpa: 985.0,
+        pressure_trend_6h: 0.0,
         fuel_consumed_24h_liters: 450.0,
         generator_runtime_hours: 24.0,
         outdoor_status: 'GREEN_NORMAL',

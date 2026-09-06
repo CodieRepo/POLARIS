@@ -71,9 +71,9 @@ export default function SitrepPage() {
     try {
       const stationId =
         selectedStation === "MTR"
-          ? "m0000000-0000-0000-0000-000000000002"
+          ? "b0000000-0000-0000-0000-000000000002"
           : selectedStation === "HMD"
-          ? "h0000000-0000-0000-0000-000000000003"
+          ? "b0000000-0000-0000-0000-000000000003"
           : "b0000000-0000-0000-0000-000000000001";
 
       const reportDateStr = new Date().toISOString().split("T")[0];

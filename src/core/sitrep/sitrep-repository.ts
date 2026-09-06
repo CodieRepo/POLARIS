@@ -16,7 +16,9 @@ const STATION_CODE_TO_ID: Record<string, string> = {
 const STATION_ID_TO_CODE: Record<string, "BHR" | "MTR" | "HMD"> = {
   "b0000000-0000-0000-0000-000000000001": "BHR",
   "b0000000-0000-0000-0000-000000000002": "MTR",
+  "m0000000-0000-0000-0000-000000000002": "MTR",
   "b0000000-0000-0000-0000-000000000003": "HMD",
+  "h0000000-0000-0000-0000-000000000003": "HMD",
 };
 
 const STATION_CODE_TO_NAME: Record<string, string> = {
@@ -56,7 +58,7 @@ export class SitrepRepository {
         reportDate: row.report_date,
         submittedByEmail: row.submitted_by ? "authenticated_operator@polaris.gov.in" : "commander@polaris.gov.in",
         commanderName: row.commander_name,
-        signerIdentity: row.signer_identity || "STATION_COMMANDER",
+        signerIdentity: row.signer_identity || `STATION_COMMANDER_${code}`,
         integrityHash: row.integrity_hash,
         digitalSignatureToken: row.integrity_hash, // backwards compatibility
         headcount: {
@@ -103,7 +105,7 @@ export class SitrepRepository {
       reportDate: row.report_date,
       submittedByEmail: "commander@polaris.gov.in",
       commanderName: row.commander_name,
-      signerIdentity: row.signer_identity || "STATION_COMMANDER",
+      signerIdentity: row.signer_identity || `STATION_COMMANDER_${code}`,
       integrityHash: row.integrity_hash,
       digitalSignatureToken: row.integrity_hash,
       headcount: {
@@ -153,11 +155,11 @@ export class SitrepRepository {
       winterOver: input.winterOver,
       summerScience: input.summerScience,
       transientAircrew: input.transientAircrew,
-      minTempC: weatherSummary.minTemp24hC,
-      maxTempC: weatherSummary.maxTemp24hC,
-      peakWindKmh: weatherSummary.peakWindKmh,
-      pressureHpa: weatherSummary.currentPressureHpa,
-      pressureTrend6h: weatherSummary.pressureDelta6h,
+      minTempC: weatherSummary.minTemp24hC !== null && weatherSummary.minTemp24hC !== undefined ? weatherSummary.minTemp24hC : null,
+      maxTempC: weatherSummary.maxTemp24hC !== null && weatherSummary.maxTemp24hC !== undefined ? weatherSummary.maxTemp24hC : null,
+      peakWindKmh: weatherSummary.peakWindKmh !== null && weatherSummary.peakWindKmh !== undefined ? weatherSummary.peakWindKmh : null,
+      pressureHpa: weatherSummary.currentPressureHpa !== null && weatherSummary.currentPressureHpa !== undefined ? weatherSummary.currentPressureHpa : null,
+      pressureTrend6h: weatherSummary.pressureDelta6h !== null && weatherSummary.pressureDelta6h !== undefined ? weatherSummary.pressureDelta6h : null,
       fuelConsumed24hLiters: input.fuelConsumed24hLiters,
       generatorRuntimeHours: input.generatorRuntimeHours,
       outdoorStatus: input.outdoorStatus,
@@ -178,11 +180,11 @@ export class SitrepRepository {
           winter_over_headcount: input.winterOver,
           summer_science_headcount: input.summerScience,
           transient_headcount: input.transientAircrew,
-          min_temp_c: weatherSummary.minTemp24hC,
-          max_temp_c: weatherSummary.maxTemp24hC,
-          peak_wind_kmh: weatherSummary.peakWindKmh,
-          pressure_hpa: weatherSummary.currentPressureHpa,
-          pressure_trend_6h: weatherSummary.pressureDelta6h,
+          min_temp_c: signablePayload.minTempC,
+          max_temp_c: signablePayload.maxTempC,
+          peak_wind_kmh: signablePayload.peakWindKmh,
+          pressure_hpa: signablePayload.pressureHpa,
+          pressure_trend_6h: signablePayload.pressureTrend6h,
           fuel_consumed_24h_liters: input.fuelConsumed24hLiters,
           generator_runtime_hours: input.generatorRuntimeHours,
           outdoor_status: input.outdoorStatus,
@@ -227,31 +229,40 @@ export class SitrepRepository {
    * Re-evaluates and verifies the cryptographic SHA-256 document integrity hash against persisted record values.
    */
   public static async verifySitrep(id: string): Promise<IntegrityVerificationResult> {
-    const sitrep = await this.getSitrepById(id);
-    if (!sitrep) {
+    const supabase = createServerClient();
+    const { data: row, error } = await supabase
+      .from("daily_sitreps")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error || !row) {
       throw new Error(`SITREP with ID ${id} not found.`);
     }
 
+    const stationCode = STATION_ID_TO_CODE[row.station_id] || "BHR";
+    const signerIdentity = row.signer_identity || `STATION_COMMANDER_${stationCode}`;
+
     const payload: SitrepSignablePayload = {
-      stationCode: sitrep.stationCode,
-      reportDate: sitrep.reportDate,
-      commanderName: sitrep.commanderName,
-      signerIdentity: sitrep.signerIdentity,
-      winterOver: sitrep.headcount.winterOver,
-      summerScience: sitrep.headcount.summerScience,
-      transientAircrew: sitrep.headcount.transientAircrew,
-      minTempC: sitrep.weatherSummary.minTemp24hC,
-      maxTempC: sitrep.weatherSummary.maxTemp24hC,
-      peakWindKmh: sitrep.weatherSummary.peakWindKmh,
-      pressureHpa: sitrep.weatherSummary.currentPressureHpa,
-      pressureTrend6h: sitrep.weatherSummary.pressureDelta6h,
-      fuelConsumed24hLiters: sitrep.fuelConsumed24hLiters,
-      generatorRuntimeHours: sitrep.generatorRuntimeHours,
-      outdoorStatus: sitrep.outdoorStatus,
-      operationalRemarks: sitrep.operationalRemarks,
+      stationCode,
+      reportDate: row.report_date,
+      commanderName: row.commander_name,
+      signerIdentity,
+      winterOver: row.winter_over_headcount,
+      summerScience: row.summer_science_headcount,
+      transientAircrew: row.transient_headcount,
+      minTempC: row.min_temp_c !== null && row.min_temp_c !== undefined ? Number(row.min_temp_c) : null,
+      maxTempC: row.max_temp_c !== null && row.max_temp_c !== undefined ? Number(row.max_temp_c) : null,
+      peakWindKmh: row.peak_wind_kmh !== null && row.peak_wind_kmh !== undefined ? Number(row.peak_wind_kmh) : null,
+      pressureHpa: row.pressure_hpa !== null && row.pressure_hpa !== undefined ? Number(row.pressure_hpa) : null,
+      pressureTrend6h: row.pressure_trend_6h !== null && row.pressure_trend_6h !== undefined ? Number(row.pressure_trend_6h) : null,
+      fuelConsumed24hLiters: Number(row.fuel_consumed_24h_liters),
+      generatorRuntimeHours: Number(row.generator_runtime_hours),
+      outdoorStatus: row.outdoor_status,
+      operationalRemarks: row.operational_remarks || "",
     };
 
-    const res = verifyDocumentIntegrity(payload, sitrep.integrityHash);
+    const res = verifyDocumentIntegrity(payload, row.integrity_hash);
 
     return {
       isValid: res.isValid,
@@ -260,7 +271,7 @@ export class SitrepRepository {
       verifiedAt: new Date().toISOString(),
       algorithm: "SHA-256",
       reportId: id,
-      signerIdentity: sitrep.signerIdentity,
+      signerIdentity,
     };
   }
 }

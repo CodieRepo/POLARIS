@@ -7,6 +7,18 @@ import {
   OfflineMutation,
   OfflineSyncResponse,
 } from '@/core/offline/types';
+import {
+  generateDocumentIntegrityHash,
+  type SitrepSignablePayload,
+} from '@/core/sitrep/sitrep-integrity';
+
+const STATION_ID_TO_CODE: Record<string, string> = {
+  'b0000000-0000-0000-0000-000000000001': 'BHR',
+  'b0000000-0000-0000-0000-000000000002': 'MTR',
+  'm0000000-0000-0000-0000-000000000002': 'MTR',
+  'b0000000-0000-0000-0000-000000000003': 'HMD',
+  'h0000000-0000-0000-0000-000000000003': 'HMD',
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,18 +79,45 @@ export async function POST(req: NextRequest) {
         let executionResult: Record<string, unknown> | null = null;
 
         if (actionType === 'SUBMIT_SITREP') {
-          // Zero-Trust: Server recomputes canonical SHA-256 hash.
+          // Zero-Trust: Server recomputes canonical SHA-256 hash using the shared domain integrity engine.
           // Never accept client-provided hash.
+          const stationCode = STATION_ID_TO_CODE[stationId] || 'BHR';
           const reportDate = String(payload.reportDate || new Date().toISOString().split('T')[0]);
           const commanderName = String(payload.commanderName || 'Officer-in-Charge');
-          const signerIdentity = String(payload.signerIdentity || 'FIELD_OFFICER');
-          const headcount = Number(payload.winterOverHeadcount) || 20;
+          const signerIdentity = String(payload.signerIdentity || `STATION_COMMANDER_${stationCode}`);
+          const winterOver = Number(payload.winterOverHeadcount) || 20;
+          const summerScience = Number(payload.summerScienceHeadcount) || 0;
+          const transientAircrew = Number(payload.transientHeadcount) || 0;
           const fuelConsumed = Number(payload.fuelConsumed24hLiters) || 0;
+          const generatorHours = Number(payload.generatorRuntimeHours) || 24.0;
+          const outdoorStatus = (payload.outdoorStatus as 'GREEN_NORMAL' | 'YELLOW_RESTRICTED' | 'RED_LOCKDOWN') || 'GREEN_NORMAL';
+          const operationalRemarks = String(payload.operationalRemarks || 'Routine offline field report synchronized.');
+          const minTempC = payload.minTempC !== undefined && payload.minTempC !== null ? Number(payload.minTempC) : -15.0;
+          const maxTempC = payload.maxTempC !== undefined && payload.maxTempC !== null ? Number(payload.maxTempC) : -10.0;
+          const peakWindKmh = payload.peakWindKmh !== undefined && payload.peakWindKmh !== null ? Number(payload.peakWindKmh) : 25.0;
+          const pressureHpa = payload.pressureHpa !== undefined && payload.pressureHpa !== null ? Number(payload.pressureHpa) : 985.0;
+          const pressureTrend6h = payload.pressureTrend6h !== undefined && payload.pressureTrend6h !== null ? Number(payload.pressureTrend6h) : 0.0;
 
-          const canonicalDataString = `${stationId}:${reportDate}:${commanderName}:${signerIdentity}:${headcount}:${fuelConsumed}`;
-          const serverAuthoritativeHash = createHash('sha256')
-            .update(canonicalDataString)
-            .digest('hex');
+          const signablePayload: SitrepSignablePayload = {
+            stationCode,
+            reportDate,
+            commanderName,
+            signerIdentity,
+            winterOver,
+            summerScience,
+            transientAircrew,
+            minTempC,
+            maxTempC,
+            peakWindKmh,
+            pressureHpa,
+            pressureTrend6h,
+            fuelConsumed24hLiters: fuelConsumed,
+            generatorRuntimeHours: generatorHours,
+            outdoorStatus,
+            operationalRemarks,
+          };
+
+          const serverAuthoritativeHash = generateDocumentIntegrityHash(signablePayload);
 
           const { data: sitrep, error: sitrepErr } = await supabase
             .from('daily_sitreps')
@@ -89,18 +128,18 @@ export async function POST(req: NextRequest) {
                 commander_name: commanderName,
                 signer_identity: signerIdentity,
                 integrity_hash: serverAuthoritativeHash,
-                winter_over_headcount: headcount,
-                summer_science_headcount: Number(payload.summerScienceHeadcount) || 0,
-                transient_headcount: Number(payload.transientHeadcount) || 0,
-                min_temp_c: Number(payload.minTempC) || -15.0,
-                max_temp_c: Number(payload.maxTempC) || -10.0,
-                peak_wind_kmh: Number(payload.peakWindKmh) || 25.0,
-                pressure_hpa: Number(payload.pressureHpa) || 985.0,
-                pressure_trend_6h: Number(payload.pressureTrend6h) || 0.0,
+                winter_over_headcount: winterOver,
+                summer_science_headcount: summerScience,
+                transient_headcount: transientAircrew,
+                min_temp_c: minTempC,
+                max_temp_c: maxTempC,
+                peak_wind_kmh: peakWindKmh,
+                pressure_hpa: pressureHpa,
+                pressure_trend_6h: pressureTrend6h,
                 fuel_consumed_24h_liters: fuelConsumed,
-                generator_runtime_hours: Number(payload.generatorRuntimeHours) || 24.0,
-                outdoor_status: (payload.outdoorStatus as 'GREEN_NORMAL' | 'YELLOW_RESTRICTED' | 'RED_LOCKDOWN') || 'GREEN_NORMAL',
-                operational_remarks: String(payload.operationalRemarks || 'Routine offline field report synchronized.'),
+                generator_runtime_hours: generatorHours,
+                outdoor_status: outdoorStatus,
+                operational_remarks: operationalRemarks,
                 signed_off_at: new Date().toISOString(),
               },
               { onConflict: 'station_id,report_date' }
