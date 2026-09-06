@@ -7,6 +7,7 @@ import type {
 import { NcporWeatherAdapter } from "./ncpor-adapter";
 import { OpenMeteoAdapter } from "./open-meteo-adapter";
 import { SolarEphemerisCalculator } from "./solar-ephemeris";
+import { WeatherHistoryService } from "./weather-history-service";
 
 interface StationMetadata {
   code: "BHR" | "MTR" | "HMD";
@@ -305,6 +306,7 @@ export class WeatherService {
       };
 
       WEATHER_CACHE.set(code, { weather, cachedAtMs: nowMs });
+      WeatherHistoryService.archiveObservation(weather).catch(() => null);
       return weather;
     }
 
@@ -440,6 +442,7 @@ export class WeatherService {
       };
 
       WEATHER_CACHE.set(code, { weather, cachedAtMs: nowMs });
+      WeatherHistoryService.archiveObservation(weather).catch(() => null);
       return weather;
     }
 

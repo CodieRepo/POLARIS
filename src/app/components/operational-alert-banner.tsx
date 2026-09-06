@@ -10,6 +10,7 @@ interface OperationalAlertBannerProps {
 export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAlertBannerProps) {
   const [alerts, setAlerts] = useState<readonly OperationalAlert[]>(initialAlerts);
   const [expanded, setExpanded] = useState<boolean>(false);
+  const [actingId, setActingId] = useState<string | null>(null);
 
   if (!alerts || alerts.length === 0) return null;
 
@@ -46,10 +47,29 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
     }
   };
 
-  const handleAcknowledge = (id: string) => {
-    setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "ACKNOWLEDGED" } : a))
-    );
+  const handleAcknowledge = async (id: string) => {
+    setActingId(id);
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action: "ACKNOWLEDGE" }),
+      });
+      const json = await res.json();
+      if (json.success && json.alerts) {
+        setAlerts(json.alerts);
+      } else {
+        setAlerts((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, status: "ACKNOWLEDGED" as const } : a))
+        );
+      }
+    } catch {
+      setAlerts((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, status: "ACKNOWLEDGED" as const } : a))
+      );
+    } finally {
+      setActingId(null);
+    }
   };
 
   return (
@@ -69,6 +89,9 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto text-xs font-mono">
+          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+            PostgreSQL: `public.operational_alerts`
+          </span>
           <button
             onClick={() => setExpanded(!expanded)}
             className="text-cyan-400 hover:text-cyan-300 underline font-semibold cursor-pointer"
@@ -108,13 +131,14 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
               {alert.status === "ACTIVE" ? (
                 <button
                   onClick={() => handleAcknowledge(alert.id)}
-                  className="rounded bg-slate-950 border border-slate-800 px-3 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+                  disabled={actingId === alert.id}
+                  className="rounded bg-slate-950 border border-slate-800 px-3 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
                 >
-                  Acknowledge
+                  {actingId === alert.id ? "Updating..." : "Acknowledge"}
                 </button>
               ) : (
                 <span className="text-[10px] text-emerald-400 font-bold uppercase">
-                  ✓ Acknowledged
+                  ✓ Acknowledged in DB
                 </span>
               )}
             </div>

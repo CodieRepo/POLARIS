@@ -168,6 +168,158 @@ export type Database = {
           },
         ]
       }
+      cargo_containers: {
+        Row: {
+          container_id: string
+          container_type: Database["public"]["Enums"]["cargo_container_type"]
+          created_at: string
+          delivered_at: string | null
+          destination_station_id: string | null
+          expedition_id: string | null
+          id: string
+          manifest_description: string
+          payload_weight_kg: number
+          priority: string
+          shipped_at: string | null
+          tare_weight_kg: number
+          transit_stage: Database["public"]["Enums"]["logistics_transit_stage"]
+          updated_at: string
+          vessel_name: string | null
+          voyage_number: string | null
+        }
+        Insert: {
+          container_id: string
+          container_type?: Database["public"]["Enums"]["cargo_container_type"]
+          created_at?: string
+          delivered_at?: string | null
+          destination_station_id?: string | null
+          expedition_id?: string | null
+          id?: string
+          manifest_description: string
+          payload_weight_kg: number
+          priority?: string
+          shipped_at?: string | null
+          tare_weight_kg?: number
+          transit_stage?: Database["public"]["Enums"]["logistics_transit_stage"]
+          updated_at?: string
+          vessel_name?: string | null
+          voyage_number?: string | null
+        }
+        Update: {
+          container_id?: string
+          container_type?: Database["public"]["Enums"]["cargo_container_type"]
+          created_at?: string
+          delivered_at?: string | null
+          destination_station_id?: string | null
+          expedition_id?: string | null
+          id?: string
+          manifest_description?: string
+          payload_weight_kg?: number
+          priority?: string
+          shipped_at?: string | null
+          tare_weight_kg?: number
+          transit_stage?: Database["public"]["Enums"]["logistics_transit_stage"]
+          updated_at?: string
+          vessel_name?: string | null
+          voyage_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cargo_containers_destination_station_id_fkey"
+            columns: ["destination_station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cargo_containers_expedition_id_fkey"
+            columns: ["expedition_id"]
+            isOneToOne: false
+            referencedRelation: "expeditions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_sitreps: {
+        Row: {
+          commander_name: string
+          created_at: string
+          fuel_consumed_24h_liters: number
+          generator_runtime_hours: number
+          id: string
+          integrity_hash: string
+          max_temp_c: number | null
+          min_temp_c: number | null
+          operational_remarks: string | null
+          outdoor_status: Database["public"]["Enums"]["outdoor_clearance_status"]
+          peak_wind_kmh: number | null
+          pressure_hpa: number | null
+          pressure_trend_6h: number | null
+          report_date: string
+          signed_off_at: string
+          signer_identity: string
+          station_id: string
+          submitted_by: string | null
+          summer_science_headcount: number
+          transient_headcount: number
+          winter_over_headcount: number
+        }
+        Insert: {
+          commander_name: string
+          created_at?: string
+          fuel_consumed_24h_liters?: number
+          generator_runtime_hours?: number
+          id?: string
+          integrity_hash: string
+          max_temp_c?: number | null
+          min_temp_c?: number | null
+          operational_remarks?: string | null
+          outdoor_status?: Database["public"]["Enums"]["outdoor_clearance_status"]
+          peak_wind_kmh?: number | null
+          pressure_hpa?: number | null
+          pressure_trend_6h?: number | null
+          report_date: string
+          signed_off_at?: string
+          signer_identity?: string
+          station_id: string
+          submitted_by?: string | null
+          summer_science_headcount?: number
+          transient_headcount?: number
+          winter_over_headcount?: number
+        }
+        Update: {
+          commander_name?: string
+          created_at?: string
+          fuel_consumed_24h_liters?: number
+          generator_runtime_hours?: number
+          id?: string
+          integrity_hash?: string
+          max_temp_c?: number | null
+          min_temp_c?: number | null
+          operational_remarks?: string | null
+          outdoor_status?: Database["public"]["Enums"]["outdoor_clearance_status"]
+          peak_wind_kmh?: number | null
+          pressure_hpa?: number | null
+          pressure_trend_6h?: number | null
+          report_date?: string
+          signed_off_at?: string
+          signer_identity?: string
+          station_id?: string
+          submitted_by?: string | null
+          summer_science_headcount?: number
+          transient_headcount?: number
+          winter_over_headcount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_sitreps_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_sources: {
         Row: {
           access_method: string | null
@@ -498,6 +650,59 @@ export type Database = {
           },
         ]
       }
+      operational_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          category: string
+          created_at: string
+          details: string
+          id: string
+          resolved_at: string | null
+          severity: Database["public"]["Enums"]["alert_severity"]
+          station_id: string | null
+          status: Database["public"]["Enums"]["alert_status"]
+          title: string
+          triggered_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          category: string
+          created_at?: string
+          details: string
+          id?: string
+          resolved_at?: string | null
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          station_id?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          title: string
+          triggered_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          category?: string
+          created_at?: string
+          details?: string
+          id?: string
+          resolved_at?: string | null
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          station_id?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          title?: string
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_alerts_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       persons: {
         Row: {
           active: boolean
@@ -554,6 +759,106 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      safety_incidents: {
+        Row: {
+          actions_taken: string
+          created_at: string
+          description: string
+          id: string
+          incident_type: Database["public"]["Enums"]["incident_type"]
+          occurred_at: string
+          reported_by: string
+          resolution_status: string
+          severity: Database["public"]["Enums"]["alert_severity"]
+          station_id: string | null
+        }
+        Insert: {
+          actions_taken: string
+          created_at?: string
+          description: string
+          id?: string
+          incident_type: Database["public"]["Enums"]["incident_type"]
+          occurred_at?: string
+          reported_by: string
+          resolution_status?: string
+          severity: Database["public"]["Enums"]["alert_severity"]
+          station_id?: string | null
+        }
+        Update: {
+          actions_taken?: string
+          created_at?: string
+          description?: string
+          id?: string
+          incident_type?: Database["public"]["Enums"]["incident_type"]
+          occurred_at?: string
+          reported_by?: string
+          resolution_status?: string
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          station_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_incidents_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      station_fuel_tanks: {
+        Row: {
+          capacity_liters: number
+          created_at: string
+          current_level_liters: number
+          daily_burn_rate_liters: number
+          fuel_type: Database["public"]["Enums"]["fuel_type"]
+          id: string
+          last_dip_reading_at: string
+          station_id: string
+          tank_code: string
+          tank_name: string
+          tank_type: Database["public"]["Enums"]["tank_type"]
+          updated_at: string
+        }
+        Insert: {
+          capacity_liters: number
+          created_at?: string
+          current_level_liters: number
+          daily_burn_rate_liters?: number
+          fuel_type?: Database["public"]["Enums"]["fuel_type"]
+          id?: string
+          last_dip_reading_at?: string
+          station_id: string
+          tank_code: string
+          tank_name: string
+          tank_type?: Database["public"]["Enums"]["tank_type"]
+          updated_at?: string
+        }
+        Update: {
+          capacity_liters?: number
+          created_at?: string
+          current_level_liters?: number
+          daily_burn_rate_liters?: number
+          fuel_type?: Database["public"]["Enums"]["fuel_type"]
+          id?: string
+          last_dip_reading_at?: string
+          station_id?: string
+          tank_code?: string
+          tank_name?: string
+          tank_type?: Database["public"]["Enums"]["tank_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "station_fuel_tanks_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stations: {
         Row: {
@@ -617,28 +922,60 @@ export type Database = {
           },
         ]
       }
+      weather_telemetry_history: {
+        Row: {
+          apparent_temp_c: number
+          created_at: string
+          id: string
+          observed_at: string
+          pressure_hpa: number
+          provenance_tier: string
+          relative_humidity_pct: number | null
+          solar_elevation_deg: number | null
+          station_code: string
+          temperature_c: number
+          wind_speed_kmh: number
+        }
+        Insert: {
+          apparent_temp_c: number
+          created_at?: string
+          id?: string
+          observed_at?: string
+          pressure_hpa: number
+          provenance_tier?: string
+          relative_humidity_pct?: number | null
+          solar_elevation_deg?: number | null
+          station_code: string
+          temperature_c: number
+          wind_speed_kmh: number
+        }
+        Update: {
+          apparent_temp_c?: number
+          created_at?: string
+          id?: string
+          observed_at?: string
+          pressure_hpa?: number
+          provenance_tier?: string
+          relative_humidity_pct?: number | null
+          solar_elevation_deg?: number | null
+          station_code?: string
+          temperature_c?: number
+          wind_speed_kmh?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      current_user_person_id: { Args: never; Returns: string }
-      current_user_role: {
-        Args: never
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
-      is_admin: { Args: never; Returns: boolean }
-      is_expedition_manager_for: {
-        Args: { target_expedition_id: string }
-        Returns: boolean
-      }
       assign_asset: {
         Args: {
           p_asset_id: string
           p_assignment_type: string
-          p_station_id?: string
           p_expedition_id?: string
           p_notes?: string
+          p_station_id?: string
         }
         Returns: {
           asset_id: string
@@ -658,6 +995,16 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      current_user_person_id: { Args: never; Returns: string }
+      current_user_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      is_admin: { Args: never; Returns: boolean }
+      is_expedition_manager_for: {
+        Args: { target_expedition_id: string }
+        Returns: boolean
       }
       release_asset_assignment: {
         Args: { p_assignment_id: string }
@@ -701,6 +1048,8 @@ export type Database = {
       }
     }
     Enums: {
+      alert_severity: "INFO" | "WATCH" | "WARNING" | "CRITICAL"
+      alert_status: "ACTIVE" | "ACKNOWLEDGED" | "RESOLVED"
       app_role:
         | "SUPER_ADMIN"
         | "COMMAND_ADMIN"
@@ -715,6 +1064,11 @@ export type Database = {
         | "MAINTENANCE"
         | "DAMAGED"
         | "RETIRED"
+      cargo_container_type:
+        | "ISO_20FT_DRY"
+        | "ISO_20FT_REEFER"
+        | "BREAKBULK_PALLET"
+        | "HAZMAT_DRUM"
       criticality_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
       data_classification:
         | "AUTHORITATIVE_REAL"
@@ -728,6 +1082,15 @@ export type Database = {
         | "COMPLETED"
         | "CANCELLED"
         | "ARCHIVED"
+      fuel_type: "ARCTIC_HSD" | "JET_A1" | "LUBE_OIL" | "MOGAS"
+      incident_type:
+        | "COLD_INJURY"
+        | "EQUIPMENT_FAILURE"
+        | "FIRE_ALARM"
+        | "VEHICLE_BREAKDOWN"
+        | "CREVASSE_HAZARD"
+        | "COMMS_BLACKOUT"
+        | "FUEL_SPILL"
       inventory_transaction_type:
         | "RECEIPT"
         | "RESTOCK"
@@ -737,12 +1100,23 @@ export type Database = {
         | "ADJUSTMENT"
         | "DAMAGE_LOSS"
         | "EXPIRY"
+      logistics_transit_stage:
+        | "GOA_MOBILIZATION"
+        | "CAPE_TOWN_BUNKERING"
+        | "SOUTHERN_OCEAN_TRANSIT"
+        | "ICE_SHELF_BARRIER"
+        | "STATION_DELIVERED"
       maintenance_status:
         | "SCHEDULED"
         | "IN_PROGRESS"
         | "COMPLETED"
         | "CANCELLED"
+      outdoor_clearance_status:
+        | "GREEN_NORMAL"
+        | "YELLOW_RESTRICTED"
+        | "RED_LOCKDOWN"
       station_status: "ACTIVE" | "INACTIVE" | "HISTORICAL"
+      tank_type: "MAIN_BULK" | "DAY_TANK" | "RESERVE_CACHE" | "MOBILE_BOWSER"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -758,12 +1132,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -787,11 +1161,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -812,11 +1186,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -837,11 +1211,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -854,11 +1228,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -873,6 +1247,8 @@ export const Constants = {
   },
   public: {
     Enums: {
+      alert_severity: ["INFO", "WATCH", "WARNING", "CRITICAL"],
+      alert_status: ["ACTIVE", "ACKNOWLEDGED", "RESOLVED"],
       app_role: [
         "SUPER_ADMIN",
         "COMMAND_ADMIN",
@@ -889,6 +1265,12 @@ export const Constants = {
         "DAMAGED",
         "RETIRED",
       ],
+      cargo_container_type: [
+        "ISO_20FT_DRY",
+        "ISO_20FT_REEFER",
+        "BREAKBULK_PALLET",
+        "HAZMAT_DRUM",
+      ],
       criticality_level: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
       data_classification: [
         "AUTHORITATIVE_REAL",
@@ -904,6 +1286,16 @@ export const Constants = {
         "CANCELLED",
         "ARCHIVED",
       ],
+      fuel_type: ["ARCTIC_HSD", "JET_A1", "LUBE_OIL", "MOGAS"],
+      incident_type: [
+        "COLD_INJURY",
+        "EQUIPMENT_FAILURE",
+        "FIRE_ALARM",
+        "VEHICLE_BREAKDOWN",
+        "CREVASSE_HAZARD",
+        "COMMS_BLACKOUT",
+        "FUEL_SPILL",
+      ],
       inventory_transaction_type: [
         "RECEIPT",
         "RESTOCK",
@@ -914,13 +1306,26 @@ export const Constants = {
         "DAMAGE_LOSS",
         "EXPIRY",
       ],
+      logistics_transit_stage: [
+        "GOA_MOBILIZATION",
+        "CAPE_TOWN_BUNKERING",
+        "SOUTHERN_OCEAN_TRANSIT",
+        "ICE_SHELF_BARRIER",
+        "STATION_DELIVERED",
+      ],
       maintenance_status: [
         "SCHEDULED",
         "IN_PROGRESS",
         "COMPLETED",
         "CANCELLED",
       ],
+      outdoor_clearance_status: [
+        "GREEN_NORMAL",
+        "YELLOW_RESTRICTED",
+        "RED_LOCKDOWN",
+      ],
       station_status: ["ACTIVE", "INACTIVE", "HISTORICAL"],
+      tank_type: ["MAIN_BULK", "DAY_TANK", "RESERVE_CACHE", "MOBILE_BOWSER"],
     },
   },
 } as const

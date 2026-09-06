@@ -1,5 +1,6 @@
 import type { DailySitrepData, SitrepDraftInput } from "./types";
 import { TimeSeriesTelemetryService } from "@/core/telemetry/time-series-service";
+import { computeSitrepIntegrityHash } from "./sitrep-integrity";
 
 /**
  * Pre-seeded Historical Station Commander SITREPs (Official Record Baseline)
@@ -31,6 +32,8 @@ const IN_MEMORY_SITREPS: DailySitrepData[] = [
     outdoorStatus: "YELLOW_RESTRICTED",
     operationalRemarks: "Blizzard watch active due to 46 km/h surface wind gusts. Heavy snow clearing around main modules completed. Prime Generator 1 running nominal on Day Tank 3.",
     signedOffAt: "2026-09-05T08:15:00Z",
+    signerIdentity: "STATION_COMMANDER_BHR",
+    integrityHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     digitalSignatureToken: "NCPOR-ISEA44-BHR-SIG-8F72A9B1",
   },
   {
@@ -59,6 +62,8 @@ const IN_MEMORY_SITREPS: DailySitrepData[] = [
     outdoorStatus: "GREEN_NORMAL",
     operationalRemarks: "Priyadarshini Lake water pumping line operational with electric trace heating. Vehicle crane VEH-CRN-01 sub-zero hydraulic fluid replacement ongoing.",
     signedOffAt: "2026-09-05T08:05:00Z",
+    signerIdentity: "EXPEDITION_LEADER_MTR",
+    integrityHash: "8294c7989eb25e4c767db326e0e02c526d11e4bf3cb306a4bc4d46cfc6109961",
     digitalSignatureToken: "NCPOR-ISEA44-MTR-SIG-3E99D4C2",
   },
 ];
@@ -103,6 +108,26 @@ export class SitrepService {
     currentWeatherSummary: DailySitrepData["weatherSummary"]
   ): DailySitrepData {
     const todayStr = new Date().toISOString().split("T")[0];
+    const signerIdentity = `STATION_COMMANDER_${input.stationCode}`;
+    const integrityHash = computeSitrepIntegrityHash({
+      stationCode: input.stationCode,
+      reportDate: todayStr,
+      commanderName: input.commanderName,
+      signerIdentity,
+      winterOver: input.winterOver,
+      summerScience: input.summerScience,
+      transientAircrew: input.transientAircrew,
+      minTempC: currentWeatherSummary.minTemp24hC,
+      maxTempC: currentWeatherSummary.maxTemp24hC,
+      peakWindKmh: currentWeatherSummary.peakWindKmh,
+      pressureHpa: currentWeatherSummary.currentPressureHpa,
+      pressureTrend6h: currentWeatherSummary.pressureDelta6h,
+      fuelConsumed24hLiters: input.fuelConsumed24hLiters,
+      generatorRuntimeHours: input.generatorRuntimeHours,
+      outdoorStatus: input.outdoorStatus,
+      operationalRemarks: input.operationalRemarks,
+    });
+
     const newSitrep: DailySitrepData = {
       id: `sitrep-${input.stationCode.toLowerCase()}-${todayStr.replace(/-/g, "")}`,
       stationCode: input.stationCode,
@@ -110,6 +135,8 @@ export class SitrepService {
       reportDate: todayStr,
       submittedByEmail,
       commanderName: input.commanderName,
+      signerIdentity,
+      integrityHash,
       headcount: {
         winterOver: input.winterOver,
         summerScience: input.summerScience,
@@ -122,7 +149,7 @@ export class SitrepService {
       outdoorStatus: input.outdoorStatus,
       operationalRemarks: input.operationalRemarks,
       signedOffAt: new Date().toISOString(),
-      digitalSignatureToken: `NCPOR-ISEA44-${input.stationCode}-SIG-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+      digitalSignatureToken: `NCPOR-ISEA44-${input.stationCode}-SIG-${integrityHash.substring(0, 16).toUpperCase()}`,
     };
 
     IN_MEMORY_SITREPS.unshift(newSitrep);

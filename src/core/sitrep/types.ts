@@ -12,6 +12,8 @@ export interface DailySitrepData {
   readonly reportDate: string; // YYYY-MM-DD
   readonly submittedByEmail: string;
   readonly commanderName: string;
+  readonly signerIdentity: string;
+  readonly integrityHash: string;
   readonly headcount: {
     readonly winterOver: number;
     readonly summerScience: number;
@@ -31,12 +33,14 @@ export interface DailySitrepData {
   readonly outdoorStatus: OutdoorClearanceStatus;
   readonly operationalRemarks: string;
   readonly signedOffAt: string;
-  readonly digitalSignatureToken: string;
+  // Legacy alias for backwards UI compatibility
+  readonly digitalSignatureToken?: string;
 }
 
 export interface SitrepDraftInput {
   readonly stationCode: "BHR" | "MTR" | "HMD";
   readonly commanderName: string;
+  readonly signerIdentity?: string;
   readonly winterOver: number;
   readonly summerScience: number;
   readonly transientAircrew: number;
@@ -44,4 +48,14 @@ export interface SitrepDraftInput {
   readonly generatorRuntimeHours: number;
   readonly outdoorStatus: OutdoorClearanceStatus;
   readonly operationalRemarks: string;
+}
+
+export interface IntegrityVerificationResult {
+  readonly isValid: boolean;
+  readonly computedHash: string;
+  readonly storedHash: string;
+  readonly verifiedAt: string;
+  readonly algorithm: "SHA-256";
+  readonly reportId: string;
+  readonly signerIdentity: string;
 }

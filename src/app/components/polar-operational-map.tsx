@@ -723,6 +723,36 @@ export default function PolarOperationalMap({
               </div>
             </div>
           )}
+
+          {/* Map Data Provenance & Operational Legend */}
+          <div className="mt-3 rounded-xl border border-slate-800/80 bg-slate-950/70 p-3 text-[11px] font-mono">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2 mb-2">
+              <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px]">
+                Operational Data Provenance Classification
+              </span>
+              <div className="flex flex-wrap items-center gap-3 text-[10px]">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                  <strong className="text-cyan-400">REAL EXTERNAL</strong> (NASA GIBS / In-situ AWS)
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <strong className="text-emerald-400">SYSTEM OF RECORD</strong> (PostgreSQL DB)
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+                  <strong className="text-purple-400">MATHEMATICALLY DERIVED</strong> (Geodesic / EPSG:3031)
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                  <strong className="text-amber-400">SCENARIO / SURVEY</strong> (Published Tracks)
+                </span>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
+              <strong className="text-slate-300">Operational Disclaimer:</strong> Traverse corridors (Maitri Barrier, Bharati-Amery) and crevasse hazard polygons represent historical NCPOR/SCAR published field survey tracks. Real-time vehicle GPS telemetry and live vessel AIS transponders are not yet integrated into this operational view.
+            </p>
+          </div>
         </div>
 
         {/* Right 4 Columns: Operational Decision Console */}

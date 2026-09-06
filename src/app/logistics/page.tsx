@@ -1,16 +1,60 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PolarisHeader } from "../components/polaris-header";
 import { LogisticsService } from "@/modules/logistics/logistics-service";
-import type { LogisticsTransitStage } from "@/modules/logistics/types/logistics.types";
+import type { CargoContainer, LogisticsTransitStage, VoyageOverview } from "@/modules/logistics/types/logistics.types";
 
 export default function LogisticsPage() {
-  const voyage = LogisticsService.getActiveVoyage();
-  const containers = LogisticsService.getAllContainers();
+  const [voyage, setVoyage] = useState<VoyageOverview>(LogisticsService.getActiveVoyage());
+  const [containers, setContainers] = useState<CargoContainer[]>(() => [...LogisticsService.getAllContainers()]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [stageFilter, setStageFilter] = useState<string>("ALL");
   const [stationFilter, setStationFilter] = useState<string>("ALL");
+
+  useEffect(() => {
+    async function loadContainers() {
+      try {
+        const res = await fetch("/api/logistics/containers");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setContainers(json.data.containers);
+            if (json.data.voyage) {
+              setVoyage(json.data.voyage);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load containers from DB:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadContainers();
+  }, []);
+
+  const handleStageChange = async (containerCode: string, newStage: LogisticsTransitStage) => {
+    setUpdatingCode(containerCode);
+    try {
+      const res = await fetch("/api/logistics/containers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ containerCode, newStage }),
+      });
+      if (res.ok) {
+        setContainers((prev) =>
+          prev.map((c) => (c.containerCode === containerCode ? { ...c, transitStage: newStage } : c))
+        );
+      }
+    } catch (e) {
+      console.error("Failed to update container stage:", e);
+    } finally {
+      setUpdatingCode(null);
+    }
+  };
 
   const filtered = containers.filter((c) => {
     if (stageFilter !== "ALL" && c.transitStage !== stageFilter) return false;
@@ -28,6 +72,8 @@ export default function LogisticsPage() {
         return "bg-amber-500/10 text-amber-400 border-amber-500/30";
       case "ICE_SHELF_BARRIER":
         return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+      case "GOA_MOBILIZATION":
+        return "bg-slate-700/30 text-slate-300 border-slate-600";
       default:
         return "bg-slate-800 text-slate-400 border-slate-700";
     }
@@ -62,11 +108,14 @@ export default function LogisticsPage() {
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 mb-8 shadow-xl">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className="rounded bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/30">
                   MARITIME EXPEDITION LOGISTICS
                 </span>
-                <span className="text-xs text-slate-400">Voyage: {voyage.voyageCode}</span>
+                <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-mono font-bold text-emerald-400 border border-emerald-500/30">
+                  SCENARIO_LOGISTICS_MANIFEST (PostgreSQL public.cargo_containers)
+                </span>
+                <span className="text-xs text-slate-400 font-mono">Voyage: {voyage.voyageCode}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white">
                 Polar Freight Manifests &amp; Resupply Chain
@@ -74,6 +123,7 @@ export default function LogisticsPage() {
               <p className="mt-2 text-sm text-slate-300 max-w-3xl leading-relaxed">
                 Tracks ISO 20-foot shipping containers, breakbulk pallets, and hazardous material drums
                 from Mormugao Port (Goa) via Cape Town bunkering to Antarctica ice shelf barrier offloading.
+                Data is persisted directly to the PostgreSQL system of record with transition capabilities.
               </p>
             </div>
 
@@ -87,6 +137,12 @@ export default function LogisticsPage() {
               <div className="flex justify-between text-slate-400 mt-1">
                 <span>Days at Sea:</span>
                 <strong className="text-white">{voyage.daysAtSea} Days</strong>
+              </div>
+              <div className="flex justify-between text-slate-400 mt-1">
+                <span>DB Status:</span>
+                <strong className={isLoading ? "text-amber-400" : "text-emerald-400"}>
+                  {isLoading ? "SYNCING..." : "LIVE (PostgreSQL)"}
+                </strong>
               </div>
             </div>
           </div>
@@ -146,8 +202,10 @@ export default function LogisticsPage() {
                 className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-white"
               >
                 <option value="ALL">All Transit Stages</option>
-                <option value="SOUTHERN_OCEAN_TRANSIT">Southern Ocean Transit</option>
+                <option value="GOA_MOBILIZATION">Goa Mobilization</option>
                 <option value="CAPE_TOWN_BUNKERING">Cape Town Bunkering</option>
+                <option value="SOUTHERN_OCEAN_TRANSIT">Southern Ocean Transit</option>
+                <option value="ICE_SHELF_BARRIER">Ice Shelf Barrier</option>
                 <option value="STATION_DELIVERED">Station Delivered</option>
               </select>
             </div>
@@ -164,7 +222,7 @@ export default function LogisticsPage() {
                     <th className="py-3 px-4">Destination</th>
                     <th className="py-3 px-4">Gross Weight</th>
                     <th className="py-3 px-4">Priority</th>
-                    <th className="py-3 px-4">Current Transit Leg</th>
+                    <th className="py-3 px-4">Transit Stage (System of Record)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-mono">
@@ -195,13 +253,25 @@ export default function LogisticsPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${getStageBadge(
-                            c.transitStage
-                          )}`}
-                        >
-                          {c.transitStage.replace(/_/g, " ")}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={c.transitStage}
+                            disabled={updatingCode === c.containerCode}
+                            onChange={(e) => handleStageChange(c.containerCode, e.target.value as LogisticsTransitStage)}
+                            className={`rounded px-2 py-1 text-[11px] font-bold border ${getStageBadge(
+                              c.transitStage
+                            )} bg-slate-950 focus:outline-none cursor-pointer disabled:opacity-50`}
+                          >
+                            <option value="GOA_MOBILIZATION">GOA MOBILIZATION</option>
+                            <option value="CAPE_TOWN_BUNKERING">CAPE TOWN BUNKERING</option>
+                            <option value="SOUTHERN_OCEAN_TRANSIT">SOUTHERN OCEAN TRANSIT</option>
+                            <option value="ICE_SHELF_BARRIER">ICE SHELF BARRIER</option>
+                            <option value="STATION_DELIVERED">STATION DELIVERED</option>
+                          </select>
+                          {updatingCode === c.containerCode && (
+                            <span className="text-[10px] text-cyan-400 animate-pulse">Saving...</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

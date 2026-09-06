@@ -7,8 +7,15 @@ interface FuelAutonomyWidgetProps {
   readonly fuelProfiles: Record<string, StationFuelProfile>;
 }
 
-export function FuelAutonomyWidget({ fuelProfiles }: FuelAutonomyWidgetProps) {
+export function FuelAutonomyWidget({ fuelProfiles: initialProfiles }: FuelAutonomyWidgetProps) {
+  const [fuelProfiles, setFuelProfiles] = useState<Record<string, StationFuelProfile>>(initialProfiles);
   const [selectedStationCode, setSelectedStationCode] = useState<string>("BHR");
+  const [showDipModal, setShowDipModal] = useState<boolean>(false);
+  const [dipTankCode, setDipTankCode] = useState<string>("");
+  const [dipLevelLiters, setDipLevelLiters] = useState<string>("");
+  const [submittingDip, setSubmittingDip] = useState<boolean>(false);
+  const [dipSuccessMessage, setDipSuccessMessage] = useState<string | null>(null);
+
   const activeProfile = fuelProfiles[selectedStationCode] || fuelProfiles["BHR"];
 
   const getStatusColor = (status: string) => {
@@ -26,6 +33,42 @@ export function FuelAutonomyWidget({ fuelProfiles }: FuelAutonomyWidgetProps) {
     }
   };
 
+  const openDipModalForTank = (tankCode: string, currentLevel: number) => {
+    setDipTankCode(tankCode);
+    setDipLevelLiters(currentLevel.toString());
+    setShowDipModal(true);
+  };
+
+  const handleDipSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingDip(true);
+    try {
+      const res = await fetch("/api/fuel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tankCode: dipTankCode,
+          newLevelLiters: parseFloat(dipLevelLiters),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to update fuel dip");
+      }
+
+      if (json.profiles) {
+        setFuelProfiles(json.profiles);
+      }
+      setShowDipModal(false);
+      setDipSuccessMessage(`Dip measurement for ${dipTankCode} recorded to PostgreSQL. Autonomy recalculated.`);
+      setTimeout(() => setDipSuccessMessage(null), 5000);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to record dip reading");
+    } finally {
+      setSubmittingDip(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl">
       {/* Widget Header */}
@@ -36,33 +79,45 @@ export function FuelAutonomyWidget({ fuelProfiles }: FuelAutonomyWidgetProps) {
               Life Support &amp; Fuel Farm Autonomy
             </span>
             <span className="rounded bg-cyan-500/10 px-2 py-0.5 text-[10px] font-mono text-cyan-400 border border-cyan-500/20">
-              COMNAP STANDARD
+              SEEDED_OPERATIONAL_BASELINE
             </span>
           </div>
           <h2 className="text-lg font-black text-white mt-1">
             Station Fuel Reserves &amp; Operational Autonomy
           </h2>
+          <span className="text-[11px] text-slate-400 font-mono">
+            Database: `public.station_fuel_tanks` • Formula: Days = Balance / Daily Burn
+          </span>
         </div>
 
-        {/* Station Selector Tabs */}
-        <div className="flex rounded-lg bg-slate-950 border border-slate-800 p-1">
-          {Object.entries(fuelProfiles)
-            .filter(([code]) => code !== "DGT")
-            .map(([code, p]) => (
-              <button
-                key={code}
-                onClick={() => setSelectedStationCode(code)}
-                className={`px-3 py-1 text-xs font-mono font-bold rounded-md transition-colors ${
-                  selectedStationCode === code
-                    ? "bg-cyan-500 text-slate-950 shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {code} ({p.daysOfAutonomy}d)
-              </button>
-            ))}
+        {/* Controls & Station Selector Tabs */}
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-lg bg-slate-950 border border-slate-800 p-1">
+            {Object.entries(fuelProfiles)
+              .filter(([code]) => code !== "DGT")
+              .map(([code, p]) => (
+                <button
+                  key={code}
+                  onClick={() => setSelectedStationCode(code)}
+                  className={`px-3 py-1 text-xs font-mono font-bold rounded-md transition-colors cursor-pointer ${
+                    selectedStationCode === code
+                      ? "bg-cyan-500 text-slate-950 shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {code} ({p.daysOfAutonomy}d)
+                </button>
+              ))}
+          </div>
         </div>
       </div>
+
+      {dipSuccessMessage && (
+        <div className="mb-4 p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-xs font-mono text-emerald-300 flex items-center justify-between">
+          <span>✓ {dipSuccessMessage}</span>
+          <button onClick={() => setDipSuccessMessage(null)} className="text-emerald-400 hover:text-white font-bold">✕</button>
+        </div>
+      )}
 
       {/* Selected Station Operational Metrics */}
       {activeProfile && (
@@ -149,8 +204,8 @@ export function FuelAutonomyWidget({ fuelProfiles }: FuelAutonomyWidgetProps) {
           <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
             <div className="px-4 py-3 bg-slate-900/80 border-b border-slate-800 text-xs font-bold uppercase tracking-wider text-slate-300 flex justify-between items-center">
               <span>{activeProfile.stationName} Bulk Tanks &amp; Day Caches</span>
-              <span className="text-[10px] text-slate-500 font-mono">
-                Formula: Days = Balance / Daily Burn
+              <span className="text-[10px] text-slate-400 font-mono">
+                Click a tank to record a manual dip measurement
               </span>
             </div>
             <div className="overflow-x-auto">
@@ -163,6 +218,7 @@ export function FuelAutonomyWidget({ fuelProfiles }: FuelAutonomyWidgetProps) {
                     <th className="py-2.5 px-4 font-semibold">Current Dip</th>
                     <th className="py-2.5 px-4 font-semibold">Capacity</th>
                     <th className="py-2.5 px-4 font-semibold">Fill Level</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -198,11 +254,80 @@ export function FuelAutonomyWidget({ fuelProfiles }: FuelAutonomyWidgetProps) {
                           </span>
                         </div>
                       </td>
+                      <td className="py-2.5 px-4 text-right">
+                        <button
+                          onClick={() => openDipModalForTank(tank.tankCode, tank.currentLevelLiters)}
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 font-mono text-[10px] font-bold text-slate-300 transition-colors cursor-pointer border border-slate-700"
+                        >
+                          Record Dip
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Fuel Dip Measurement Modal */}
+      {showDipModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-white">
+                  Record Fuel Dip: {dipTankCode}
+                </h3>
+                <span className="text-xs text-slate-400 font-mono">
+                  Updates balance in `station_fuel_tanks`
+                </span>
+              </div>
+              <button
+                onClick={() => setShowDipModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleDipSubmit} className="space-y-4 text-xs font-mono">
+              <div>
+                <label className="block text-slate-400 mb-1 font-semibold">
+                  Measured Liquid Volume (Liters):
+                </label>
+                <input
+                  type="number"
+                  step="10"
+                  required
+                  value={dipLevelLiters}
+                  onChange={(e) => setDipLevelLiters(e.target.value)}
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white text-base font-bold"
+                />
+              </div>
+
+              <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+                Note: Updating the dip reading updates autonomy days in real time. If the balance falls below 20% of tank capacity, an automatic operational low-fuel warning will be persisted to `operational_alerts`.
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowDipModal(false)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingDip}
+                  className="px-4 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-400 disabled:opacity-50 cursor-pointer"
+                >
+                  {submittingDip ? "Committing..." : "Commit Dip Reading"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

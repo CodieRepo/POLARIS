@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PolarisHeader } from "../components/polaris-header";
-import { SitrepService } from "@/core/sitrep/sitrep-service";
-import type { DailySitrepData, OutdoorClearanceStatus } from "@/core/sitrep/types";
+import type { DailySitrepData, OutdoorClearanceStatus, IntegrityVerificationResult } from "@/core/sitrep/types";
 
 export default function SitrepPage() {
   const [sitreps, setSitreps] = useState<readonly DailySitrepData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedStation, setSelectedStation] = useState<"BHR" | "MTR" | "HMD">("BHR");
   const [commanderName, setCommanderName] = useState("Cmdr. Vikram Shekhawat");
@@ -18,13 +18,29 @@ export default function SitrepPage() {
   const [generatorHours, setGeneratorHours] = useState(24);
   const [outdoorStatus, setOutdoorStatus] = useState<OutdoorClearanceStatus>("GREEN_NORMAL");
   const [remarks, setRemarks] = useState(
-    "Standard 08:00 UTC operational dispatch. All primary systems green. Power generation and heating loops fully nominal."
+    "Standard 08:00 UTC operational dispatch. All primary systems nominal. Power generation and heating loops operating within seasonal limits."
   );
   const [submitting, setSubmitting] = useState(false);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+  const [verificationMap, setVerificationMap] = useState<Record<string, IntegrityVerificationResult>>({});
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+  const fetchSitreps = async () => {
+    try {
+      const res = await fetch("/api/sitrep");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setSitreps(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load sitreps from PostgreSQL:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setSitreps(SitrepService.getAllSitreps());
+    fetchSitreps();
   }, []);
 
   const handleStationChange = (code: "BHR" | "MTR" | "HMD") => {
@@ -47,15 +63,16 @@ export default function SitrepPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      const newDoc = SitrepService.submitSitrep(
-        {
+      const payload = {
+        input: {
           stationCode: selectedStation,
           commanderName,
+          signerIdentity: `STATION_COMMANDER_${selectedStation}`,
           winterOver,
           summerScience,
           transientAircrew,
@@ -64,22 +81,55 @@ export default function SitrepPage() {
           outdoorStatus,
           operationalRemarks: remarks,
         },
-        "commander@polaris.test",
-        {
+        weatherSummary: {
           currentTempC: selectedStation === "BHR" ? -13.8 : selectedStation === "MTR" ? -14.2 : 2.3,
-          minTemp24hC: -16.5,
-          maxTemp24hC: -11.0,
-          peakWindKmh: 42.0,
-          currentPressureHpa: 985.0,
-          pressureDelta6h: -1.2,
-        }
-      );
+          minTemp24hC: selectedStation === "BHR" ? -16.5 : -18.5,
+          maxTemp24hC: selectedStation === "BHR" ? -11.0 : -12.0,
+          peakWindKmh: selectedStation === "BHR" ? 42.0 : 28.0,
+          currentPressureHpa: selectedStation === "BHR" ? 985.0 : 976.0,
+          pressureDelta6h: selectedStation === "BHR" ? -1.2 : 0.5,
+        },
+      };
 
-      setSitreps(SitrepService.getAllSitreps());
+      const res = await fetch("/api/sitrep", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to commit SITREP to database");
+      }
+
+      await fetchSitreps();
       setShowCreateModal(false);
-      setSuccessBanner(`SITREP [${newDoc.id}] successfully signed off with digital token: ${newDoc.digitalSignatureToken}`);
+      setSuccessBanner(
+        `SITREP for ${selectedStation} persisted to PostgreSQL with SHA-256 integrity hash: ${json.data.integrityHash.substring(0, 16)}...`
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Submission failed");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleVerifyIntegrity = async (id: string) => {
+    setVerifyingId(id);
+    try {
+      const res = await fetch("/api/sitrep/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (json.success && json.verification) {
+        setVerificationMap((prev) => ({ ...prev, [id]: json.verification }));
+      }
+    } catch (err) {
+      console.error("Verification failed:", err);
+    } finally {
+      setVerifyingId(null);
     }
   };
 
@@ -124,7 +174,7 @@ export default function SitrepPage() {
             <span>✅ {successBanner}</span>
             <button
               onClick={() => setSuccessBanner(null)}
-              className="text-emerald-400 hover:text-white"
+              className="text-emerald-400 hover:text-white font-bold ml-4"
             >
               ✕
             </button>
@@ -139,14 +189,16 @@ export default function SitrepPage() {
                 <span className="rounded bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/30">
                   COMNAP / MoES FORM 104
                 </span>
-                <span className="text-xs text-slate-400">Standard Operational Protocol</span>
+                <span className="text-xs text-emerald-400 font-mono flex items-center gap-1">
+                  ● PostgreSQL System of Record
+                </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white">
                 Station Commander Daily Situation Reports (SITREP)
               </h1>
               <p className="mt-2 text-sm text-slate-300 max-w-3xl leading-relaxed">
-                Official daily operational dispatch transmitted at 08:00 UTC by Station Leaders to NCPOR Headquarters, Goa.
-                Records on-station headcount, 24-hour meteorological extremes, fuel consumed, generator run hours, and outdoor clearance status.
+                Official daily operational dispatches recorded by Station Leaders to NCPOR Headquarters, Goa.
+                Submissions are stored in PostgreSQL (`daily_sitreps`) with a deterministic SHA-256 document integrity hash for tamper verification.
               </p>
             </div>
 
@@ -161,86 +213,133 @@ export default function SitrepPage() {
 
         {/* SITREPs List */}
         <div className="space-y-6">
-          <h2 className="text-sm font-mono uppercase tracking-wider font-bold text-slate-400">
-            Official Dispatched SITREPs
-          </h2>
-
-          <div className="grid grid-cols-1 gap-6">
-            {sitreps.map((doc) => (
-              <div
-                key={doc.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 hover:border-slate-700 transition-colors shadow-lg space-y-4"
-              >
-                {/* SITREP Card Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm font-black text-cyan-400">
-                      {doc.stationCode}
-                    </span>
-                    <span className="text-sm font-bold text-white">
-                      {doc.stationName}
-                    </span>
-                    <span className="text-xs text-slate-400 font-mono">
-                      • Date: {doc.reportDate}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold border ${getStatusBadge(
-                        doc.outdoorStatus
-                      )}`}
-                    >
-                      CLEARANCE: {doc.outdoorStatus.replace("_", " ")}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Metrics Breakdown */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
-                  <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                    <span className="text-slate-500 block text-[10px] uppercase">Commander</span>
-                    <span className="text-slate-200 font-bold">{doc.commanderName}</span>
-                  </div>
-
-                  <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                    <span className="text-slate-500 block text-[10px] uppercase">Headcount</span>
-                    <span className="text-white font-bold">
-                      {doc.headcount.total} pers ({doc.headcount.winterOver} WO / {doc.headcount.summerScience} Sci)
-                    </span>
-                  </div>
-
-                  <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                    <span className="text-slate-500 block text-[10px] uppercase">Fuel Burned (24h)</span>
-                    <span className="text-amber-400 font-bold">
-                      {doc.fuelConsumed24hLiters} L (Gen: {doc.generatorRuntimeHours}h)
-                    </span>
-                  </div>
-
-                  <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                    <span className="text-slate-500 block text-[10px] uppercase">24h Weather Extremes</span>
-                    <span className="text-cyan-400 font-bold">
-                      {doc.weatherSummary.minTemp24hC}°C to {doc.weatherSummary.maxTemp24hC}°C • {doc.weatherSummary.peakWindKmh} km/h
-                    </span>
-                  </div>
-                </div>
-
-                {/* Operational Remarks */}
-                <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 text-xs leading-relaxed text-slate-300">
-                  <strong className="text-cyan-400 block mb-1 font-mono uppercase text-[10px]">
-                    Commander Operational Dispatch Remarks:
-                  </strong>
-                  {doc.operationalRemarks}
-                </div>
-
-                {/* Digital Audit Signature Token */}
-                <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-800/60">
-                  <span>Signed off: {doc.signedOffAt} UTC</span>
-                  <span className="text-cyan-500/80">Digital Auth Token: {doc.digitalSignatureToken}</span>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-mono uppercase tracking-wider font-bold text-slate-400">
+              Persisted Official Dispatches ({sitreps.length})
+            </h2>
+            <span className="text-xs text-slate-500 font-mono">
+              Database: `public.daily_sitreps`
+            </span>
           </div>
+
+          {loading ? (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-sm font-mono text-slate-400">
+              Loading dispatches from PostgreSQL...
+            </div>
+          ) : sitreps.length === 0 ? (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-sm font-mono text-slate-400">
+              No SITREPs recorded yet. Click &ldquo;+ File Daily SITREP&rdquo; to create the first dispatch.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {sitreps.map((doc) => {
+                const verification = verificationMap[doc.id];
+                return (
+                  <div
+                    key={doc.id}
+                    className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 hover:border-slate-700 transition-colors shadow-lg space-y-4"
+                  >
+                    {/* SITREP Card Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-sm font-black text-cyan-400">
+                          {doc.stationCode}
+                        </span>
+                        <span className="text-sm font-bold text-white">
+                          {doc.stationName}
+                        </span>
+                        <span className="text-xs text-slate-400 font-mono">
+                          • Date: {doc.reportDate}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold border ${getStatusBadge(
+                            doc.outdoorStatus
+                          )}`}
+                        >
+                          CLEARANCE: {doc.outdoorStatus.replace("_", " ")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Metrics Breakdown */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
+                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                        <span className="text-slate-500 block text-[10px] uppercase">Commander</span>
+                        <span className="text-slate-200 font-bold">{doc.commanderName}</span>
+                      </div>
+
+                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                        <span className="text-slate-500 block text-[10px] uppercase">Headcount</span>
+                        <span className="text-white font-bold">
+                          {doc.headcount.total} pers ({doc.headcount.winterOver} WO / {doc.headcount.summerScience} Sci)
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                        <span className="text-slate-500 block text-[10px] uppercase">Fuel Burned (24h)</span>
+                        <span className="text-amber-400 font-bold">
+                          {doc.fuelConsumed24hLiters} L (Gen: {doc.generatorRuntimeHours}h)
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                        <span className="text-slate-500 block text-[10px] uppercase">24h Weather Extremes</span>
+                        <span className="text-cyan-400 font-bold">
+                          {doc.weatherSummary.minTemp24hC}°C to {doc.weatherSummary.maxTemp24hC}°C • {doc.weatherSummary.peakWindKmh} km/h
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Operational Remarks */}
+                    <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 text-xs leading-relaxed text-slate-300">
+                      <strong className="text-cyan-400 block mb-1 font-mono uppercase text-[10px]">
+                        Commander Operational Dispatch Remarks:
+                      </strong>
+                      {doc.operationalRemarks}
+                    </div>
+
+                    {/* Cryptographic Document Integrity Hash Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] font-mono text-slate-400 pt-3 border-t border-slate-800/80 bg-slate-950/40 px-3 py-2 rounded-lg">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 uppercase text-[10px] font-bold">Document Integrity Hash (SHA-256):</span>
+                          <span className="text-cyan-400 font-mono break-all">{doc.integrityHash}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          Signer: {doc.signerIdentity} • Timestamp: {doc.signedOffAt}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {verification ? (
+                          <span
+                            className={`px-2.5 py-1 rounded text-[10px] font-bold font-mono border ${
+                              verification.isValid
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                            }`}
+                          >
+                            {verification.isValid ? "✓ SHA-256 VERIFIED" : "✕ HASH MISMATCH"}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleVerifyIntegrity(doc.id)}
+                            disabled={verifyingId === doc.id}
+                            className="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 text-[10px] font-bold font-mono border border-slate-700 cursor-pointer disabled:opacity-50"
+                          >
+                            {verifyingId === doc.id ? "Verifying..." : "Verify Integrity"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Modal: File Daily SITREP */}
@@ -248,9 +347,14 @@ export default function SitrepPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
             <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-lg font-bold text-white">
-                  File Official Daily SITREP
-                </h3>
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    File Official Daily SITREP
+                  </h3>
+                  <span className="text-xs text-slate-400 font-mono">
+                    Persisted with SHA-256 canonical hash to `daily_sitreps`
+                  </span>
+                </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
                   className="text-slate-400 hover:text-white text-sm"
@@ -365,6 +469,11 @@ export default function SitrepPage() {
                   />
                 </div>
 
+                <div className="rounded bg-slate-950 p-3 border border-slate-800 text-[11px] text-slate-400">
+                  <strong className="text-cyan-400 block mb-0.5 font-mono">Cryptographic Document Integrity:</strong>
+                  On submission, the report payload will be canonicalized and hashed via SHA-256. The digest will be committed to `daily_sitreps.integrity_hash` to detect any post-dispatch alteration.
+                </div>
+
                 <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                   <button
                     type="button"
@@ -378,7 +487,7 @@ export default function SitrepPage() {
                     disabled={submitting}
                     className="rounded-lg bg-cyan-500 px-4 py-2 font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
                   >
-                    {submitting ? "Signing Off Dispatch..." : "Sign Off & Dispatch SITREP"}
+                    {submitting ? "Hashing & Committing..." : "Commit & Dispatch SITREP"}
                   </button>
                 </div>
               </form>

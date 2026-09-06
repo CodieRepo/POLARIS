@@ -12,7 +12,10 @@ import { createServerClient } from "@/infrastructure/db/supabase-server";
 import { calculateOperationalReadiness } from "@/core/readiness/operational-readiness";
 import { WeatherService } from "@/core/weather/weather-service";
 import { FuelService } from "@/core/fuel/fuel-service";
+import { FuelRepository } from "@/core/fuel/fuel-repository";
 import { AlertEngine } from "@/core/alerts/alert-engine";
+import { AlertRepository } from "@/core/alerts/alert-repository";
+import { WeatherHistoryService } from "@/core/weather/weather-history-service";
 import { TimeSeriesTelemetryService } from "@/core/telemetry/time-series-service";
 import { LogisticsService } from "@/modules/logistics/logistics-service";
 import type { StationWeather } from "@/core/weather/types";
@@ -96,8 +99,17 @@ export default async function DashboardPage() {
   }
 
   const readiness = calculateOperationalReadiness(assets, maintenance, stations, weatherTelemetry);
-  const fuelProfiles = FuelService.getAllStationFuelProfiles();
-  const operationalAlerts = AlertEngine.evaluateTelemetryAlerts(weatherTelemetry);
+
+  const [fuelProfiles, persistentAlerts, bhrTrend, mtrTrend, hmdTrend] = await Promise.all([
+    FuelRepository.getAllStationFuelProfiles().catch(() => FuelService.getAllStationFuelProfiles()),
+    AlertRepository.getActiveAlerts().catch(() => []),
+    WeatherHistoryService.getHistoricalTrend("BHR", 24).catch(() => null),
+    WeatherHistoryService.getHistoricalTrend("MTR", 24).catch(() => null),
+    WeatherHistoryService.getHistoricalTrend("HMD", 24).catch(() => null),
+  ]);
+
+  const fallbackAlerts = AlertEngine.evaluateTelemetryAlerts(weatherTelemetry);
+  const operationalAlerts = persistentAlerts.length > 0 ? persistentAlerts : fallbackAlerts;
   const activeVoyage = LogisticsService.getActiveVoyage();
 
   const bhrWeather = weatherTelemetry?.["BHR"];
@@ -105,19 +117,19 @@ export default async function DashboardPage() {
   const hmdWeather = weatherTelemetry?.["HMD"];
 
   const weatherTrends = {
-    BHR: TimeSeriesTelemetryService.getStationTelemetryTrend(
+    BHR: bhrTrend || TimeSeriesTelemetryService.getStationTelemetryTrend(
       "BHR",
       bhrWeather?.measurements.temperatureC.value ?? -8.5,
       bhrWeather?.measurements.pressureHpa.value ?? 988.2,
       bhrWeather?.measurements.windSpeedKmH.value ?? 24
     ),
-    MTR: TimeSeriesTelemetryService.getStationTelemetryTrend(
+    MTR: mtrTrend || TimeSeriesTelemetryService.getStationTelemetryTrend(
       "MTR",
       mtrWeather?.measurements.temperatureC.value ?? -12.4,
       mtrWeather?.measurements.pressureHpa.value ?? 982.0,
       mtrWeather?.measurements.windSpeedKmH.value ?? 38
     ),
-    HMD: TimeSeriesTelemetryService.getStationTelemetryTrend(
+    HMD: hmdTrend || TimeSeriesTelemetryService.getStationTelemetryTrend(
       "HMD",
       hmdWeather?.measurements.temperatureC.value ?? -2.1,
       hmdWeather?.measurements.pressureHpa.value ?? 1004.5,
@@ -125,9 +137,10 @@ export default async function DashboardPage() {
     ),
   };
 
-  const avgDaysAutonomy = Math.round(
-    (fuelProfiles.BHR.daysOfAutonomy + fuelProfiles.MTR.daysOfAutonomy + fuelProfiles.HMD.daysOfAutonomy) / 3
-  );
+  const bhrAutonomy = fuelProfiles.BHR?.daysOfAutonomy ?? 255;
+  const mtrAutonomy = fuelProfiles.MTR?.daysOfAutonomy ?? 231;
+  const hmdAutonomy = fuelProfiles.HMD?.daysOfAutonomy ?? 284;
+  const avgDaysAutonomy = Math.round((bhrAutonomy + mtrAutonomy + hmdAutonomy) / 3);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
@@ -142,7 +155,7 @@ export default async function DashboardPage() {
                 <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-bold text-cyan-400 border border-cyan-500/40">
                   NATIONAL POLAR OPERATIONS PLATFORM
                 </span>
-                <span className="text-xs text-slate-400">SIH 2026 Production Baseline</span>
+                <span className="text-xs text-slate-400 font-mono">POLARIS Reality Upgrade — Phase 1 (PostgreSQL System of Record Active)</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 Integrated Polar Expedition Logistics &amp; Asset Command Suite
