@@ -62,18 +62,12 @@ export class TelemetryProcessor {
   }
 
   /**
-   * Ingests a batch of telemetry events with reboot-safe deduplication.
+   * Core telemetry batch ingestion and side-effect processing engine.
    */
-  static async processBatch(
+  private static async ingestEventBatch(
     gatewayId: string,
-    rawKey: string,
     events: HardwareTelemetryEvent[]
   ): Promise<TelemetryIngestResult> {
-    const auth = await this.authenticateGateway(gatewayId, rawKey);
-    if (!auth.authenticated) {
-      throw new Error(`Authentication failed: ${auth.error}`);
-    }
-
     const supabase = createServerClient();
     let accepted = 0;
     let deduplicated = 0;
@@ -85,7 +79,10 @@ export class TelemetryProcessor {
       .select('device_code, target_tank_id, target_asset_id, station_id')
       .eq('gateway_id', gatewayId);
 
-    const deviceMap = new Map<string, { target_tank_id: string | null; target_asset_id: string | null; station_id: string }>();
+    const deviceMap = new Map<
+      string,
+      { target_tank_id: string | null; target_asset_id: string | null; station_id: string }
+    >();
     if (devices) {
       for (const d of devices) {
         deviceMap.set(d.device_code, d);
@@ -187,6 +184,62 @@ export class TelemetryProcessor {
       errors,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Ingests a batch of telemetry events with reboot-safe deduplication (External Gateway Route).
+   */
+  static async processBatch(
+    gatewayId: string,
+    rawKey: string,
+    events: HardwareTelemetryEvent[]
+  ): Promise<TelemetryIngestResult> {
+    const auth = await this.authenticateGateway(gatewayId, rawKey);
+    if (!auth.authenticated) {
+      throw new Error(`Authentication failed: ${auth.error}`);
+    }
+
+    return this.ingestEventBatch(gatewayId, events);
+  }
+
+  /**
+   * Ingests virtual telemetry events for internal simulation & UI demonstration.
+   * Validates gateway existence in registry without requiring ambient plaintext key secrets.
+   */
+  static async processVirtualBatch(
+    gatewayId: string,
+    events: HardwareTelemetryEvent[]
+  ): Promise<TelemetryIngestResult> {
+    const supabase = createServerClient();
+    const { data: gw, error } = await supabase
+      .from('gateway_credentials')
+      .select('id, is_active, revoked_at')
+      .eq('gateway_id', gatewayId)
+      .maybeSingle();
+
+    if (error || !gw) {
+      throw new Error(`Virtual gateway '${gatewayId}' is not registered`);
+    }
+
+    if (!gw.is_active || gw.revoked_at) {
+      throw new Error(`Virtual gateway '${gatewayId}' is inactive or revoked`);
+    }
+
+    // Touch last_seen_at
+    await supabase
+      .from('gateway_credentials')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', gw.id);
+
+    // Enforce simulation watermarking on all virtual events
+    const sanitizedEvents = events.map((e) => ({
+      ...e,
+      classification: 'SIMULATED_TELEMETRY' as const,
+      source: 'VIRTUAL' as const,
+      quality: 'SIMULATED' as const,
+    }));
+
+    return this.ingestEventBatch(gatewayId, sanitizedEvents);
   }
 
   /**

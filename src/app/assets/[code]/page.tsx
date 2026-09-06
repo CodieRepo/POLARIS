@@ -139,7 +139,10 @@ export default function AssetDetailPage({ params }: PageProps) {
 
   const handleMaintenanceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!assetHistory?.asset) return;
+    if (!assetHistory?.asset) {
+      console.error("[handleMaintenanceSubmit] ABORT: No asset record found in state");
+      return;
+    }
 
     setActionLoading(true);
     setErrorMsg(null);
@@ -155,6 +158,8 @@ export default function AssetDetailPage({ params }: PageProps) {
         notes: "Scheduled via POLARIS Asset Operations Portal",
       };
 
+      console.log("[handleMaintenanceSubmit] Submitting payload:", JSON.stringify(payload));
+
       const res = await fetch("/api/maintenance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,6 +167,7 @@ export default function AssetDetailPage({ params }: PageProps) {
       });
 
       const json = await res.json();
+      console.log("[handleMaintenanceSubmit] Server responded:", res.status, JSON.stringify(json));
 
       if (!res.ok) {
         setErrorMsg(`Maintenance order rejected: ${json.error || "Engine error"}`);
@@ -174,6 +180,7 @@ export default function AssetDetailPage({ params }: PageProps) {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      console.error("[handleMaintenanceSubmit] Exception:", msg);
       setErrorMsg(`Workflow exception: ${msg}`);
     } finally {
       setActionLoading(false);
@@ -680,6 +687,8 @@ export default function AssetDetailPage({ params }: PageProps) {
                   Scheduled Service Date &amp; Time
                 </label>
                 <input
+                  id="maintenance-scheduled-date"
+                  name="scheduledDate"
                   type="datetime-local"
                   required
                   value={scheduledDate}
@@ -693,6 +702,8 @@ export default function AssetDetailPage({ params }: PageProps) {
                   Work Order Description / Sub-Zero Scope
                 </label>
                 <textarea
+                  id="maintenance-desc"
+                  name="maintenanceDesc"
                   required
                   rows={2}
                   value={maintenanceDesc}
@@ -707,6 +718,8 @@ export default function AssetDetailPage({ params }: PageProps) {
                   Estimated Servicing Cost ($ USD, Optional)
                 </label>
                 <input
+                  id="maintenance-cost"
+                  name="maintenanceCost"
                   type="number"
                   min="0"
                   step="0.01"

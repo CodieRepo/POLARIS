@@ -26,18 +26,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const gatewayId = body.gatewayId || 'EDGE-GW-BHR-01';
-    // Gateway key retrieved securely from server environment
-    const rawKey =
-      (gatewayId === 'EDGE-GW-MTR-01'
-        ? process.env.POLARIS_GATEWAY_KEY_MTR
-        : process.env.POLARIS_GATEWAY_KEY) ||
-      process.env.POLARIS_GATEWAY_KEY ||
-      '';
 
     const adapter = new VirtualTelemetryAdapter(gatewayId);
     const events = await adapter.pollAll();
 
-    const result = await TelemetryProcessor.processBatch(gatewayId, rawKey, events);
+    const result = await TelemetryProcessor.processVirtualBatch(gatewayId, events);
     return NextResponse.json({
       success: true,
       simulated: true,

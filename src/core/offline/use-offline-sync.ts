@@ -67,8 +67,13 @@ export function useOfflineSync() {
         setSyncState('OFFLINE');
       };
 
+      const handleQueueUpdate = () => {
+        refreshPendingCount();
+      };
+
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
+      window.addEventListener('offline-mutation-queued', handleQueueUpdate);
 
       // 3. Service Worker messages (e.g. background sync)
       const handleMessage = (event: MessageEvent) => {
@@ -81,14 +86,15 @@ export function useOfflineSync() {
         navigator.serviceWorker.addEventListener('message', handleMessage);
       }
 
-      // 4. Polling interval to check pending queue (every 15s)
+      // 4. Polling interval to check pending queue (every 10s)
       const intervalId = setInterval(() => {
         refreshPendingCount();
-      }, 15000);
+      }, 10000);
 
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
+        window.removeEventListener('offline-mutation-queued', handleQueueUpdate);
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.removeEventListener('message', handleMessage);
         }

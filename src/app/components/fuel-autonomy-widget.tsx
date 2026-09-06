@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { MutationQueue } from "@/core/offline/mutation-queue";
 import type { StationFuelProfile } from "@/core/fuel/types";
 
 interface FuelAutonomyWidgetProps {
@@ -43,14 +44,98 @@ export function FuelAutonomyWidget({ fuelProfiles: initialProfiles }: FuelAutono
     e.preventDefault();
     setSubmittingDip(true);
     try {
-      const res = await fetch("/api/fuel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const parsedLit = parseFloat(dipLevelLiters);
+
+      // If browser is offline, queue mutation locally into IndexedDB
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        const stationId =
+          selectedStationCode === "MTR"
+            ? "m0000000-0000-0000-0000-000000000002"
+            : selectedStationCode === "HMD"
+            ? "h0000000-0000-0000-0000-000000000003"
+            : "b0000000-0000-0000-0000-000000000001";
+
+        const tank = activeProfile?.tanks.find((t) => t.tankCode === dipTankCode);
+        const tankId = tank?.id || dipTankCode;
+
+        await MutationQueue.enqueue("LOG_FUEL_DIP", stationId, {
+          tankId,
           tankCode: dipTankCode,
-          newLevelLiters: parseFloat(dipLevelLiters),
-        }),
-      });
+          dipReadingLiters: parsedLit,
+          loggedBy: "Field Operations Officer (Offline)",
+        });
+
+        // Optimistically update local profile in UI state
+        if (activeProfile && tank) {
+          const updatedTanks = activeProfile.tanks.map((t) =>
+            t.tankCode === dipTankCode
+              ? {
+                  ...t,
+                  currentLevelLiters: parsedLit,
+                  percentage: Math.round((parsedLit / t.capacityLiters) * 100),
+                }
+              : t
+          );
+          const newTotal = updatedTanks.reduce((acc, t) => acc + t.currentLevelLiters, 0);
+          const newDays = Math.round(newTotal / (activeProfile.aggregateDailyBurnLiters || 450));
+          setFuelProfiles((prev) => ({
+            ...prev,
+            [selectedStationCode]: {
+              ...activeProfile,
+              totalCurrentLiters: newTotal,
+              daysOfAutonomy: newDays,
+              tanks: updatedTanks,
+            },
+          }));
+        }
+
+        setShowDipModal(false);
+        setDipSuccessMessage(
+          `[OFFLINE MODE] Fuel Dip reading for ${dipTankCode} (${parsedLit.toLocaleString()} L) buffered locally in IndexedDB. Will synchronize automatically when connection is restored.`
+        );
+        setTimeout(() => setDipSuccessMessage(null), 8000);
+        window.dispatchEvent(new Event("offline-mutation-queued"));
+        return;
+      }
+
+      let res: Response;
+      try {
+        res = await fetch("/api/fuel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tankCode: dipTankCode,
+            newLevelLiters: parsedLit,
+          }),
+        });
+      } catch (netErr) {
+        console.warn("Network request failed, falling back to offline mutation queue:", netErr);
+        const stationId =
+          selectedStationCode === "MTR"
+            ? "m0000000-0000-0000-0000-000000000002"
+            : selectedStationCode === "HMD"
+            ? "h0000000-0000-0000-0000-000000000003"
+            : "b0000000-0000-0000-0000-000000000001";
+
+        const tank = activeProfile?.tanks.find((t) => t.tankCode === dipTankCode);
+        const tankId = tank?.id || dipTankCode;
+
+        await MutationQueue.enqueue("LOG_FUEL_DIP", stationId, {
+          tankId,
+          tankCode: dipTankCode,
+          dipReadingLiters: parsedLit,
+          loggedBy: "Field Operations Officer (Offline)",
+        });
+
+        setShowDipModal(false);
+        setDipSuccessMessage(
+          `[OFFLINE MODE] Fuel Dip reading for ${dipTankCode} (${parsedLit.toLocaleString()} L) buffered locally in IndexedDB. Will synchronize automatically when connection is restored.`
+        );
+        setTimeout(() => setDipSuccessMessage(null), 8000);
+        window.dispatchEvent(new Event("offline-mutation-queued"));
+        return;
+      }
+
       const json = await res.json();
       if (!res.ok || !json.success) {
         throw new Error(json.error || "Failed to update fuel dip");

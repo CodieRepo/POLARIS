@@ -34,7 +34,8 @@ export class SitrepRepository {
     let query = supabase
       .from("daily_sitreps")
       .select("*")
-      .order("report_date", { ascending: false });
+      .order("report_date", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (stationCode && STATION_CODE_TO_ID[stationCode]) {
       query = query.eq("station_id", STATION_CODE_TO_ID[stationCode]);

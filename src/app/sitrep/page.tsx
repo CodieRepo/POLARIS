@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PolarisHeader } from "../components/polaris-header";
+import { MutationQueue } from "@/core/offline/mutation-queue";
 import type { DailySitrepData, OutdoorClearanceStatus, IntegrityVerificationResult } from "@/core/sitrep/types";
 
 export default function SitrepPage() {
@@ -68,6 +69,43 @@ export default function SitrepPage() {
     setSubmitting(true);
 
     try {
+      const stationId =
+        selectedStation === "MTR"
+          ? "m0000000-0000-0000-0000-000000000002"
+          : selectedStation === "HMD"
+          ? "h0000000-0000-0000-0000-000000000003"
+          : "b0000000-0000-0000-0000-000000000001";
+
+      const reportDateStr = new Date().toISOString().split("T")[0];
+
+      // If browser is offline, queue mutation locally into IndexedDB
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        const idempotencyKey = await MutationQueue.enqueue("SUBMIT_SITREP", stationId, {
+          reportDate: reportDateStr,
+          commanderName,
+          signerIdentity: `STATION_COMMANDER_${selectedStation}`,
+          winterOverHeadcount: winterOver,
+          summerScienceHeadcount: summerScience,
+          transientHeadcount: transientAircrew,
+          minTempC: selectedStation === "BHR" ? -16.5 : selectedStation === "MTR" ? -18.5 : -2.0,
+          maxTempC: selectedStation === "BHR" ? -11.0 : selectedStation === "MTR" ? -12.0 : 4.0,
+          peakWindKmh: selectedStation === "BHR" ? 42.0 : 28.0,
+          pressureHpa: selectedStation === "BHR" ? 985.0 : 976.0,
+          pressureTrend6h: selectedStation === "BHR" ? -1.2 : 0.5,
+          fuelConsumed24hLiters: fuelConsumed,
+          generatorRuntimeHours: generatorHours,
+          outdoorStatus,
+          operationalRemarks: remarks || "Offline SITREP filed from local field station client.",
+        });
+
+        setShowCreateModal(false);
+        setSuccessBanner(
+          `[OFFLINE MODE] Daily SITREP for ${selectedStation} (${reportDateStr}) buffered locally in IndexedDB (Queue ID: ${idempotencyKey.slice(0, 8)}). Will synchronize automatically when connection is restored.`
+        );
+        window.dispatchEvent(new Event("offline-mutation-queued"));
+        return;
+      }
+
       const payload = {
         input: {
           stationCode: selectedStation,
@@ -91,11 +129,41 @@ export default function SitrepPage() {
         },
       };
 
-      const res = await fetch("/api/sitrep", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let res: Response;
+      try {
+        res = await fetch("/api/sitrep", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch (netErr) {
+        // Network failure fallback: buffer offline in IndexedDB
+        console.warn("Network request failed, falling back to offline mutation queue:", netErr);
+        const idempotencyKey = await MutationQueue.enqueue("SUBMIT_SITREP", stationId, {
+          reportDate: reportDateStr,
+          commanderName,
+          signerIdentity: `STATION_COMMANDER_${selectedStation}`,
+          winterOverHeadcount: winterOver,
+          summerScienceHeadcount: summerScience,
+          transientHeadcount: transientAircrew,
+          minTempC: selectedStation === "BHR" ? -16.5 : selectedStation === "MTR" ? -18.5 : -2.0,
+          maxTempC: selectedStation === "BHR" ? -11.0 : selectedStation === "MTR" ? -12.0 : 4.0,
+          peakWindKmh: selectedStation === "BHR" ? 42.0 : 28.0,
+          pressureHpa: selectedStation === "BHR" ? 985.0 : 976.0,
+          pressureTrend6h: selectedStation === "BHR" ? -1.2 : 0.5,
+          fuelConsumed24hLiters: fuelConsumed,
+          generatorRuntimeHours: generatorHours,
+          outdoorStatus,
+          operationalRemarks: remarks || "Offline SITREP filed from local field station client.",
+        });
+
+        setShowCreateModal(false);
+        setSuccessBanner(
+          `[OFFLINE MODE] Daily SITREP for ${selectedStation} (${reportDateStr}) buffered locally in IndexedDB (Queue ID: ${idempotencyKey.slice(0, 8)}). Will synchronize automatically when connection is restored.`
+        );
+        window.dispatchEvent(new Event("offline-mutation-queued"));
+        return;
+      }
 
       const json = await res.json();
       if (!res.ok || !json.success) {
