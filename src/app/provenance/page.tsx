@@ -78,18 +78,18 @@ export default function ProvenancePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <PolarisHeader currentPath="/provenance" />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         {/* Navigation Breadcrumb */}
-        <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
+        <div className="mb-4 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <Link href="/" className="hover:text-cyan-400 transition-colors">
+            <Link href="/" className="hover:text-sky-700 transition-colors">
               ← Command Dashboard
             </Link>
             <span>/</span>
-            <span className="font-mono text-cyan-400">Data Provenance Charter</span>
+            <span className="font-mono text-sky-700 font-bold">Data Provenance Charter</span>
           </div>
           <span className="text-[11px] font-mono text-slate-500">
             NCPOR Governance Standard
@@ -97,19 +97,19 @@ export default function ProvenancePage() {
         </div>
 
         {/* Header Summary */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 mb-8 shadow-xl">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 mb-8 shadow-xs">
           <div className="flex items-center gap-2 mb-2">
-            <span className="rounded bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/30">
+            <span className="rounded bg-sky-50 px-2 py-0.5 text-xs font-mono font-bold text-sky-700 border border-sky-200">
               POLARIS GOVERNANCE PRINCIPLE
             </span>
-            <span className="text-xs text-emerald-400 font-mono">
+            <span className="text-xs text-emerald-700 font-mono font-semibold">
               ● Zero Simulation Misrepresentation
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
             Data Provenance, Source Hierarchy &amp; Freshness Policy
           </h1>
-          <p className="mt-2 text-sm text-slate-300 max-w-3xl leading-relaxed">
+          <p className="mt-2 text-sm text-slate-600 max-w-3xl leading-relaxed">
             POLARIS strictly separates physical in-situ observations from numerical models, emergency fallback baselines, and mathematical heuristics.
             Every metric surfaced in the command center preserves its source attribution, timestamp, and methodology.
           </p>
@@ -120,67 +120,67 @@ export default function ProvenancePage() {
           {weatherTiers.map((t) => (
             <div
               key={t.tier}
-              className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 flex flex-col justify-between shadow-xl hover:border-slate-700 transition-colors"
+              className="rounded-xl border border-slate-200 bg-white p-6 flex flex-col justify-between shadow-xs hover:border-slate-300 transition-colors"
             >
               <div>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    <span className="text-xs font-mono font-bold text-cyan-400 block mb-1">
+                    <span className="text-xs font-mono font-bold text-sky-700 block mb-1">
                       TIER: {t.tier}
                     </span>
-                    <h2 className="text-base font-bold text-white leading-snug">{t.title}</h2>
+                    <h2 className="text-base font-bold text-slate-900 leading-snug">{t.title}</h2>
                   </div>
                   <ProvenanceBadge tier={t.badge} size="sm" />
                 </div>
 
-                <div className="mb-3 rounded-xl bg-slate-950/80 px-3.5 py-2.5 border border-slate-800 text-xs font-mono">
+                <div className="mb-3 rounded-xl bg-slate-50 px-3.5 py-2.5 border border-slate-200/80 text-xs font-mono">
                   <span className="text-slate-500 block text-[10px] uppercase font-bold mb-0.5">Authoritative Source:</span>
                   <a
                     href={t.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-cyan-400 hover:underline font-medium text-xs break-all"
+                    className="text-sky-700 hover:underline font-medium text-xs break-all"
                   >
                     {t.source} ↗
                   </a>
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                <p className="text-xs text-slate-600 leading-relaxed mb-4">
                   {t.description}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+              <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500 flex items-center justify-between">
                 <span className="font-semibold text-slate-500 uppercase text-[10px]">Freshness Protocol:</span>
-                <span className="text-slate-300">{t.freshnessPolicy}</span>
+                <span className="text-slate-700">{t.freshnessPolicy}</span>
               </div>
             </div>
           ))}
         </div>
 
         {/* Governance Charter Box */}
-        <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/30 p-6 sm:p-8 shadow-2xl">
-          <h2 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+        <div className="rounded-xl border border-sky-200 bg-gradient-to-r from-sky-50/50 via-white to-sky-50/30 p-6 sm:p-8 shadow-xs">
+          <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
             <span>🛡️</span> Non-Negotiable Polar Operational Grounding Principles
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300 mt-5">
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800">
-              <span className="font-bold text-cyan-400 block mb-1 font-mono text-sm">1. Real &amp; Official Data First</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600 mt-5">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+              <span className="font-bold text-sky-700 block mb-1 font-mono text-sm">1. Real &amp; Official Data First</span>
               <p className="leading-relaxed">Prioritize NCPOR, MoES, and Indian national polar records. Numerical models only supplement unmonitored fields.</p>
             </div>
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800">
-              <span className="font-bold text-cyan-400 block mb-1 font-mono text-sm">2. Zero Paid Data Dependencies</span>
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+              <span className="font-bold text-sky-700 block mb-1 font-mono text-sm">2. Zero Paid Data Dependencies</span>
               <p className="leading-relaxed">100% public, free scientific infrastructure. Zero proprietary API keys or commercial weather vendors required.</p>
             </div>
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800">
-              <span className="font-bold text-cyan-400 block mb-1 font-mono text-sm">3. Fully Explainable Heuristics</span>
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+              <span className="font-bold text-sky-700 block mb-1 font-mono text-sm">3. Fully Explainable Heuristics</span>
               <p className="leading-relaxed">Operational readiness and environmental scores are mathematical heuristics for decision support, never certified SOP certifications.</p>
             </div>
           </div>
         </div>
       </main>
 
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 mt-12 font-mono">
+      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 mt-12 font-mono">
         POLARIS • National Centre for Polar &amp; Ocean Research (NCPOR) Management Foundation • SIH 2026
       </footer>
     </div>

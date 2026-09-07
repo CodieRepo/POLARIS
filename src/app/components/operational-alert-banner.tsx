@@ -26,26 +26,26 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
   const getSeverityStyle = (s: string) => {
     switch (s) {
       case "CRITICAL":
-        return "bg-rose-950/60 border-rose-500/50 text-rose-300";
+        return "bg-rose-50 border-rose-200 text-rose-900";
       case "WARNING":
-        return "bg-amber-950/60 border-amber-500/50 text-amber-300";
+        return "bg-amber-50 border-amber-200 text-amber-900";
       case "WATCH":
-        return "bg-cyan-950/60 border-cyan-500/40 text-cyan-300";
+        return "bg-sky-50 border-sky-200 text-sky-900";
       default:
-        return "bg-slate-900/60 border-slate-700 text-slate-300";
+        return "bg-slate-50 border-slate-200 text-slate-800";
     }
   };
 
   const getBadgeStyle = (s: string) => {
     switch (s) {
       case "CRITICAL":
-        return "bg-rose-500 text-slate-950 font-black";
+        return "bg-rose-600 text-white font-bold";
       case "WARNING":
-        return "bg-amber-500 text-slate-950 font-black";
+        return "bg-amber-600 text-white font-bold";
       case "WATCH":
-        return "bg-cyan-500 text-slate-950 font-black";
+        return "bg-sky-600 text-white font-bold";
       default:
-        return "bg-slate-800 text-slate-300";
+        return "bg-slate-200 text-slate-800 font-bold";
     }
   };
 
@@ -75,7 +75,7 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
   };
 
   return (
-    <div className="mb-6 rounded-xl border border-slate-800 bg-slate-900/70 p-3.5 shadow-lg">
+    <div className="mb-6 rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span
@@ -85,18 +85,18 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
           >
             {highestSeverity} ALERT ({activeCount})
           </span>
-          <span className="text-xs font-mono text-slate-300 font-bold truncate max-w-xl">
-            {alerts[0].title} — <span className="font-normal text-slate-400">{alerts[0].stationCode}: {alerts[0].details}</span>
+          <span className="text-xs font-mono text-slate-800 font-bold truncate max-w-xl">
+            {alerts[0].title} — <span className="font-normal text-slate-600">{alerts[0].stationCode}: {alerts[0].details}</span>
           </span>
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto text-xs font-mono">
-          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+          <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
             PostgreSQL: `public.operational_alerts`
           </span>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-cyan-400 hover:text-cyan-300 underline font-semibold cursor-pointer"
+            className="text-sky-700 hover:text-sky-800 underline font-semibold cursor-pointer"
           >
             {expanded ? "Hide Alert Drawer" : `View All (${alerts.length})`}
           </button>
@@ -105,7 +105,7 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
 
       {/* Expanded Alert Drawer */}
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-slate-800/80 space-y-2.5">
+        <div className="mt-4 pt-4 border-t border-slate-200 space-y-2.5">
           {alerts.map((alert) => (
             <div
               key={alert.id}
@@ -115,14 +115,14 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-white uppercase tracking-wider">
+                  <span className="font-bold text-slate-900 uppercase tracking-wider">
                     [{alert.stationCode}] {alert.title}
                   </span>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-slate-500">
                     Category: {alert.category}
                   </span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-slate-300 font-sans">
+                <p className="text-[11px] leading-relaxed text-slate-700 font-sans">
                   {alert.details}
                 </p>
                 <span className="text-[10px] text-slate-500 block">
@@ -135,17 +135,17 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
                   <button
                     onClick={() => handleAcknowledge(alert.id)}
                     disabled={actingId === alert.id}
-                    className="rounded bg-slate-950 border border-slate-800 px-3 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
+                    className="rounded bg-white border border-slate-300 px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
                   >
                     {actingId === alert.id ? "Updating..." : "Acknowledge"}
                   </button>
                 ) : (
-                  <span className="text-[10px] text-amber-400 font-bold uppercase">
+                  <span className="text-[10px] text-amber-700 font-bold uppercase">
                     ● Active Alert
                   </span>
                 )
               ) : (
-                <span className="text-[10px] text-emerald-400 font-bold uppercase">
+                <span className="text-[10px] text-emerald-700 font-bold uppercase">
                   ✓ Acknowledged in DB
                 </span>
               )}

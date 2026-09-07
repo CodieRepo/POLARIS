@@ -251,9 +251,9 @@ export default function AssetDetailPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
         <PolarisHeader currentPath="/assets" />
-        <div className="flex-1 flex items-center justify-center p-8 text-sm text-slate-400">
+        <div className="flex-1 flex items-center justify-center p-8 text-sm text-slate-500 font-mono">
           Loading asset record [{code}]...
         </div>
       </div>
@@ -273,31 +273,31 @@ export default function AssetDetailPage({ params }: PageProps) {
   const expeditionMap = new Map(expeditions.map((e) => [e.id, e.name]));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <PolarisHeader currentPath="/assets" />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         {/* Navigation Breadcrumb */}
-        <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
+        <div className="mb-4 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <Link href="/assets" className="hover:text-cyan-400 transition-colors">
+            <Link href="/assets" className="hover:text-sky-700 transition-colors">
               ← Back to Asset Registry
             </Link>
             <span>/</span>
-            <span className="font-mono text-cyan-400 font-bold">{code}</span>
+            <span className="font-mono text-sky-700 font-bold">{code}</span>
           </div>
-          <span className="text-[11px] font-mono text-slate-500">
+          <span className="text-[11px] font-mono text-slate-400">
             NCPOR Asset Master Record
           </span>
         </div>
 
         {/* Notifications */}
         {errorMsg && (
-          <div className="mb-6 rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 text-xs font-mono text-rose-300 flex items-center justify-between shadow-lg">
+          <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-mono text-rose-800 flex items-center justify-between shadow-xs">
             <span>⚠️ {errorMsg}</span>
             <button
               onClick={() => setErrorMsg(null)}
-              className="text-xs text-rose-400 hover:text-white font-bold ml-4"
+              className="text-xs text-rose-700 hover:text-rose-900 font-bold ml-4 cursor-pointer"
             >
               ✕
             </button>
@@ -305,11 +305,11 @@ export default function AssetDetailPage({ params }: PageProps) {
         )}
 
         {successMsg && (
-          <div className="mb-6 rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-xs font-mono text-emerald-300 flex items-center justify-between shadow-lg">
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-mono text-emerald-800 flex items-center justify-between shadow-xs">
             <span>✅ {successMsg}</span>
             <button
               onClick={() => setSuccessMsg(null)}
-              className="text-xs text-emerald-400 hover:text-white font-bold ml-4"
+              className="text-xs text-emerald-700 hover:text-emerald-900 font-bold ml-4 cursor-pointer"
             >
               ✕
             </button>
@@ -317,30 +317,30 @@ export default function AssetDetailPage({ params }: PageProps) {
         )}
 
         {/* Header Summary */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 mb-8 shadow-xl">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 mb-8 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="rounded bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/30">
+                <span className="rounded-md bg-sky-50 px-2.5 py-0.5 text-xs font-mono font-bold text-sky-800 border border-sky-200">
                   ASSET DOSSIER
                 </span>
-                <span className="text-xs font-mono text-slate-400">
-                  Tag: <strong className="text-cyan-300 font-bold">{asset?.asset_code}</strong>
+                <span className="text-xs font-mono text-slate-500">
+                  Tag: <strong className="text-sky-700 font-bold">{asset?.asset_code}</strong>
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-black text-white">
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                   {asset?.name}
                 </h1>
                 <StatusBadge status={asset?.status || "AVAILABLE"} />
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                <span>Category: <strong className="text-slate-200">{asset?.category}</strong></span>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                <span>Category: <strong className="text-slate-900">{asset?.category}</strong></span>
                 <span>•</span>
                 <span>
                   Current Base:{" "}
-                  <strong className="text-slate-200">
+                  <strong className="text-slate-900">
                     {asset?.station_id
                       ? stationMap.get(asset.station_id) || "Field / Transit"
                       : "Field Traverse / In Transit"}
@@ -359,7 +359,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                 <button
                   onClick={() => setShowAssignModal(true)}
                   disabled={actionLoading}
-                  className="rounded-xl bg-cyan-500 px-4 py-2.5 text-xs font-bold text-slate-950 hover:bg-cyan-400 transition-colors disabled:opacity-50 cursor-pointer shadow-lg shadow-cyan-500/20"
+                  className="rounded-lg bg-sky-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-sky-700 transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   🚀 Assign Asset Workflow
                 </button>
@@ -369,7 +369,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                 <button
                   onClick={() => handleReleaseSubmit(activeAssignment.id)}
                   disabled={actionLoading}
-                  className="rounded-xl bg-amber-500/20 border border-amber-500/40 px-4 py-2.5 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-2.5 text-xs font-bold text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   🔓 Release Active Allocation
                 </button>
@@ -379,7 +379,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                 <button
                   onClick={() => setShowMaintenanceModal(true)}
                   disabled={actionLoading}
-                  className="rounded-xl bg-indigo-500/20 border border-indigo-500/40 px-4 py-2.5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-2.5 text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   🛠️ Schedule Maintenance
                 </button>
@@ -389,7 +389,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                 <button
                   onClick={handleRetire}
                   disabled={actionLoading}
-                  className="rounded-xl bg-rose-500/10 border border-rose-500/30 px-3 py-2 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   Permanently Retire
                 </button>
@@ -401,84 +401,84 @@ export default function AssetDetailPage({ params }: PageProps) {
         {/* Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Specifications Card */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 shadow-xl flex flex-col justify-between">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between">
             <div>
-              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-800/80 pb-2.5">
+              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-4 border-b border-slate-200 pb-2.5">
                 Technical Specifications
               </h2>
               <dl className="space-y-3.5 text-xs font-mono">
                 <div className="flex justify-between items-center">
-                  <dt className="text-slate-400">Manufacturer</dt>
-                  <dd className="font-semibold text-slate-200">{asset?.manufacturer || "Unspecified"}</dd>
+                  <dt className="text-slate-500">Manufacturer</dt>
+                  <dd className="font-semibold text-slate-900">{asset?.manufacturer || "Unspecified"}</dd>
                 </div>
                 <div className="flex justify-between items-center">
-                  <dt className="text-slate-400">Model / Serial</dt>
-                  <dd className="font-semibold text-slate-200">{asset?.model || "Standard Spec"}</dd>
+                  <dt className="text-slate-500">Model / Serial</dt>
+                  <dd className="font-semibold text-slate-900">{asset?.model || "Standard Spec"}</dd>
                 </div>
                 <div className="flex justify-between items-center">
-                  <dt className="text-slate-400">Commissioned Date</dt>
-                  <dd className="font-semibold text-slate-200">
+                  <dt className="text-slate-500">Commissioned Date</dt>
+                  <dd className="font-semibold text-slate-900">
                     {asset?.commissioned_at ? new Date(asset.commissioned_at).toLocaleDateString() : "Historical Ground Asset"}
                   </dd>
                 </div>
                 <div className="flex justify-between items-center">
-                  <dt className="text-slate-400">Operational Criticality</dt>
+                  <dt className="text-slate-500">Operational Criticality</dt>
                   <dd><StatusBadge status={asset?.criticality || "MEDIUM"} type="criticality" /></dd>
                 </div>
                 <div className="flex justify-between items-center">
-                  <dt className="text-slate-400">Physical Degradation</dt>
+                  <dt className="text-slate-500">Physical Degradation</dt>
                   <dd><StatusBadge status={asset?.condition || "GOOD"} type="condition" /></dd>
                 </div>
               </dl>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-800/60 text-[11px] font-mono text-slate-500">
+            <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] font-mono text-slate-400">
               Database UID: {asset?.id}
             </div>
           </div>
 
           {/* Active Allocation Context */}
-          <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 shadow-xl">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-800/80 pb-2.5">
+          <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-4 border-b border-slate-200 pb-2.5">
               Active Operational Allocation
             </h2>
             {activeAssignment ? (
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-500/20 pb-3">
-                  <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
+              <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sky-200/60 pb-3">
+                  <span className="text-xs font-mono font-bold text-sky-800 uppercase tracking-wider">
                     ● {activeAssignment.assignment_type.replace(/_/g, " ")}
                   </span>
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs font-mono text-slate-600">
                     Deployed: {new Date(activeAssignment.assigned_at).toLocaleString()}
                   </span>
                 </div>
-                <div className="text-sm text-slate-200 space-y-2">
+                <div className="text-sm text-slate-800 space-y-2">
                   {activeAssignment.expedition_id && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 font-mono">Assigned Expedition:</span>
-                      <strong className="text-white font-semibold">
+                      <span className="text-xs text-slate-500 font-mono">Assigned Expedition:</span>
+                      <strong className="text-slate-900 font-semibold">
                         {expeditionMap.get(activeAssignment.expedition_id) || activeAssignment.expedition_id}
                       </strong>
                     </div>
                   )}
                   {activeAssignment.station_id && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 font-mono">Operating Station:</span>
-                      <strong className="text-white font-semibold">
+                      <span className="text-xs text-slate-500 font-mono">Operating Station:</span>
+                      <strong className="text-slate-900 font-semibold">
                         {stationMap.get(activeAssignment.station_id) || activeAssignment.station_id}
                       </strong>
                     </div>
                   )}
                   {activeAssignment.notes && (
-                    <div className="rounded-lg bg-slate-950/60 p-3 border border-slate-800/80 text-xs text-slate-300 italic">
+                    <div className="rounded-lg bg-white p-3 border border-sky-200 text-xs text-slate-700 italic">
                       &ldquo;{activeAssignment.notes}&rdquo;
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-8 text-center text-xs font-mono text-slate-400">
-                <p className="text-slate-300 font-semibold mb-1">Asset is currently unallocated and in storage reserves.</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-xs font-mono text-slate-500">
+                <p className="text-slate-800 font-semibold mb-1">Asset is currently unallocated and in storage reserves.</p>
                 <p className="text-slate-500">Available for immediate expedition traverse or station deployment via atomic transaction.</p>
               </div>
             )}
@@ -488,37 +488,37 @@ export default function AssetDetailPage({ params }: PageProps) {
         {/* History Tabs / Records */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Assignment History */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 shadow-xl">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-800/80 pb-2.5">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-4 border-b border-slate-200 pb-2.5">
               Assignment &amp; Deployment History ({assignments.length})
             </h2>
             {assignments.length === 0 ? (
-              <p className="text-xs font-mono text-slate-500 py-6 text-center">No previous deployment records found.</p>
+              <p className="text-xs font-mono text-slate-400 py-6 text-center">No previous deployment records found.</p>
             ) : (
               <div className="space-y-3">
                 {assignments.map((asgn: AssetAssignmentRow) => (
                   <div
                     key={asgn.id}
-                    className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-xs font-mono space-y-1.5"
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs font-mono space-y-1.5"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-200">
+                      <span className="font-semibold text-slate-900">
                         {asgn.assignment_type.replace(/_/g, " ")}
                       </span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        asgn.released_at ? "bg-slate-800 text-slate-400" : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        asgn.released_at ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-sky-50 text-sky-800 border-sky-200"
                       }`}>
                         {asgn.released_at ? "RELEASED" : "ACTIVE"}
                       </span>
                     </div>
-                    <div className="text-slate-400 text-[11px]">
+                    <div className="text-slate-500 text-[11px]">
                       <span>Assigned: {new Date(asgn.assigned_at).toLocaleDateString()}</span>
                       {asgn.released_at && (
                         <span> • Concluded: {new Date(asgn.released_at).toLocaleDateString()}</span>
                       )}
                     </div>
                     {asgn.notes && (
-                      <p className="text-slate-400 italic pt-1 border-t border-slate-900">
+                      <p className="text-slate-600 italic pt-1 border-t border-slate-200">
                         &quot;{asgn.notes}&quot;
                       </p>
                     )}
@@ -529,27 +529,27 @@ export default function AssetDetailPage({ params }: PageProps) {
           </div>
 
           {/* Maintenance Servicing Records */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 shadow-xl">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-800/80 pb-2.5">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-4 border-b border-slate-200 pb-2.5">
               Maintenance Work Orders ({maintenance.length})
             </h2>
             {maintenance.length === 0 ? (
-              <p className="text-xs font-mono text-slate-500 py-6 text-center">No scheduled or historical maintenance logs.</p>
+              <p className="text-xs font-mono text-slate-400 py-6 text-center">No scheduled or historical maintenance logs.</p>
             ) : (
               <div className="space-y-3">
                 {maintenance.map((m: MaintenanceRecordRow) => (
                   <div
                     key={m.id}
-                    className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-xs font-mono space-y-2"
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs font-mono space-y-2"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-200">{m.maintenance_type}</span>
+                      <span className="font-semibold text-slate-900">{m.maintenance_type}</span>
                       <StatusBadge status={m.status} />
                     </div>
-                    <p className="text-slate-300 font-sans text-xs">{m.description || "Routine cold-region check"}</p>
-                    <div className="flex items-center justify-between text-slate-400 text-[11px] pt-1 border-t border-slate-900">
+                    <p className="text-slate-700 font-sans text-xs">{m.description || "Routine cold-region check"}</p>
+                    <div className="flex items-center justify-between text-slate-500 text-[11px] pt-1 border-t border-slate-200">
                       <span>Technician: {m.performed_by || "Station Plant Engineer"}</span>
-                      {m.cost && <span className="text-slate-300 font-bold">Cost: ${m.cost}</span>}
+                      {m.cost && <span className="text-slate-900 font-bold">Cost: ${m.cost}</span>}
                     </div>
                   </div>
                 ))}
@@ -561,16 +561,16 @@ export default function AssetDetailPage({ params }: PageProps) {
 
       {/* Atomic Assignment Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-lg font-bold text-white">Assign Asset [{code}]</h3>
-                <span className="text-xs font-mono text-slate-400">PostgreSQL Atomic Allocation RPC</span>
+                <h3 className="text-lg font-bold text-slate-900">Assign Asset [{code}]</h3>
+                <span className="text-xs font-mono text-slate-500">PostgreSQL Atomic Allocation RPC</span>
               </div>
               <button
                 onClick={() => setShowAssignModal(false)}
-                className="text-slate-400 hover:text-white text-sm cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 text-sm cursor-pointer"
               >
                 ✕
               </button>
@@ -578,7 +578,7 @@ export default function AssetDetailPage({ params }: PageProps) {
 
             <form onSubmit={handleAssignSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 mb-1">
                   Deployment Scope
                 </label>
                 <select
@@ -590,7 +590,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                         | "STATION_DEPLOYMENT"
                     )
                   }
-                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none"
                 >
                   <option value="EXPEDITION_FIELD_OPERATION">
                     Expedition Field Operation
@@ -603,13 +603,13 @@ export default function AssetDetailPage({ params }: PageProps) {
 
               {assignType === "EXPEDITION_FIELD_OPERATION" ? (
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
+                  <label className="block font-semibold text-slate-700 mb-1">
                     Target Expedition
                   </label>
                   <select
                     value={targetExpeditionId}
                     onChange={(e) => setTargetExpeditionId(e.target.value)}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                    className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none"
                   >
                     {expeditions.map((exp) => (
                       <option key={exp.id} value={exp.id}>
@@ -620,13 +620,13 @@ export default function AssetDetailPage({ params }: PageProps) {
                 </div>
               ) : (
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
+                  <label className="block font-semibold text-slate-700 mb-1">
                     Destination Station
                   </label>
                   <select
                     value={targetStationId}
                     onChange={(e) => setTargetStationId(e.target.value)}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                    className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none"
                   >
                     {stations.map((st) => (
                       <option key={st.id} value={st.id}>
@@ -638,7 +638,7 @@ export default function AssetDetailPage({ params }: PageProps) {
               )}
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 mb-1">
                   Operational Mission Notes (Optional)
                 </label>
                 <textarea
@@ -646,22 +646,22 @@ export default function AssetDetailPage({ params }: PageProps) {
                   onChange={(e) => setAssignNotes(e.target.value)}
                   placeholder="e.g. Assigned to 44th ISEA team for radar survey in Sector 4"
                   rows={3}
-                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none leading-relaxed"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none leading-relaxed"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowAssignModal(false)}
-                  className="rounded-lg bg-slate-800 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-700 cursor-pointer"
+                  className="rounded-lg bg-slate-100 border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="rounded-lg bg-cyan-500 px-4 py-2 font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50 cursor-pointer"
+                  className="rounded-lg bg-sky-600 px-4 py-2 font-bold text-white hover:bg-sky-700 disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   {actionLoading ? "Executing RPC..." : "Confirm Assignment"}
                 </button>
@@ -673,15 +673,15 @@ export default function AssetDetailPage({ params }: PageProps) {
 
       {/* Schedule Maintenance Modal */}
       {showMaintenanceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <span>🛠️</span> Schedule Maintenance Work Order
               </h3>
               <button
                 onClick={() => setShowMaintenanceModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 ✕
               </button>
@@ -689,7 +689,7 @@ export default function AssetDetailPage({ params }: PageProps) {
 
             <form onSubmit={handleMaintenanceSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 mb-1">
                   Maintenance Type
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -700,8 +700,8 @@ export default function AssetDetailPage({ params }: PageProps) {
                       onClick={() => setMaintenanceType(type)}
                       className={`p-2 rounded-lg border text-center font-bold transition-colors cursor-pointer ${
                         maintenanceType === type
-                          ? "border-cyan-500 bg-cyan-500/10 text-cyan-400"
-                          : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                          ? "border-sky-500 bg-sky-50 text-sky-800"
+                          : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
                       }`}
                     >
                       {type}
@@ -711,7 +711,7 @@ export default function AssetDetailPage({ params }: PageProps) {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 mb-1">
                   Scheduled Service Date &amp; Time
                 </label>
                 <input
@@ -721,12 +721,12 @@ export default function AssetDetailPage({ params }: PageProps) {
                   required
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
-                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 mb-1">
                   Work Order Description / Sub-Zero Scope
                 </label>
                 <textarea
@@ -737,12 +737,12 @@ export default function AssetDetailPage({ params }: PageProps) {
                   value={maintenanceDesc}
                   onChange={(e) => setMaintenanceDesc(e.target.value)}
                   placeholder="e.g. 250-hr cold-weather fluid flush, hydraulic track inspection"
-                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 mb-1">
                   Estimated Servicing Cost ($ USD, Optional)
                 </label>
                 <input
@@ -754,22 +754,22 @@ export default function AssetDetailPage({ params }: PageProps) {
                   value={maintenanceCost}
                   onChange={(e) => setMaintenanceCost(e.target.value)}
                   placeholder="e.g. 750.00"
-                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowMaintenanceModal(false)}
-                  className="rounded-lg bg-slate-800 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-700 cursor-pointer"
+                  className="rounded-lg bg-slate-100 border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="rounded-lg bg-indigo-500 px-4 py-2 font-bold text-white hover:bg-indigo-400 disabled:opacity-50 cursor-pointer"
+                  className="rounded-lg bg-indigo-600 px-4 py-2 font-bold text-white hover:bg-indigo-700 disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   {actionLoading ? "Logging Order..." : "Schedule Work Order"}
                 </button>
@@ -778,6 +778,10 @@ export default function AssetDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
+
+      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 mt-12">
+        POLARIS • National Centre for Polar &amp; Ocean Research (NCPOR) Management Foundation • SIH 2026
+      </footer>
     </div>
   );
 }

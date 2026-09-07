@@ -275,14 +275,14 @@ export function TraverseMissionCommand({
   };
 
   return (
-    <div className="space-y-4 font-mono text-xs">
+    <div className="space-y-4 font-mono text-xs text-slate-800">
       {/* Header & Mission Action Bar */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
         <div>
-          <span className="text-[10px] uppercase font-bold text-cyan-400 block">
+          <span className="text-[10px] uppercase font-bold text-sky-700 block">
             Overland Traverse Mission Command
           </span>
-          <p className="text-[11px] text-slate-400 mt-0.5">
+          <p className="text-[11px] text-slate-500 mt-0.5">
             Discrete waypoint check-ins, convoy state machine &amp; hazard proximity.
           </p>
         </div>
@@ -290,7 +290,7 @@ export function TraverseMissionCommand({
         {can('TRAVERSE_MISSION_CREATE') && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="rounded bg-cyan-500 px-2.5 py-1 text-[11px] font-bold text-slate-950 hover:bg-cyan-400 transition cursor-pointer"
+            className="rounded-lg bg-sky-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-sky-700 transition cursor-pointer shadow-xs"
           >
             + Create Mission
           </button>
@@ -299,24 +299,24 @@ export function TraverseMissionCommand({
 
       {/* Notifications / Alerts */}
       {error && (
-        <div className="rounded-lg bg-rose-950/60 border border-rose-800 p-2.5 text-rose-300 text-[11px]">
+        <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-rose-800 text-[11px]">
           <strong>Error:</strong> {error}
         </div>
       )}
       {successMsg && (
-        <div className="rounded-lg bg-emerald-950/60 border border-emerald-800 p-2.5 text-emerald-300 text-[11px]">
+        <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-emerald-800 text-[11px]">
           {successMsg}
         </div>
       )}
 
       {/* Active Missions List */}
       <div className="space-y-2">
-        <span className="text-[10px] text-slate-400 uppercase font-bold block">
+        <span className="text-[10px] text-slate-500 uppercase font-bold block">
           Active Traverse Missions ({missions.length})
         </span>
 
         {missions.length === 0 && !loading && (
-          <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-center text-slate-500">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-slate-400">
             No active traverse missions registered.
           </div>
         )}
@@ -326,14 +326,14 @@ export function TraverseMissionCommand({
             const isSelected = selectedMission?.id === m.id;
             const statusColor =
               m.status === 'EN_ROUTE'
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : m.status === 'CHECKIN_OVERDUE'
-                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse'
+                ? 'bg-rose-50 text-rose-800 border-rose-200 animate-pulse'
                 : m.status === 'DISPATCHED'
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                ? 'bg-sky-50 text-sky-800 border-sky-200'
                 : m.status === 'COMPLETED'
-                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                : 'bg-slate-800 text-slate-400 border-slate-700';
+                ? 'bg-purple-50 text-purple-800 border-purple-200'
+                : 'bg-slate-100 text-slate-700 border-slate-200';
 
             return (
               <div
@@ -341,14 +341,14 @@ export function TraverseMissionCommand({
                 onClick={() => handleSelectMission(m)}
                 className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-cyan-950/40 border-cyan-500/60 shadow-lg'
-                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                    ? 'bg-sky-50 border-sky-300 shadow-xs'
+                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                 }`}
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-bold text-white text-xs block">{m.mission_code}</span>
-                    <span className="text-[10px] text-slate-400 truncate max-w-[180px] block">
+                    <span className="font-bold text-slate-900 text-xs block">{m.mission_code}</span>
+                    <span className="text-[10px] text-slate-600 truncate max-w-[180px] block font-sans">
                       {m.title}
                     </span>
                   </div>
@@ -357,10 +357,10 @@ export function TraverseMissionCommand({
                   </span>
                 </div>
 
-                <div className="mt-2 flex justify-between text-[10px] text-slate-400 border-t border-slate-900 pt-1.5">
-                  <span>Base: <strong className="text-slate-200">{m.originStation?.code || 'Base'}</strong></span>
-                  <span>Vehicle: <strong className="text-cyan-400">{m.asset?.asset_code || 'Snowcat'}</strong></span>
-                  <span>Checkins: <strong className="text-emerald-400">{m.checkinCount || 0}</strong></span>
+                <div className="mt-2 flex justify-between text-[10px] text-slate-500 border-t border-slate-200 pt-1.5">
+                  <span>Base: <strong className="text-slate-800">{m.originStation?.code || 'Base'}</strong></span>
+                  <span>Vehicle: <strong className="text-sky-700">{m.asset?.asset_code || 'Snowcat'}</strong></span>
+                  <span>Checkins: <strong className="text-emerald-700">{m.checkinCount || 0}</strong></span>
                 </div>
               </div>
             );
@@ -370,30 +370,30 @@ export function TraverseMissionCommand({
 
       {/* Selected Mission Command Center */}
       {selectedMission && (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/90 p-3 space-y-3">
-          <div className="flex justify-between items-start border-b border-slate-800 pb-2">
+        <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 shadow-xs">
+          <div className="flex justify-between items-start border-b border-slate-200 pb-2">
             <div>
-              <span className="text-[10px] text-cyan-400 font-bold block">MISSION DOSSIER</span>
-              <h4 className="text-white font-bold text-sm">{selectedMission.title}</h4>
+              <span className="text-[10px] text-sky-700 font-bold block uppercase">MISSION DOSSIER</span>
+              <h4 className="text-slate-900 font-bold text-sm">{selectedMission.title}</h4>
               <span className="text-[10px] text-slate-500">
                 Corridor: {activeCorridor.name} ({activeCorridor.totalDistanceKm} km)
               </span>
             </div>
             <button
               onClick={() => setSelectedMission(null)}
-              className="text-slate-500 hover:text-white text-xs"
+              className="text-slate-400 hover:text-slate-700 text-xs cursor-pointer"
             >
               ✕
             </button>
           </div>
 
           {/* Last Verified Waypoint Telemetry Snapshot */}
-          <div className="rounded-lg bg-slate-900/80 border border-slate-800 p-2.5 space-y-2">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 uppercase font-bold">
+              <span className="text-[10px] text-slate-500 uppercase font-bold">
                 LAST VERIFIED WAYPOINT
               </span>
-              <span className="text-[10px] font-mono text-cyan-400">
+              <span className="text-[10px] font-mono text-sky-700 font-bold">
                 {selectedMission.latestCheckin
                   ? selectedMission.latestCheckin.waypoint_code
                   : 'NO CHECK-IN YET (AT BASE)'}
@@ -402,32 +402,32 @@ export function TraverseMissionCommand({
 
             {selectedMission.latestCheckin ? (
               <div className="grid grid-cols-2 gap-2 text-[10px]">
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+                <div className="bg-white p-1.5 rounded border border-slate-200">
                   <span className="text-slate-500 block">Verified At</span>
-                  <span className="text-slate-200 font-bold">
+                  <span className="text-slate-900 font-bold">
                     {new Date(selectedMission.latestCheckin.checkin_at).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                   </span>
                 </div>
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+                <div className="bg-white p-1.5 rounded border border-slate-200">
                   <span className="text-slate-500 block">Comms Mode</span>
-                  <span className="text-emerald-400 font-bold">
+                  <span className="text-emerald-700 font-bold">
                     {selectedMission.latestCheckin.comms_status}
                   </span>
                 </div>
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+                <div className="bg-white p-1.5 rounded border border-slate-200">
                   <span className="text-slate-500 block">Remaining Fuel</span>
-                  <span className="text-amber-400 font-bold">
+                  <span className="text-amber-700 font-bold">
                     {selectedMission.latestCheckin.remaining_fuel_liters !== null
                       ? `${selectedMission.latestCheckin.remaining_fuel_liters} L`
                       : 'Unrecorded'}
                   </span>
                 </div>
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+                <div className="bg-white p-1.5 rounded border border-slate-200">
                   <span className="text-slate-500 block">Ambient Temp</span>
-                  <span className="text-cyan-400 font-bold">
+                  <span className="text-sky-700 font-bold">
                     {selectedMission.latestCheckin.ambient_temp_c !== null
                       ? `${selectedMission.latestCheckin.ambient_temp_c}°C`
                       : '--'}
@@ -443,16 +443,16 @@ export function TraverseMissionCommand({
 
           {/* Surveyed Cryospheric Hazard Proximity */}
           {nearbyHazards.length > 0 && (
-            <div className="rounded-lg bg-rose-950/20 border border-rose-900/40 p-2.5 space-y-1.5">
-              <span className="text-[10px] uppercase font-bold text-rose-400 block">
+            <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 space-y-1.5">
+              <span className="text-[10px] uppercase font-bold text-rose-700 block">
                 Surveyed Cryospheric Hazard Proximity (Scenario)
               </span>
               {nearbyHazards.slice(0, 2).map(({ hazard, distanceKm, isWithinZone }) => (
                 <div key={hazard.id} className="flex justify-between items-center text-[10px]">
-                  <span className="text-slate-300">
+                  <span className="text-slate-700">
                     {isWithinZone ? '⚠️ IN ZONE:' : '•'} {hazard.name}
                   </span>
-                  <span className={`font-bold ${isWithinZone ? 'text-rose-400' : 'text-slate-400'}`}>
+                  <span className={`font-bold ${isWithinZone ? 'text-rose-700' : 'text-slate-600'}`}>
                     {distanceKm.toFixed(1)} km away
                   </span>
                 </div>
@@ -461,14 +461,14 @@ export function TraverseMissionCommand({
           )}
 
           {/* Operational Control Buttons (RBAC Gated) */}
-          <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-800">
+          <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-200">
             {selectedMission.status === 'PLANNED' && can('TRAVERSE_MISSION_DISPATCH') && (
               <button
                 onClick={() => {
                   setPendingStatus('DISPATCHED');
                   setShowTransitionModal(true);
                 }}
-                className="flex-1 rounded bg-cyan-600 px-3 py-1.5 font-bold text-slate-950 hover:bg-cyan-500 cursor-pointer text-center"
+                className="flex-1 rounded-lg bg-sky-600 px-3 py-1.5 font-bold text-white hover:bg-sky-700 cursor-pointer text-center shadow-xs"
               >
                 🚀 Dispatch Mission
               </button>
@@ -480,7 +480,7 @@ export function TraverseMissionCommand({
               can('TRAVERSE_CHECKIN_RECORD') && (
                 <button
                   onClick={() => setShowCheckinModal(true)}
-                  className="flex-1 rounded bg-emerald-600 px-3 py-1.5 font-bold text-white hover:bg-emerald-500 cursor-pointer text-center"
+                  className="flex-1 rounded-lg bg-emerald-600 px-3 py-1.5 font-bold text-white hover:bg-emerald-700 cursor-pointer text-center shadow-xs"
                 >
                   📍 Log Waypoint Check-in
                 </button>
@@ -494,7 +494,7 @@ export function TraverseMissionCommand({
                       setPendingStatus('COMPLETED');
                       setShowTransitionModal(true);
                     }}
-                    className="flex-1 rounded bg-purple-600 px-2 py-1.5 font-bold text-white hover:bg-purple-500 cursor-pointer text-center"
+                    className="flex-1 rounded-lg bg-purple-600 px-2 py-1.5 font-bold text-white hover:bg-purple-700 cursor-pointer text-center shadow-xs"
                   >
                     ✓ Complete
                   </button>
@@ -503,7 +503,7 @@ export function TraverseMissionCommand({
                       setPendingStatus('ABORTED');
                       setShowTransitionModal(true);
                     }}
-                    className="flex-1 rounded bg-rose-700 px-2 py-1.5 font-bold text-white hover:bg-rose-600 cursor-pointer text-center"
+                    className="flex-1 rounded-lg bg-rose-600 px-2 py-1.5 font-bold text-white hover:bg-rose-700 cursor-pointer text-center shadow-xs"
                   >
                     ✕ Abort
                   </button>
@@ -517,7 +517,7 @@ export function TraverseMissionCommand({
                     setPendingStatus('CANCELLED');
                     setShowTransitionModal(true);
                   }}
-                  className="rounded bg-slate-800 px-2.5 py-1.5 text-[10px] text-slate-300 hover:bg-slate-700 cursor-pointer"
+                  className="rounded-lg bg-slate-100 border border-slate-200 px-2.5 py-1.5 text-[10px] text-slate-700 hover:bg-slate-200 cursor-pointer"
                 >
                   Cancel Mission
                 </button>
@@ -528,13 +528,13 @@ export function TraverseMissionCommand({
 
       {/* CREATE MISSION MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">Create Polar Traverse Mission</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900">Create Polar Traverse Mission</h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 ✕
               </button>
@@ -542,35 +542,35 @@ export function TraverseMissionCommand({
 
             <form onSubmit={handleCreateMission} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-400 block mb-1">Mission Code</label>
+                <label className="text-slate-600 block mb-1 font-semibold">Mission Code</label>
                 <input
                   type="text"
                   value={newMissionCode}
                   onChange={(e) => setNewMissionCode(e.target.value)}
                   placeholder="e.g. TRV-44-MTR-SHELF-02"
-                  className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                  className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Mission Title</label>
+                <label className="text-slate-600 block mb-1 font-semibold">Mission Title</label>
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Emergency Fuel Haul to India Bay"
-                  className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                  className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Surveyed Corridor</label>
+                <label className="text-slate-600 block mb-1 font-semibold">Surveyed Corridor</label>
                 <select
                   value={newCorridorId}
                   onChange={(e) => setNewCorridorId(e.target.value as 'TRV-MTR-SHELF' | 'TRV-BHR-AMERY')}
-                  className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                  className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                 >
                   <option value="TRV-MTR-SHELF">Maitri to Shelf Barrier (104.5 km, Origin: MTR)</option>
                   <option value="TRV-BHR-AMERY">Bharati to Amery Ice Shelf (162.0 km, Origin: BHR)</option>
@@ -579,11 +579,11 @@ export function TraverseMissionCommand({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-slate-400 block mb-1">Lead Vehicle Asset</label>
+                  <label className="text-slate-600 block mb-1 font-semibold">Lead Vehicle Asset</label>
                   <select
                     value={newLeadAssetId}
                     onChange={(e) => setNewLeadAssetId(e.target.value)}
-                    className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                    className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                   >
                     <option value="f0000000-0000-0000-0000-000000000001">VEH-PB-01 (PB 300 Polar)</option>
                     <option value="f0000000-0000-0000-0000-000000000002">VEH-PB-02 (PB 100 Scout)</option>
@@ -591,12 +591,12 @@ export function TraverseMissionCommand({
                   </select>
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Check-in Interval (hrs)</label>
+                  <label className="text-slate-600 block mb-1 font-semibold">Check-in Interval (hrs)</label>
                   <input
                     type="number"
                     value={newCheckinInterval}
                     onChange={(e) => setNewCheckinInterval(e.target.value)}
-                    className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                    className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                     min="1"
                     max="24"
                     step="0.5"
@@ -605,38 +605,38 @@ export function TraverseMissionCommand({
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Scheduled Departure</label>
+                <label className="text-slate-600 block mb-1 font-semibold">Scheduled Departure</label>
                 <input
                   type="datetime-local"
                   value={newDepartureTime}
                   onChange={(e) => setNewDepartureTime(e.target.value)}
-                  className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                  className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Operational Notes</label>
+                <label className="text-slate-600 block mb-1 font-semibold">Operational Notes</label>
                 <textarea
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   placeholder="Payload summary, radar sounding requirements, weather go/no-go limits..."
-                  className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white h-16"
+                  className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none h-16"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="rounded bg-slate-800 px-3 py-1.5 text-slate-300 hover:bg-slate-700"
+                  className="rounded-lg bg-slate-100 border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="rounded bg-cyan-500 px-4 py-1.5 font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50 cursor-pointer"
+                  className="rounded-lg bg-sky-600 px-4 py-1.5 font-bold text-white hover:bg-sky-700 disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   {actionLoading ? 'Creating...' : 'Register Mission'}
                 </button>
@@ -648,16 +648,16 @@ export function TraverseMissionCommand({
 
       {/* RECORD CHECKIN MODAL */}
       {showCheckinModal && selectedMission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-base font-bold text-white">Log Waypoint Check-in</h3>
-                <span className="text-[10px] text-cyan-400">{selectedMission.mission_code}</span>
+                <h3 className="text-base font-bold text-slate-900">Log Waypoint Check-in</h3>
+                <span className="text-[10px] text-sky-700 font-bold">{selectedMission.mission_code}</span>
               </div>
               <button
                 onClick={() => setShowCheckinModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 ✕
               </button>
@@ -665,11 +665,11 @@ export function TraverseMissionCommand({
 
             <form onSubmit={handleRecordCheckin} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-400 block mb-1">Surveyed Waypoint</label>
+                <label className="text-slate-600 block mb-1 font-semibold">Surveyed Waypoint</label>
                 <select
                   value={selectedWaypointCode}
                   onChange={(e) => setSelectedWaypointCode(e.target.value)}
-                  className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white font-mono"
+                  className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none font-mono"
                   required
                 >
                   <option value="">-- Select Waypoint along Corridor --</option>
@@ -684,24 +684,24 @@ export function TraverseMissionCommand({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-slate-400 block mb-1">Remaining Fuel (Liters Snapshot)</label>
+                  <label className="text-slate-600 block mb-1 font-semibold">Remaining Fuel (Liters)</label>
                   <input
                     type="number"
                     value={checkinFuel}
                     onChange={(e) => setCheckinFuel(e.target.value)}
                     placeholder="e.g. 950"
-                    className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                    className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                     min="0"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Ambient Temp (°C)</label>
+                  <label className="text-slate-600 block mb-1 font-semibold">Ambient Temp (°C)</label>
                   <input
                     type="number"
                     value={checkinTemp}
                     onChange={(e) => setCheckinTemp(e.target.value)}
                     placeholder="e.g. -18.5"
-                    className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                    className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                     step="0.1"
                   />
                 </div>
@@ -709,11 +709,11 @@ export function TraverseMissionCommand({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-slate-400 block mb-1">Comms Carrier Mode</label>
+                  <label className="text-slate-600 block mb-1 font-semibold">Comms Carrier Mode</label>
                   <select
                     value={checkinComms}
                     onChange={(e) => setCheckinComms(e.target.value as CommsStatus)}
-                    className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                    className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                   >
                     <option value="NOMINAL_HF">HF Radio (Nominal)</option>
                     <option value="IRIDIUM_RUDICS">Iridium Satellite RUDICS</option>
@@ -723,11 +723,11 @@ export function TraverseMissionCommand({
                   </select>
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Operational State</label>
+                  <label className="text-slate-600 block mb-1 font-semibold">Operational State</label>
                   <select
                     value={checkinOpStatus}
                     onChange={(e) => setCheckinOpStatus(e.target.value)}
-                    className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white"
+                    className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none"
                   >
                     <option value="NOMINAL">NOMINAL (Proceeding)</option>
                     <option value="HOLDING_WEATHER">HOLDING (Weather/Visibility)</option>
@@ -738,33 +738,33 @@ export function TraverseMissionCommand({
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Field Assessment &amp; Radar Notes</label>
+                <label className="text-slate-600 block mb-1 font-semibold">Field Assessment &amp; Radar Notes</label>
                 <textarea
                   value={checkinHazardNotes}
                   onChange={(e) => setCheckinHazardNotes(e.target.value)}
                   placeholder="Surface condition, blue ice sastrugi, ground-penetrating radar observations..."
-                  className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white h-16"
+                  className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none h-16"
                 />
               </div>
 
               {syncState === 'OFFLINE' && (
-                <div className="rounded bg-amber-950/60 border border-amber-800 p-2 text-[10px] text-amber-300">
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-2 text-[10px] text-amber-800">
                   ⚡ Network connection offline. Check-in will be buffered locally in IndexedDB queue (OFFLINE PENDING SYNC).
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowCheckinModal(false)}
-                  className="rounded bg-slate-800 px-3 py-1.5 text-slate-300 hover:bg-slate-700"
+                  className="rounded-lg bg-slate-100 border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="rounded bg-emerald-500 px-4 py-1.5 font-bold text-slate-950 hover:bg-emerald-400 disabled:opacity-50 cursor-pointer"
+                  className="rounded-lg bg-emerald-600 px-4 py-1.5 font-bold text-white hover:bg-emerald-700 disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   {actionLoading ? 'Logging...' : 'Confirm Check-in'}
                 </button>
@@ -776,36 +776,36 @@ export function TraverseMissionCommand({
 
       {/* STATE TRANSITION CONFIRMATION MODAL */}
       {showTransitionModal && selectedMission && pendingStatus && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl space-y-4">
-            <div className="border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl space-y-4">
+            <div className="border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900">
                 Confirm Transition: {selectedMission.status} → {pendingStatus}
               </h3>
-              <span className="text-[10px] text-cyan-400">{selectedMission.mission_code}</span>
+              <span className="text-[10px] text-sky-700 font-bold">{selectedMission.mission_code}</span>
             </div>
 
-            <p className="text-slate-300 text-xs leading-relaxed">
+            <p className="text-slate-600 text-xs leading-relaxed font-sans">
               Are you sure you want to transition this mission to{' '}
-              <strong className="text-white font-bold">{pendingStatus}</strong>?
+              <strong className="text-slate-900 font-bold">{pendingStatus}</strong>?
               This state transition will be authoritatively recorded with server-side lifecycle validation.
             </p>
 
             <div>
-              <label className="text-slate-400 block mb-1">Operational Log Entry</label>
+              <label className="text-slate-600 block mb-1 font-semibold">Operational Log Entry</label>
               <textarea
                 value={transitionNotes}
                 onChange={(e) => setTransitionNotes(e.target.value)}
                 placeholder="Reason for dispatch, completion report, or abort rationale..."
-                className="w-full rounded bg-slate-950 border border-slate-800 p-2 text-white h-16"
+                className="w-full rounded-lg bg-white border border-slate-300 p-2 text-slate-900 focus:border-sky-500 focus:outline-none h-16"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setShowTransitionModal(false)}
-                className="rounded bg-slate-800 px-3 py-1.5 text-slate-300 hover:bg-slate-700"
+                className="rounded-lg bg-slate-100 border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-200 cursor-pointer"
               >
                 Cancel
               </button>
@@ -813,10 +813,10 @@ export function TraverseMissionCommand({
                 type="button"
                 onClick={handleExecuteTransition}
                 disabled={actionLoading}
-                className={`rounded px-4 py-1.5 font-bold text-white disabled:opacity-50 cursor-pointer ${
+                className={`rounded-lg px-4 py-1.5 font-bold text-white disabled:opacity-50 cursor-pointer shadow-xs ${
                   pendingStatus === 'ABORTED' || pendingStatus === 'CANCELLED'
-                    ? 'bg-rose-600 hover:bg-rose-500'
-                    : 'bg-cyan-600 hover:bg-cyan-500'
+                    ? 'bg-rose-600 hover:bg-rose-700'
+                    : 'bg-sky-600 hover:bg-sky-700'
                 }`}
               >
                 {actionLoading ? 'Executing...' : `Confirm ${pendingStatus}`}

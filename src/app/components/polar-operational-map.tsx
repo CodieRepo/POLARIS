@@ -182,10 +182,10 @@ export default function PolarOperationalMap({
     coastlineFeature.setStyle(
       new Style({
         fill: new Fill({
-          color: "rgba(15, 23, 42, 0.85)", // Dark operational landmass
+          color: "rgba(255, 255, 255, 0.96)", // Clean white ice continental landmass
         }),
         stroke: new Stroke({
-          color: "#38bdf8", // Clean cyan continental boundary
+          color: "#0284c7", // Clear institutional blue boundary line
           width: 1.6,
         }),
       })
@@ -194,7 +194,7 @@ export default function PolarOperationalMap({
     // 2. Graticule Lat/Lon subtle grid
     const graticuleLayer = new Graticule({
       strokeStyle: new Stroke({
-        color: "rgba(51, 65, 85, 0.45)", // Subtle slate grid
+        color: "rgba(148, 163, 184, 0.45)", // Subtle slate grid lines
         width: 0.8,
         lineDash: [4, 4],
       }),
@@ -211,21 +211,21 @@ export default function PolarOperationalMap({
       });
 
       const isDGT = station.code === "DGT";
-      const markerColor = isDGT ? "#f59e0b" : "#10b981"; // Amber for historical DGT, Emerald for Active
+      const markerColor = isDGT ? "#d97706" : "#059669"; // Amber for historical DGT, Emerald for Active
 
       feature.setStyle(
         new Style({
           image: new CircleStyle({
             radius: 7,
             fill: new Fill({ color: markerColor }),
-            stroke: new Stroke({ color: "#020617", width: 2.5 }),
+            stroke: new Stroke({ color: "#ffffff", width: 2 }),
           }),
           text: new TextStyle({
             text: `${station.code}${isDGT ? " [HISTORICAL]" : ""}`,
             font: "bold 11px monospace",
-            fill: new Fill({ color: isDGT ? "#fbbf24" : "#ffffff" }),
-            backgroundFill: new Fill({ color: "rgba(2, 6, 23, 0.9)" }),
-            backgroundStroke: new Stroke({ color: isDGT ? "#d97706" : "#334155", width: 1 }),
+            fill: new Fill({ color: isDGT ? "#92400e" : "#0f172a" }),
+            backgroundFill: new Fill({ color: "rgba(255, 255, 255, 0.95)" }),
+            backgroundStroke: new Stroke({ color: isDGT ? "#f59e0b" : "#cbd5e1", width: 1 }),
             padding: [2, 5, 2, 5],
             offsetY: -17,
           }),
@@ -248,8 +248,8 @@ export default function PolarOperationalMap({
     mtrRouteFeature.setStyle(
       new Style({
         stroke: new Stroke({
-          color: "#06b6d4",
-          width: 3,
+          color: "#0284c7",
+          width: 2.8,
           lineDash: [6, 4],
         }),
       })
@@ -267,8 +267,8 @@ export default function PolarOperationalMap({
     bhrRouteFeature.setStyle(
       new Style({
         stroke: new Stroke({
-          color: "#38bdf8",
-          width: 3,
+          color: "#0d9488",
+          width: 2.8,
           lineDash: [6, 4],
         }),
       })
@@ -286,14 +286,14 @@ export default function PolarOperationalMap({
         new Style({
           image: new CircleStyle({
             radius: 3.5,
-            fill: new Fill({ color: wp.isFuelCache ? "#f59e0b" : "#38bdf8" }),
-            stroke: new Stroke({ color: "#020617", width: 1.5 }),
+            fill: new Fill({ color: wp.isFuelCache ? "#d97706" : "#0284c7" }),
+            stroke: new Stroke({ color: "#ffffff", width: 1.5 }),
           }),
           text: new TextStyle({
             text: wp.code,
             font: "9px monospace",
-            fill: new Fill({ color: "#94a3b8" }),
-            backgroundFill: new Fill({ color: "rgba(2, 6, 23, 0.8)" }),
+            fill: new Fill({ color: "#475569" }),
+            backgroundFill: new Fill({ color: "rgba(255, 255, 255, 0.92)" }),
             padding: [1, 3, 1, 3],
             offsetY: 12,
           }),
@@ -321,18 +321,18 @@ export default function PolarOperationalMap({
       polyFeature.setStyle(
         new Style({
           fill: new Fill({
-            color: haz.severity === "CRITICAL" ? "rgba(244, 63, 94, 0.22)" : "rgba(245, 158, 11, 0.18)",
+            color: haz.severity === "CRITICAL" ? "rgba(244, 63, 94, 0.15)" : "rgba(245, 158, 11, 0.14)",
           }),
           stroke: new Stroke({
-            color: haz.severity === "CRITICAL" ? "#f43f5e" : "#f59e0b",
+            color: haz.severity === "CRITICAL" ? "#e11d48" : "#d97706",
             width: 1.8,
             lineDash: [4, 4],
           }),
           text: new TextStyle({
             text: `⚠️ ${haz.name}`,
             font: "bold 9px monospace",
-            fill: new Fill({ color: haz.severity === "CRITICAL" ? "#fda4af" : "#fde68a" }),
-            backgroundFill: new Fill({ color: "rgba(2, 6, 23, 0.85)" }),
+            fill: new Fill({ color: haz.severity === "CRITICAL" ? "#9f1239" : "#92400e" }),
+            backgroundFill: new Fill({ color: "rgba(255, 255, 255, 0.95)" }),
             padding: [1, 4, 1, 4],
           }),
         })
@@ -515,19 +515,19 @@ export default function PolarOperationalMap({
   };
 
   return (
-    <div className="w-full space-y-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-5 shadow-2xl backdrop-blur-sm">
+    <div className="w-full space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
       {/* Tactical GIS Console Header Bar */}
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 border-b border-slate-800/80 pb-4">
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-[10px] font-mono font-black text-cyan-400 border border-cyan-500/40">
+            <span className="rounded bg-sky-50 px-2.5 py-0.5 text-[10px] font-mono font-bold text-sky-800 border border-sky-200">
               PRIMARY MISSION SURFACE • EPSG:3031
             </span>
-            <span className="text-[11px] font-mono text-slate-400">
+            <span className="text-[11px] font-mono text-slate-500">
               True Scale Lat: -71° S • Central Meridian: 0°
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
             Antarctic Operational GIS Console &amp; Spatial Decision Bridge
           </h2>
         </div>
@@ -538,8 +538,8 @@ export default function PolarOperationalMap({
             onClick={() => setActiveViewMode("ANTARCTICA")}
             className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
               activeViewMode === "ANTARCTICA"
-                ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
-                : "bg-slate-900 text-slate-400 border border-slate-800 hover:text-white"
+                ? "bg-sky-600 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
             }`}
           >
             Antarctic Grid (EPSG:3031)
@@ -548,24 +548,24 @@ export default function PolarOperationalMap({
             onClick={() => setActiveViewMode("ARCTIC")}
             className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
               activeViewMode === "ARCTIC"
-                ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
-                : "bg-slate-900 text-slate-400 border border-slate-800 hover:text-white"
+                ? "bg-sky-600 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
             }`}
           >
             🌐 Arctic Inset (Ny-Ålesund, Svalbard)
           </button>
 
           {activeViewMode === "ANTARCTICA" && (
-            <div className="flex items-center gap-1.5 border-l border-slate-800 pl-2">
+            <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2">
               <button
                 onClick={handleResetSouthPole}
-                className="px-2.5 py-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-semibold cursor-pointer"
+                className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer"
               >
                 Center Pole
               </button>
               <button
                 onClick={handleFitStations}
-                className="px-2.5 py-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-semibold cursor-pointer"
+                className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer"
               >
                 Fit Stations
               </button>
@@ -579,68 +579,68 @@ export default function PolarOperationalMap({
         {/* Left 8 Columns: Dominant Polar GIS Map Canvas */}
         <div className="lg:col-span-8 relative">
           {activeViewMode === "ANTARCTICA" ? (
-            <div className="relative w-full h-[620px] rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-2xl">
+            <div className="relative w-full h-[620px] rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shadow-xs">
               <div ref={mapRef} className="w-full h-full" />
 
               {/* Geographical North Indicator & Orientation */}
-              <div className="absolute top-3 left-3 bg-slate-950/90 border border-slate-800 px-3 py-1.5 rounded-xl text-[10px] font-mono text-slate-400 shadow-md pointer-events-none z-10">
-                <span className="text-cyan-400 font-bold block">SOUTH POLE AZIMUTH</span>
+              <div className="absolute top-3 left-3 bg-white/95 border border-slate-200 px-3 py-1.5 rounded-lg text-[10px] font-mono text-slate-600 shadow-xs pointer-events-none z-10 backdrop-blur-xs">
+                <span className="text-sky-700 font-bold block">SOUTH POLE AZIMUTH</span>
                 <span>True North: Radial outward along meridians</span>
               </div>
 
               {/* GIS Layer Switcher Overlay (Top-Right) */}
-              <div className="absolute top-3 right-3 bg-slate-950/90 border border-slate-800 p-2.5 rounded-xl text-[11px] font-mono text-slate-300 shadow-xl z-10 space-y-1.5 backdrop-blur-sm">
-                <div className="text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800 pb-1 mb-1">
+              <div className="absolute top-3 right-3 bg-white/95 border border-slate-200 p-2.5 rounded-lg text-[11px] font-mono text-slate-700 shadow-xs z-10 space-y-1.5 backdrop-blur-xs">
+                <div className="text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200 pb-1 mb-1">
                   Tactical GIS Layers
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer hover:text-white">
+                <label className="flex items-center gap-2 cursor-pointer hover:text-slate-950">
                   <input
                     type="checkbox"
                     checked={showSeaIce}
                     onChange={(e) => setShowSeaIce(e.target.checked)}
-                    className="rounded accent-cyan-500"
+                    className="rounded accent-sky-600"
                   />
                   <span>NASA GIBS Sea Ice</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer hover:text-white">
+                <label className="flex items-center gap-2 cursor-pointer hover:text-slate-950">
                   <input
                     type="checkbox"
                     checked={showTraverseRoutes}
                     onChange={(e) => setShowTraverseRoutes(e.target.checked)}
-                    className="rounded accent-cyan-500"
+                    className="rounded accent-sky-600"
                   />
                   <span>Traverse Corridors</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer hover:text-white">
+                <label className="flex items-center gap-2 cursor-pointer hover:text-slate-950">
                   <input
                     type="checkbox"
                     checked={showHazards}
                     onChange={(e) => setShowHazards(e.target.checked)}
-                    className="rounded accent-cyan-500"
+                    className="rounded accent-sky-600"
                   />
                   <span>Crevasse Hazards</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer hover:text-white">
+                <label className="flex items-center gap-2 cursor-pointer hover:text-slate-950">
                   <input
                     type="checkbox"
                     checked={showStations}
                     onChange={(e) => setShowStations(e.target.checked)}
-                    className="rounded accent-cyan-500"
+                    className="rounded accent-sky-600"
                   />
                   <span>Research Bases</span>
                 </label>
               </div>
 
               {/* Station Quick-Selection Floating Chips (Bottom-Right) */}
-              <div className="absolute bottom-6 right-3 flex gap-1.5 bg-slate-950/90 p-1.5 rounded-lg border border-slate-800 shadow-md z-10">
+              <div className="absolute bottom-6 right-3 flex gap-1.5 bg-white/95 p-1.5 rounded-lg border border-slate-200 shadow-xs z-10 backdrop-blur-xs">
                 {antarcticStations.map((st) => (
                   <button
                     key={st.code}
                     onClick={() => handleFocusStation(st)}
                     className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold transition-colors cursor-pointer ${
                       selectedStation?.code === st.code
-                        ? "bg-cyan-500 text-slate-950"
-                        : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
+                        ? "bg-sky-600 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                     }`}
                   >
                     {st.code}
@@ -649,8 +649,8 @@ export default function PolarOperationalMap({
               </div>
 
               {/* Tactical Status & Provenance Strip */}
-              <div className="absolute bottom-0 left-0 right-0 bg-slate-950/90 border-t border-slate-800/80 px-3 py-1.5 text-[9px] font-mono text-slate-400 flex justify-between pointer-events-none z-10">
-                <span className="text-emerald-400 font-bold">
+              <div className="absolute bottom-0 left-0 right-0 bg-white/90 border-t border-slate-200 px-3 py-1.5 text-[9px] font-mono text-slate-500 flex justify-between pointer-events-none z-10">
+                <span className="text-emerald-700 font-bold">
                   ● DYNAMIC SPATIAL ENGINE ACTIVE • EPSG:3031 WGS 84
                 </span>
                 <span>DATA: NASA GIBS AMSR2 • SCAR ADD • NCPOR IN-SITU SURVEY</span>
@@ -658,26 +658,26 @@ export default function PolarOperationalMap({
             </div>
           ) : (
             /* Arctic Svalbard Inset View */
-            <div className="w-full h-[620px] rounded-2xl bg-slate-950 border border-slate-800 p-6 flex flex-col justify-between shadow-inner">
+            <div className="w-full h-[620px] rounded-xl bg-slate-50 border border-slate-200 p-6 flex flex-col justify-between shadow-xs">
               <div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
                   <div>
-                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-bold block">
+                    <span className="text-xs font-mono text-sky-700 uppercase tracking-wider font-bold block">
                       High Arctic Sector • 78°55&apos; N
                     </span>
-                    <h3 className="text-xl font-bold text-white">
+                    <h3 className="text-xl font-bold text-slate-900">
                       Himadri Research Outpost (Ny-Ålesund, Svalbard)
                     </h3>
                   </div>
-                  <span className="rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 text-xs font-mono font-bold">
+                  <span className="rounded bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 text-xs font-mono font-bold">
                     OPERATIONAL (HMD)
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
-                  <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                    <span className="text-slate-400 block font-semibold mb-1">Geodetic Location</span>
-                    <div className="text-slate-200 text-sm font-bold">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200">
+                    <span className="text-slate-500 block font-semibold mb-1">Geodetic Location</span>
+                    <div className="text-slate-900 text-sm font-bold">
                       78.9233° N, 11.9289° E
                     </div>
                     <div className="text-[11px] text-slate-500 mt-1">
@@ -685,9 +685,9 @@ export default function PolarOperationalMap({
                     </div>
                   </div>
 
-                  <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                    <span className="text-slate-400 block font-semibold mb-1">Governing Organization</span>
-                    <div className="text-slate-200 font-medium">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200">
+                    <span className="text-slate-500 block font-semibold mb-1">Governing Organization</span>
+                    <div className="text-slate-900 font-medium">
                       National Centre for Polar &amp; Ocean Research (NCPOR)
                     </div>
                     <div className="text-[11px] text-slate-500 mt-1">
@@ -696,18 +696,18 @@ export default function PolarOperationalMap({
                   </div>
                 </div>
 
-                <div className="mt-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800 text-xs leading-relaxed text-slate-300 font-mono">
-                  <span className="font-bold text-cyan-400 block mb-1">Polar Geodetic Context:</span>
+                <div className="mt-4 bg-white p-4 rounded-xl border border-slate-200 text-xs leading-relaxed text-slate-700 font-mono">
+                  <span className="font-bold text-sky-700 block mb-1">Polar Geodetic Context:</span>
                   Himadri operates at 78°55&apos; N in the international scientific research village of Ny-Ålesund.
                   Great-circle distance from Maitri Station is{" "}
-                  <strong className="text-white font-mono">16,645 km</strong> (calculated via spherical geodesic formula).
+                  <strong className="text-slate-900 font-mono">16,645 km</strong> (calculated via spherical geodesic formula).
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+              <div className="flex justify-between items-center pt-4 border-t border-slate-200">
                 <button
                   onClick={() => setActiveViewMode("ANTARCTICA")}
-                  className="text-xs text-cyan-400 hover:underline font-semibold cursor-pointer"
+                  className="text-xs text-sky-700 hover:text-sky-900 hover:underline font-semibold cursor-pointer"
                 >
                   ← Return to Antarctic Polar Stereographic Map
                 </button>
@@ -718,7 +718,7 @@ export default function PolarOperationalMap({
                       setActiveTab("STATION");
                     }
                   }}
-                  className="rounded bg-cyan-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-cyan-400 cursor-pointer"
+                  className="rounded bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer shadow-xs"
                 >
                   Select Himadri Telemetry &amp; Dossier
                 </button>
@@ -727,46 +727,46 @@ export default function PolarOperationalMap({
           )}
 
           {/* Map Data Provenance & Operational Legend */}
-          <div className="mt-3 rounded-xl border border-slate-800/80 bg-slate-950/70 p-3 text-[11px] font-mono">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2 mb-2">
-              <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px]">
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] font-mono">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2 mb-2">
+              <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">
                 Operational Data Provenance Classification
               </span>
               <div className="flex flex-wrap items-center gap-3 text-[10px]">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-                  <strong className="text-cyan-400">REAL EXTERNAL</strong> (NASA GIBS / In-situ AWS)
+                  <span className="w-2 h-2 rounded-full bg-sky-600"></span>
+                  <strong className="text-sky-700">REAL EXTERNAL</strong> (NASA GIBS / In-situ AWS)
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <strong className="text-emerald-400">SYSTEM OF RECORD</strong> (PostgreSQL DB)
+                  <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                  <strong className="text-emerald-700">SYSTEM OF RECORD</strong> (PostgreSQL DB)
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-                  <strong className="text-purple-400">MATHEMATICALLY DERIVED</strong> (Geodesic / EPSG:3031)
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <strong className="text-purple-700">MATHEMATICALLY DERIVED</strong> (Geodesic / EPSG:3031)
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  <strong className="text-amber-400">SCENARIO / SURVEY</strong> (Published Tracks)
+                  <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+                  <strong className="text-amber-700">SCENARIO / SURVEY</strong> (Published Tracks)
                 </span>
               </div>
             </div>
-            <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
-              <strong className="text-slate-300">Operational Disclaimer:</strong> Traverse corridors (Maitri Barrier, Bharati-Amery) and crevasse hazard polygons represent historical NCPOR/SCAR published field survey tracks. Real-time vehicle GPS telemetry and live vessel AIS transponders are not yet integrated into this operational view.
+            <p className="text-[10px] text-slate-600 font-sans leading-relaxed">
+              <strong className="text-slate-800">Operational Disclaimer:</strong> Traverse corridors (Maitri Barrier, Bharati-Amery) and crevasse hazard polygons represent historical NCPOR/SCAR published field survey tracks. Real-time vehicle GPS telemetry and live vessel AIS transponders are not yet integrated into this operational view.
             </p>
           </div>
         </div>
 
         {/* Right 4 Columns: Operational Decision Console */}
-        <div className="lg:col-span-4 h-[620px] flex flex-col rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl overflow-hidden">
+        <div className="lg:col-span-4 h-[620px] flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
           {/* Tactical Tab Switcher */}
-          <div className="flex flex-wrap border-b border-slate-800 bg-slate-950/60 p-2 gap-1 text-[11px] font-mono">
+          <div className="flex flex-wrap border-b border-slate-200 bg-slate-50 p-2 gap-1 text-[11px] font-mono">
             <button
               onClick={() => setActiveTab("READINESS")}
               className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                 activeTab === "READINESS"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
               ⚡ Readiness
@@ -775,8 +775,8 @@ export default function PolarOperationalMap({
               onClick={() => setActiveTab("FUEL")}
               className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                 activeTab === "FUEL"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
               ⛽ Fuel
@@ -785,8 +785,8 @@ export default function PolarOperationalMap({
               onClick={() => setActiveTab("WEATHER")}
               className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                 activeTab === "WEATHER"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
               ❄️ Weather
@@ -795,8 +795,8 @@ export default function PolarOperationalMap({
               onClick={() => setActiveTab("TRAVERSE")}
               className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                 activeTab === "TRAVERSE"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
               🧭 Traverse
@@ -805,8 +805,8 @@ export default function PolarOperationalMap({
               onClick={() => setActiveTab("MISSIONS")}
               className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                 activeTab === "MISSIONS"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
               🎯 Missions
@@ -815,8 +815,8 @@ export default function PolarOperationalMap({
               onClick={() => setActiveTab("HAZARDS")}
               className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                 activeTab === "HAZARDS"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
               ⚠️ Hazards
@@ -826,8 +826,8 @@ export default function PolarOperationalMap({
                 onClick={() => setActiveTab("STATION")}
                 className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                   activeTab === "STATION"
-                    ? "bg-emerald-500 text-slate-950"
-                    : "text-emerald-400 hover:text-emerald-300"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "text-emerald-700 hover:bg-emerald-50"
                 }`}
               >
                 📍 {selectedStation.code}
@@ -836,80 +836,80 @@ export default function PolarOperationalMap({
           </div>
 
           {/* Tab Content Body (Scrollable) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs font-mono">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs font-mono bg-white">
             {/* 1. READINESS TAB */}
             {activeTab === "READINESS" && (
               <div className="space-y-4">
-                <div className="border-b border-slate-800 pb-2">
-                  <span className="text-[10px] text-cyan-400 uppercase font-bold block">
+                <div className="border-b border-slate-200 pb-2">
+                  <span className="text-[10px] text-sky-700 uppercase font-bold block">
                     Operational Readiness Heuristic
                   </span>
                   <div className="flex items-baseline justify-between mt-1">
-                    <span className="text-2xl font-black text-emerald-400">
+                    <span className="text-2xl font-black text-emerald-700 tabular-nums">
                       {readiness?.score ?? 92}
-                      <span className="text-xs text-slate-500 font-normal"> / 100</span>
+                      <span className="text-xs text-slate-400 font-normal"> / 100</span>
                     </span>
-                    <span className="rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold uppercase">
+                    <span className="rounded bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold uppercase">
                       {readiness?.status ?? "OPERATIONAL"}
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
-                  <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-slate-300 font-bold">Critical Asset Health</span>
-                      <span className="text-emerald-400 font-bold">
+                      <span className="text-slate-800 font-bold">Critical Asset Health</span>
+                      <span className="text-emerald-700 font-bold">
                         {readiness?.categoryScores.assetHealth ?? 35} / 35
                       </span>
                     </div>
-                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-emerald-400 h-full rounded-full" style={{ width: "100%" }} />
+                    <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: "100%" }} />
                     </div>
                     <span className="text-[10px] text-slate-500 mt-1 block">
                       3/3 Mission-critical generators &amp; lifelines verified
                     </span>
                   </div>
 
-                  <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-slate-300 font-bold">Power Redundancy</span>
-                      <span className="text-emerald-400 font-bold">
+                      <span className="text-slate-800 font-bold">Power Redundancy</span>
+                      <span className="text-emerald-700 font-bold">
                         {readiness?.categoryScores.powerRedundancy ?? 25} / 25
                       </span>
                     </div>
-                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-emerald-400 h-full rounded-full" style={{ width: "100%" }} />
+                    <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: "100%" }} />
                     </div>
                     <span className="text-[10px] text-slate-500 mt-1 block">
                       N+1 continuous power architecture active
                     </span>
                   </div>
 
-                  <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-slate-300 font-bold">Maintenance Backlog</span>
-                      <span className="text-amber-400 font-bold">
+                      <span className="text-slate-800 font-bold">Maintenance Backlog</span>
+                      <span className="text-amber-700 font-bold">
                         {readiness?.categoryScores.maintenanceHealth ?? 14} / 20
                       </span>
                     </div>
-                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-amber-400 h-full rounded-full" style={{ width: "70%" }} />
+                    <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-amber-500 h-full rounded-full" style={{ width: "70%" }} />
                     </div>
                     <span className="text-[10px] text-slate-500 mt-1 block">
                       1 active corrective work order (VEH-CRN-01)
                     </span>
                   </div>
 
-                  <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-slate-300 font-bold">Environmental Hazard</span>
-                      <span className="text-emerald-400 font-bold">
+                      <span className="text-slate-800 font-bold">Environmental Hazard</span>
+                      <span className="text-emerald-700 font-bold">
                         {readiness?.categoryScores.environmentalRisk ?? 18} / 20
                       </span>
                     </div>
-                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-emerald-400 h-full rounded-full" style={{ width: "90%" }} />
+                    <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: "90%" }} />
                     </div>
                     <span className="text-[10px] text-slate-500 mt-1 block">
                       Dynamic in-situ AWS wind &amp; katabatic risk penalty
@@ -917,8 +917,8 @@ export default function PolarOperationalMap({
                   </div>
                 </div>
 
-                <div className="border-t border-slate-800 pt-3">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-2">
+                <div className="border-t border-slate-200 pt-3">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold block mb-2">
                     Spatial Station Focus
                   </span>
                   <div className="grid grid-cols-2 gap-2">
@@ -926,10 +926,10 @@ export default function PolarOperationalMap({
                       <button
                         key={st.code}
                         onClick={() => handleFocusStation(st)}
-                        className="rounded bg-slate-950 border border-slate-800 p-2 text-left hover:border-cyan-500/50 cursor-pointer"
+                        className="rounded-lg bg-slate-50 border border-slate-200 p-2 text-left hover:border-sky-300 hover:bg-sky-50 transition-colors cursor-pointer"
                       >
-                        <span className="font-bold text-white block">{st.code}</span>
-                        <span className="text-[10px] text-slate-400 truncate block">{st.name}</span>
+                        <span className="font-bold text-slate-900 block">{st.code}</span>
+                        <span className="text-[10px] text-slate-500 truncate block">{st.name}</span>
                       </button>
                     ))}
                   </div>
@@ -940,11 +940,11 @@ export default function PolarOperationalMap({
             {/* 2. FUEL AUTONOMY TAB */}
             {activeTab === "FUEL" && (
               <div className="space-y-4">
-                <div className="border-b border-slate-800 pb-2">
-                  <span className="text-[10px] text-cyan-400 uppercase font-bold block">
+                <div className="border-b border-slate-200 pb-2">
+                  <span className="text-[10px] text-sky-700 uppercase font-bold block">
                     Life-Support Fuel Autonomy
                   </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Critical reserves for prime generators &amp; sub-zero heating.
                   </p>
                 </div>
@@ -954,30 +954,30 @@ export default function PolarOperationalMap({
                   .map((fuel) => (
                     <div
                       key={fuel.stationCode}
-                      className="bg-slate-950/80 p-3 rounded-xl border border-slate-800/80 space-y-2"
+                      className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <strong className="text-white text-sm">{fuel.stationName}</strong>
+                          <strong className="text-slate-900 text-sm">{fuel.stationName}</strong>
                           <span className="text-[10px] text-slate-500 block">
                             Daily Burn: {fuel.aggregateDailyBurnLiters} L/day
                           </span>
                         </div>
-                        <span className="rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold">
+                        <span className="rounded bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold">
                           {fuel.autonomyStatus}
                         </span>
                       </div>
 
                       <div className="flex items-baseline justify-between">
-                        <span className="text-slate-400 text-[11px]">Days of Autonomy:</span>
-                        <span className="text-lg font-black text-cyan-400">
+                        <span className="text-slate-600 text-[11px]">Days of Autonomy:</span>
+                        <span className="text-lg font-black text-sky-700 tabular-nums">
                           {fuel.daysOfAutonomy} Days
                         </span>
                       </div>
 
-                      <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                      <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className="bg-cyan-400 h-full rounded-full"
+                          className="bg-sky-600 h-full rounded-full"
                           style={{
                             width: `${Math.round(
                               (fuel.totalCurrentLiters / fuel.totalCapacityLiters) * 100
@@ -986,7 +986,7 @@ export default function PolarOperationalMap({
                         />
                       </div>
 
-                      <div className="flex justify-between text-[10px] text-slate-500">
+                      <div className="flex justify-between text-[10px] text-slate-500 tabular-nums">
                         <span>{fuel.totalCurrentLiters.toLocaleString()} L</span>
                         <span>Capacity: {fuel.totalCapacityLiters.toLocaleString()} L</span>
                       </div>
@@ -998,11 +998,11 @@ export default function PolarOperationalMap({
             {/* 3. WEATHER RISK TAB */}
             {activeTab === "WEATHER" && (
               <div className="space-y-4">
-                <div className="border-b border-slate-800 pb-2">
-                  <span className="text-[10px] text-cyan-400 uppercase font-bold block">
+                <div className="border-b border-slate-200 pb-2">
+                  <span className="text-[10px] text-sky-700 uppercase font-bold block">
                     Polar Meteorological Risk Feeds
                   </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     In-situ AWS telemetry + Siple-Passel wind chill.
                   </p>
                 </div>
@@ -1012,32 +1012,32 @@ export default function PolarOperationalMap({
                   return (
                     <div
                       key={st.code}
-                      className="bg-slate-950/80 p-3 rounded-xl border border-slate-800/80 space-y-2.5"
+                      className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2.5"
                     >
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-white">
+                        <span className="font-bold text-slate-900">
                           [{st.code}] {st.name}
                         </span>
-                        {w && <ProvenanceBadge type={w.stationOverallStatus.classification} />}
+                        {w && <ProvenanceBadge tier={w.stationOverallStatus.classification} size="xs" />}
                       </div>
 
                       {w ? (
                         <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-                          <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
+                          <div className="bg-white p-2 rounded-lg border border-slate-200">
                             <span className="text-[10px] text-slate-500 block">Temp</span>
-                            <span className="text-white font-bold text-sm">
+                            <span className="text-slate-900 font-bold text-sm tabular-nums">
                               {w.measurements.temperatureC.value ?? "--"}°C
                             </span>
                           </div>
-                          <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
+                          <div className="bg-white p-2 rounded-lg border border-slate-200">
                             <span className="text-[10px] text-slate-500 block">Wind</span>
-                            <span className="text-amber-400 font-bold text-sm">
+                            <span className="text-amber-700 font-bold text-sm tabular-nums">
                               {w.measurements.windSpeedKmH.value ?? "--"} km/h
                             </span>
                           </div>
-                          <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
+                          <div className="bg-white p-2 rounded-lg border border-slate-200">
                             <span className="text-[10px] text-slate-500 block">Chill</span>
-                            <span className="text-cyan-400 font-bold text-sm">
+                            <span className="text-sky-700 font-bold text-sm tabular-nums">
                               {w.derivedCalculations.apparentTemperatureC.value ?? "--"}°C
                             </span>
                           </div>
@@ -1056,39 +1056,39 @@ export default function PolarOperationalMap({
             {/* 4. TRAVERSE PLANNING TAB */}
             {activeTab === "TRAVERSE" && (
               <div className="space-y-4">
-                <div className="border-b border-slate-800 pb-2">
-                  <span className="text-[10px] text-cyan-400 uppercase font-bold block">
+                <div className="border-b border-slate-200 pb-2">
+                  <span className="text-[10px] text-sky-700 uppercase font-bold block">
                     Expedition Overland Corridors (Scenario)
                   </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Waypoints, fuel depots &amp; convoy transit paths.
                   </p>
                 </div>
 
                 {selectedCorridor && (
-                  <div className="bg-cyan-950/40 border border-cyan-500/40 p-2.5 rounded-xl text-[11px] text-cyan-300">
-                    <span className="font-bold block uppercase text-[10px] text-cyan-400">Active Corridor Focus</span>
+                  <div className="bg-sky-50 border border-sky-200 p-2.5 rounded-xl text-[11px] text-sky-900">
+                    <span className="font-bold block uppercase text-[10px] text-sky-800">Active Corridor Focus</span>
                     {selectedCorridor.name} ({selectedCorridor.totalDistanceKm} km)
                   </div>
                 )}
 
                 {/* Corridor 1: Maitri to Shelf */}
-                <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800/80 space-y-2">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-start">
                     <div>
-                      <strong className="text-white text-xs block">
+                      <strong className="text-slate-900 text-xs block">
                         {MAITRI_SHELF_TRAVERSE.name}
                       </strong>
                       <span className="text-[10px] text-slate-500">
                         Origin: MTR • Waypoints: {MAITRI_SHELF_TRAVERSE.waypoints.length}
                       </span>
                     </div>
-                    <span className="text-cyan-400 font-bold">
+                    <span className="text-sky-700 font-bold tabular-nums">
                       {MAITRI_SHELF_TRAVERSE.totalDistanceKm} km
                     </span>
                   </div>
 
-                  <div className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                  <div className="text-[11px] text-slate-600 leading-relaxed font-sans">
                     Resupply route crossing blue ice moraine to floating ice shelf at India Bay.
                     Includes fuel cache at WP-MTR-03.
                   </div>
@@ -1098,29 +1098,29 @@ export default function PolarOperationalMap({
                       setSelectedCorridor(MAITRI_SHELF_TRAVERSE);
                       handleFocusCoordinates(11.9, -70.4, 4.8);
                     }}
-                    className="w-full rounded bg-cyan-500/20 border border-cyan-500/40 py-1.5 text-[11px] font-bold text-cyan-300 hover:bg-cyan-500/30 cursor-pointer text-center"
+                    className="w-full rounded bg-sky-50 border border-sky-200 py-1.5 text-[11px] font-bold text-sky-700 hover:bg-sky-100 cursor-pointer text-center transition-colors"
                   >
                     Focus Maitri Corridor on Map
                   </button>
                 </div>
 
                 {/* Corridor 2: Bharati to Amery */}
-                <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800/80 space-y-2">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-start">
                     <div>
-                      <strong className="text-white text-xs block">
+                      <strong className="text-slate-900 text-xs block">
                         {BHARATI_AMERY_TRAVERSE.name}
                       </strong>
                       <span className="text-[10px] text-slate-500">
                         Origin: BHR • Waypoints: {BHARATI_AMERY_TRAVERSE.waypoints.length}
                       </span>
                     </div>
-                    <span className="text-cyan-400 font-bold">
+                    <span className="text-sky-700 font-bold tabular-nums">
                       {BHARATI_AMERY_TRAVERSE.totalDistanceKm} km
                     </span>
                   </div>
 
-                  <div className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                  <div className="text-[11px] text-slate-600 leading-relaxed font-sans">
                     Deep-field scientific traverse to Amery Ice Shelf transect.
                     Caution: Shear margin crevasses along southern approach.
                   </div>
@@ -1130,7 +1130,7 @@ export default function PolarOperationalMap({
                       setSelectedCorridor(BHARATI_AMERY_TRAVERSE);
                       handleFocusCoordinates(74.5, -69.5, 4.8);
                     }}
-                    className="w-full rounded bg-cyan-500/20 border border-cyan-500/40 py-1.5 text-[11px] font-bold text-cyan-300 hover:bg-cyan-500/30 cursor-pointer text-center"
+                    className="w-full rounded bg-sky-50 border border-sky-200 py-1.5 text-[11px] font-bold text-sky-700 hover:bg-sky-100 cursor-pointer text-center transition-colors"
                   >
                     Focus Amery Corridor on Map
                   </button>
@@ -1138,13 +1138,13 @@ export default function PolarOperationalMap({
 
                 {/* Bharati-Maitri Geodesic Baseline */}
                 {bhrMtrSpatial && (
-                  <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800 text-[11px] space-y-1">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] space-y-1">
                     <span className="text-[10px] text-slate-500 uppercase font-bold block">
                       Inter-Station Geodesic Baseline
                     </span>
                     <div className="flex justify-between font-mono">
-                      <span className="text-slate-300">Bharati ↔ Maitri:</span>
-                      <span className="text-cyan-400 font-bold">
+                      <span className="text-slate-700">Bharati ↔ Maitri:</span>
+                      <span className="text-sky-700 font-bold tabular-nums">
                         {bhrMtrSpatial.distanceKm.toLocaleString()} km
                       </span>
                     </div>
@@ -1157,7 +1157,7 @@ export default function PolarOperationalMap({
                 <div className="pt-2">
                   <button
                     onClick={() => setActiveTab("MISSIONS")}
-                    className="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 p-2.5 text-center text-xs font-bold text-slate-950 hover:from-cyan-500 hover:to-cyan-400 transition cursor-pointer shadow-lg shadow-cyan-500/10"
+                    className="w-full rounded-xl bg-sky-600 p-2.5 text-center text-xs font-bold text-white hover:bg-sky-700 transition cursor-pointer shadow-xs"
                   >
                     🚀 Open Field Mission Command Console →
                   </button>
@@ -1168,18 +1168,18 @@ export default function PolarOperationalMap({
             {/* 5. HAZARDS TAB */}
             {activeTab === "HAZARDS" && (
               <div className="space-y-4">
-                <div className="border-b border-slate-800 pb-2">
-                  <span className="text-[10px] text-rose-400 uppercase font-bold block">
+                <div className="border-b border-slate-200 pb-2">
+                  <span className="text-[10px] text-rose-700 uppercase font-bold block">
                     Cryospheric Hazard Corridors
                   </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Crevasse fields &amp; tidal shear zones requiring radar-sounding.
                   </p>
                 </div>
 
                 {selectedHazard && (
-                  <div className="bg-rose-950/40 border border-rose-500/40 p-2.5 rounded-xl text-[11px] text-rose-300">
-                    <span className="font-bold block uppercase text-[10px] text-rose-400">Active Hazard Focus</span>
+                  <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-[11px] text-rose-900">
+                    <span className="font-bold block uppercase text-[10px] text-rose-800">Active Hazard Focus</span>
                     {selectedHazard.name} ({selectedHazard.severity})
                   </div>
                 )}
@@ -1187,11 +1187,11 @@ export default function PolarOperationalMap({
                 {POLAR_HAZARD_ZONES.map((haz) => (
                   <div
                     key={haz.id}
-                    className="bg-slate-950/80 p-3 rounded-xl border border-slate-800/80 space-y-2"
+                    className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2"
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <strong className="text-white text-xs block">
+                        <strong className="text-slate-900 text-xs block">
                           ⚠️ {haz.name}
                         </strong>
                         <span className="text-[10px] text-slate-500">
@@ -1201,15 +1201,15 @@ export default function PolarOperationalMap({
                       <span
                         className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                           haz.severity === "CRITICAL"
-                            ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                            : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                            ? "bg-rose-50 text-rose-700 border border-rose-200"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
                         }`}
                       >
                         {haz.severity}
                       </span>
                     </div>
 
-                    <p className="text-[11px] leading-relaxed text-slate-400 font-sans">
+                    <p className="text-[11px] leading-relaxed text-slate-600 font-sans">
                       {haz.description}
                     </p>
 
@@ -1222,7 +1222,7 @@ export default function PolarOperationalMap({
                           5.2
                         );
                       }}
-                      className="w-full rounded bg-slate-900 border border-slate-800 py-1 text-[10px] font-bold text-slate-300 hover:text-white hover:border-slate-700 cursor-pointer text-center"
+                      className="w-full rounded bg-white border border-slate-200 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-100 cursor-pointer text-center transition-colors"
                     >
                       Center on Hazard Zone
                     </button>
@@ -1241,17 +1241,17 @@ export default function PolarOperationalMap({
             {/* 7. SELECTED STATION DOSSIER TAB */}
             {activeTab === "STATION" && selectedStation && (
               <div className="space-y-4">
-                <div className="flex justify-between items-start border-b border-slate-800 pb-2">
+                <div className="flex justify-between items-start border-b border-slate-200 pb-2">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-cyan-400 text-sm">
+                      <span className="font-bold text-sky-700 text-sm">
                         {selectedStation.code}
                       </span>
-                      <span className="rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold">
+                      <span className="rounded bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold">
                         {selectedStation.status}
                       </span>
                     </div>
-                    <h3 className="text-white font-bold text-base mt-0.5">
+                    <h3 className="text-slate-900 font-bold text-base mt-0.5">
                       {selectedStation.name}
                     </h3>
                   </div>
@@ -1260,31 +1260,31 @@ export default function PolarOperationalMap({
                       setSelectedStation(null);
                       setActiveTab("READINESS");
                     }}
-                    className="text-slate-500 hover:text-white text-xs cursor-pointer"
+                    className="text-slate-400 hover:text-slate-700 text-xs cursor-pointer"
                   >
                     ✕ Close
                   </button>
                 </div>
 
                 {/* Spatial Coordinates */}
-                <div className="grid grid-cols-2 gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-[11px]">
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
                   <div>
                     <span className="text-[10px] text-slate-500 block uppercase">Latitude</span>
-                    <span className="text-white font-bold">{selectedStation.latitude}°</span>
+                    <span className="text-slate-900 font-bold">{selectedStation.latitude}°</span>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-500 block uppercase">Longitude</span>
-                    <span className="text-white font-bold">{selectedStation.longitude}°</span>
+                    <span className="text-slate-900 font-bold">{selectedStation.longitude}°</span>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-500 block uppercase">Capacity</span>
-                    <span className="text-white font-bold">
+                    <span className="text-slate-900 font-bold">
                       {selectedStation.capacity ?? "Unspecified"} pers
                     </span>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-500 block uppercase">Fuel Autonomy</span>
-                    <span className="text-cyan-400 font-bold">
+                    <span className="text-sky-700 font-bold">
                       {stationFuel ? `${stationFuel.daysOfAutonomy} Days` : "N/A"}
                     </span>
                   </div>
@@ -1292,27 +1292,27 @@ export default function PolarOperationalMap({
 
                 {/* Live Weather Snapshot */}
                 {stationWeather && (
-                  <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-bold text-slate-300">In-Situ Weather Telemetry</span>
-                      <ProvenanceBadge type={stationWeather.stationOverallStatus.classification} />
+                      <span className="font-bold text-slate-800">In-Situ Weather Telemetry</span>
+                      <ProvenanceBadge tier={stationWeather.stationOverallStatus.classification} size="xs" />
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-                      <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-                        <span className="text-[10px] text-slate-400 block">Ambient</span>
-                        <strong className="text-white text-sm">
+                      <div className="bg-white p-2 rounded-lg border border-slate-200">
+                        <span className="text-[10px] text-slate-500 block">Ambient</span>
+                        <strong className="text-slate-900 text-sm tabular-nums">
                           {stationWeather.measurements.temperatureC.value ?? "--"}°C
                         </strong>
                       </div>
-                      <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-                        <span className="text-[10px] text-slate-400 block">Wind</span>
-                        <strong className="text-amber-400 text-sm">
+                      <div className="bg-white p-2 rounded-lg border border-slate-200">
+                        <span className="text-[10px] text-slate-500 block">Wind</span>
+                        <strong className="text-amber-700 text-sm tabular-nums">
                           {stationWeather.measurements.windSpeedKmH.value ?? "--"} kt
                         </strong>
                       </div>
-                      <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-                        <span className="text-[10px] text-slate-400 block">Wind Chill</span>
-                        <strong className="text-cyan-400 text-sm">
+                      <div className="bg-white p-2 rounded-lg border border-slate-200">
+                        <span className="text-[10px] text-slate-500 block">Wind Chill</span>
+                        <strong className="text-sky-700 text-sm tabular-nums">
                           {stationWeather.derivedCalculations.apparentTemperatureC.value ?? "--"}°C
                         </strong>
                       </div>
@@ -1322,15 +1322,15 @@ export default function PolarOperationalMap({
 
                 {/* Geodesic Vector */}
                 {distanceToOther && (
-                  <div className="bg-cyan-950/20 border border-cyan-500/20 p-2.5 rounded-xl text-[11px]">
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                  <div className="bg-sky-50 border border-sky-200 p-2.5 rounded-xl text-[11px]">
+                    <span className="text-slate-600 block text-[10px] uppercase font-bold">
                       Geodesic Vector to {distanceToOther.targetCode}
                     </span>
                     <div className="mt-1 flex items-baseline justify-between font-mono">
-                      <span className="text-sm font-bold text-cyan-400">
+                      <span className="text-sm font-bold text-sky-700 tabular-nums">
                         {distanceToOther.distanceKm.toLocaleString()} km
                       </span>
-                      <span className="text-slate-300 text-[10px]">
+                      <span className="text-slate-700 text-[10px]">
                         Azimuth: {distanceToOther.bearing}
                       </span>
                     </div>
@@ -1338,16 +1338,16 @@ export default function PolarOperationalMap({
                 )}
 
                 {/* Operational Quick Actions */}
-                <div className="flex gap-2 pt-2 border-t border-slate-800">
+                <div className="flex gap-2 pt-2 border-t border-slate-200">
                   <Link
                     href="/sitrep"
-                    className="flex-1 text-center rounded-lg bg-cyan-500 px-3 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
+                    className="flex-1 text-center rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700 transition-colors shadow-xs"
                   >
                     File Daily SITREP
                   </Link>
                   <Link
                     href="/assets"
-                    className="flex-1 text-center rounded-lg bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 transition-colors"
+                    className="flex-1 text-center rounded-lg bg-slate-100 border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
                   >
                     Inspect Station Assets
                   </Link>

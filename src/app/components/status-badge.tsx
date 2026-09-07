@@ -7,7 +7,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, size = "xs" }: StatusBadgeProps) {
-  let colorClass = "bg-slate-800/80 text-slate-300 border-slate-700/60";
+  let colorClass = "bg-slate-100 text-slate-700 border-slate-300";
   const s = (status || "").toUpperCase();
 
   switch (s) {
@@ -20,7 +20,7 @@ export function StatusBadge({ status, size = "xs" }: StatusBadgeProps) {
     case "OPERATIONAL":
     case "OPTIMAL":
     case "AUTHORITATIVE_REAL":
-      colorClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+      colorClass = "bg-emerald-50 text-emerald-800 border-emerald-300";
       break;
     case "ASSIGNED":
     case "IN_USE":
@@ -28,7 +28,7 @@ export function StatusBadge({ status, size = "xs" }: StatusBadgeProps) {
     case "GOOD":
     case "MEDIUM":
     case "EXTERNAL_REAL":
-      colorClass = "bg-sky-500/10 text-sky-300 border-sky-500/30";
+      colorClass = "bg-sky-50 text-sky-800 border-sky-300";
       break;
     case "MAINTENANCE":
     case "ATTENTION_REQUIRED":
@@ -37,7 +37,7 @@ export function StatusBadge({ status, size = "xs" }: StatusBadgeProps) {
     case "HIGH":
     case "DRAFT":
     case "SIMULATED":
-      colorClass = "bg-amber-500/10 text-amber-300 border-amber-500/30";
+      colorClass = "bg-amber-50 text-amber-800 border-amber-300";
       break;
     case "CRITICAL":
     case "DAMAGED":
@@ -45,11 +45,11 @@ export function StatusBadge({ status, size = "xs" }: StatusBadgeProps) {
     case "RETIRED":
     case "HISTORICAL":
     case "POOR":
-      colorClass = "bg-rose-500/10 text-rose-400 border-rose-500/30";
+      colorClass = "bg-rose-50 text-rose-800 border-rose-300";
       break;
     case "COMPLETED":
     case "DERIVED":
-      colorClass = "bg-indigo-500/10 text-indigo-300 border-indigo-500/30";
+      colorClass = "bg-violet-50 text-violet-800 border-violet-300";
       break;
   }
 

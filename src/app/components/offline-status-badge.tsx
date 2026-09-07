@@ -12,32 +12,32 @@ export function OfflineStatusBadge() {
         return {
           label: 'OFFLINE',
           dotClass: 'bg-rose-500',
-          badgeClass: 'bg-rose-950/70 border-rose-800 text-rose-300',
+          badgeClass: 'bg-rose-50 border-rose-300 text-rose-800',
         };
       case 'SYNCING':
         return {
           label: 'SYNCING',
-          dotClass: 'bg-cyan-400 animate-ping',
-          badgeClass: 'bg-cyan-950/70 border-cyan-800 text-cyan-300',
+          dotClass: 'bg-sky-500 animate-pulse',
+          badgeClass: 'bg-sky-50 border-sky-300 text-sky-800',
         };
       case 'SYNCED':
         return {
           label: 'SYNCED',
-          dotClass: 'bg-emerald-400',
-          badgeClass: 'bg-emerald-950/70 border-emerald-800 text-emerald-300',
+          dotClass: 'bg-emerald-500',
+          badgeClass: 'bg-emerald-50 border-emerald-300 text-emerald-800',
         };
       case 'SYNC_FAILED':
         return {
           label: 'SYNC FAILED',
           dotClass: 'bg-amber-500',
-          badgeClass: 'bg-amber-950/70 border-amber-800 text-amber-300',
+          badgeClass: 'bg-amber-50 border-amber-300 text-amber-800',
         };
       case 'ONLINE':
       default:
         return {
           label: 'ONLINE',
-          dotClass: 'bg-emerald-500',
-          badgeClass: 'bg-slate-900 border-slate-800 text-slate-300',
+          dotClass: 'bg-emerald-600',
+          badgeClass: 'bg-slate-100 border-slate-300 text-slate-700',
         };
     }
   };

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description:
     "Polar Logistics, Operations, Resource & Asset Intelligence System",
   manifest: "/manifest.webmanifest",
-  themeColor: "#0f172a",
+  themeColor: "#f8fafc",
 };
 
 export default function RootLayout({

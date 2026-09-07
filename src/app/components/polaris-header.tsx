@@ -26,37 +26,64 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
   const getRoleBadgeColor = (r: string | null) => {
     switch (r) {
       case "SUPER_ADMIN":
-        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
+        return "bg-sky-50 text-sky-800 border-sky-300";
       case "COMMAND_ADMIN":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+        return "bg-emerald-50 text-emerald-800 border-emerald-300";
       case "EXPEDITION_MANAGER":
-        return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+        return "bg-purple-50 text-purple-800 border-purple-300";
       case "STATION_OPERATOR":
-        return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+        return "bg-amber-50 text-amber-800 border-amber-300";
       case "VIEWER":
       default:
-        return "bg-slate-800 text-slate-400 border-slate-700";
+        return "bg-slate-100 text-slate-700 border-slate-300";
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800/90 bg-slate-950/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+      {/* Institutional Mission Utility Bar */}
+      <div className="border-b border-slate-150 bg-slate-50 text-[11px] font-mono text-slate-600">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1 sm:px-6">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <span className="font-semibold text-slate-800 flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+              NCPOR POLAR NET
+            </span>
+            <span className="text-slate-300 hidden sm:inline">|</span>
+            <span className="hidden sm:inline">UTC: 08:00</span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="hidden md:inline">Bharati: 13:00 (UTC+5)</span>
+            <span className="text-slate-300 hidden md:inline">•</span>
+            <span className="hidden md:inline">Maitri: 08:00 (UTC)</span>
+            <span className="text-slate-300 hidden lg:inline">•</span>
+            <span className="hidden lg:inline">Himadri: 09:00 (UTC+1)</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-emerald-700 font-semibold flex items-center gap-1">
+              PostgreSQL Active
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Header */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6">
         {/* Brand & Identity */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-black text-sm group-hover:bg-cyan-500/20 transition-colors">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 border border-sky-200 text-sky-700 font-black text-sm group-hover:bg-sky-100 transition-colors">
               ❄
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-black tracking-wider text-white">POLARIS</span>
-                <span className="rounded bg-cyan-950/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-cyan-400 border border-cyan-800/60 hidden sm:inline-block">
-                  MISSION CONTROL
+                <span className="text-base font-black tracking-wider text-slate-900">POLARIS</span>
+                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-mono font-bold text-slate-700 border border-slate-300 hidden sm:inline-block">
+                  MISSION OPS
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono hidden md:block">
-                NCPOR / Indian Polar Operations
+              <p className="text-[10px] text-slate-500 font-mono hidden md:block">
+                National Centre for Polar and Ocean Research • MoES
               </p>
             </div>
           </Link>
@@ -72,8 +99,8 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
                 href={item.href}
                 className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 shadow-xs"
-                    : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                    ? "bg-sky-50 text-sky-800 border border-sky-200 shadow-xs font-bold"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 {item.label}
@@ -97,11 +124,11 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
               </span>
               <Link
                 href="/login"
-                className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/90 px-2.5 py-1 text-xs text-slate-300 hover:border-cyan-500/40 transition-colors"
+                className="flex items-center gap-2 rounded-full border border-slate-250 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-colors"
                 title={`Logged in as ${user.email}`}
               >
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-semibold text-slate-200 truncate max-w-[90px] sm:max-w-[130px]">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="font-semibold text-slate-800 truncate max-w-[90px] sm:max-w-[130px]">
                   {user.email.split("@")[0]}
                 </span>
               </Link>
@@ -109,17 +136,17 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-2.5 py-1 text-xs text-slate-300 hover:border-cyan-500/40 transition-colors"
+              className="flex items-center gap-1.5 rounded-full border border-slate-250 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-colors"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-              <span className="font-semibold text-slate-200 text-xs">Login</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <span className="font-semibold text-slate-800 text-xs">Login</span>
             </Link>
           )}
 
           {/* Mobile Hamburger Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 hover:text-white cursor-pointer"
+            className="lg:hidden p-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? "✕" : "☰"}
@@ -129,7 +156,7 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-800 bg-slate-950 px-4 py-3 space-y-1">
+        <div className="lg:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1">
           {navItems.map((item) => {
             const isActive = currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href));
             return (
@@ -139,8 +166,8 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                   isActive
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
-                    : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                    ? "bg-sky-50 text-sky-800 border border-sky-200 font-bold"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 {item.label}

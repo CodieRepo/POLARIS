@@ -147,67 +147,67 @@ export default async function DashboardPage() {
   const avgDaysAutonomy = Math.round((bhrAutonomy + mtrAutonomy + hmdAutonomy) / 3);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <PolarisHeader currentPath="/" />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 space-y-6">
         {/* MISSION CONTROL HEADER */}
-        <div className="rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-950 p-6 sm:p-7 shadow-xl">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-7 shadow-xs">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-md bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/30">
+                <span className="rounded-md bg-sky-50 px-2.5 py-0.5 text-xs font-mono font-bold text-sky-800 border border-sky-200">
                   NATIONAL POLAR MISSION CONTROL
                 </span>
-                <span className="text-xs text-slate-400 font-mono">
+                <span className="text-xs text-slate-500 font-mono">
                   Sept 7, 2026 • 08:00 UTC
                 </span>
-                <span className="text-slate-600 hidden sm:inline">•</span>
-                <span className="text-xs text-emerald-400 font-mono flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="text-slate-300 hidden sm:inline">•</span>
+                <span className="text-xs text-emerald-700 font-mono flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   PostgreSQL System of Record Active
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
                 Polar Logistics, Operations, Resource &amp; Asset Intelligence
               </h1>
 
-              <p className="max-w-3xl text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <p className="max-w-3xl text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Central command suite for Indian Antarctic (Bharati, Maitri) and Arctic (Himadri) scientific missions.
                 Continuously tracks asset lifecycle states, life-support fuel reserves, synoptic meteorological trends, and resupply logistics.
               </p>
             </div>
 
             {/* OPERATIONAL READINESS GAUGE */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-center min-w-[220px] shadow-lg shrink-0">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-1.5 mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-center min-w-[220px] shadow-xs shrink-0">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Operational Health
                 </span>
                 <ProvenanceBadge tier="DERIVED" size="xs" />
               </div>
 
               <div className="flex items-baseline justify-center gap-1.5">
-                <span className={`text-4xl font-black font-mono ${
-                  readiness.score >= 85 ? "text-emerald-400" : readiness.score >= 60 ? "text-amber-400" : "text-rose-400"
+                <span className={`text-4xl font-black font-mono tracking-tight tabular-nums ${
+                  readiness.score >= 85 ? "text-emerald-700" : readiness.score >= 60 ? "text-amber-700" : "text-rose-700"
                 }`}>
                   {readiness.score}
                 </span>
-                <span className="text-sm font-bold text-slate-500">/ 100</span>
+                <span className="text-sm font-bold text-slate-400">/ 100</span>
               </div>
 
-              <div className="mt-1">
+              <div className="mt-1.5">
                 <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider ${
                   readiness.status === "OPTIMAL" || readiness.status === "OPERATIONAL"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                    : "bg-amber-500/10 text-amber-300 border border-amber-500/30"
+                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                    : "bg-amber-50 text-amber-800 border border-amber-200"
                 }`}>
                   {readiness.status} POSTURE
                 </span>
               </div>
 
-              <p className="mt-2 text-[10px] text-slate-400 leading-tight">
+              <p className="mt-2 text-[10px] text-slate-500 leading-tight">
                 {readiness.summary}
               </p>
             </div>
@@ -220,105 +220,105 @@ export default async function DashboardPage() {
         {/* LEVEL 1: GLOBAL SITUATION GRID (6 meaningful cards) */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
               Global Situation Overview
             </h2>
-            <span className="text-[11px] font-mono text-slate-500">Level 1 • High-Level Metrics</span>
+            <span className="text-[11px] font-mono text-slate-400">Level 1 • High-Level Metrics</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {/* 1. Active Expeditions */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-sm hover:border-slate-700 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Expeditions
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-white">
+                <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
                   {stats.expeditions.active}
                 </span>
-                <span className="text-xs text-emerald-400 font-semibold font-mono">Active</span>
+                <span className="text-xs text-emerald-700 font-semibold font-mono">Active</span>
               </div>
-              <div className="mt-2 text-[11px] text-slate-400">
+              <div className="mt-2 text-[11px] text-slate-500">
                 {stats.expeditions.total} campaigns logged
               </div>
             </div>
 
             {/* 2. Permanent Bases */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-sm hover:border-slate-700 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Research Stations
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-white">
+                <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
                   {stats.stations.active}
                 </span>
-                <span className="text-xs text-sky-400 font-semibold font-mono">Bases</span>
+                <span className="text-xs text-sky-700 font-semibold font-mono">Bases</span>
               </div>
-              <div className="mt-2 text-[11px] text-slate-400 truncate">
+              <div className="mt-2 text-[11px] text-slate-500 truncate">
                 BHR • MTR • HMD
               </div>
             </div>
 
             {/* 3. Operational Alerts */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-sm hover:border-slate-700 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Active Alerts
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-amber-400">
+                <span className="text-2xl sm:text-3xl font-black font-mono text-amber-700 tabular-nums">
                   {operationalAlerts.filter((a) => a.status === "ACTIVE").length}
                 </span>
-                <span className="text-xs text-amber-400 font-semibold font-mono">Watch</span>
+                <span className="text-xs text-amber-700 font-semibold font-mono">Watch</span>
               </div>
-              <div className="mt-2 text-[11px] text-slate-400">
+              <div className="mt-2 text-[11px] text-slate-500">
                 Weather &amp; Maint queues
               </div>
             </div>
 
             {/* 4. Fuel Autonomy */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-sm hover:border-slate-700 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Fuel Autonomy
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-400">
+                <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 tabular-nums">
                   {avgDaysAutonomy}d
                 </span>
-                <span className="text-xs text-emerald-400 font-semibold font-mono">Normal</span>
+                <span className="text-xs text-emerald-700 font-semibold font-mono">Normal</span>
               </div>
-              <div className="mt-2 text-[11px] text-slate-400">
+              <div className="mt-2 text-[11px] text-slate-500">
                 Life-support buffer
               </div>
             </div>
 
             {/* 5. Maritime Resupply */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-sm hover:border-slate-700 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Resupply Vessel
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-cyan-400">
+                <span className="text-2xl sm:text-3xl font-black font-mono text-sky-700 tabular-nums">
                   {activeVoyage.daysAtSea}d
                 </span>
-                <span className="text-xs text-cyan-400 font-semibold font-mono">At Sea</span>
+                <span className="text-xs text-sky-700 font-semibold font-mono">At Sea</span>
               </div>
-              <div className="mt-2 text-[11px] text-slate-400 truncate">
+              <div className="mt-2 text-[11px] text-slate-500 truncate">
                 {activeVoyage.vesselName.split(" (")[0]}
               </div>
             </div>
 
             {/* 6. Tracked Assets */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-sm hover:border-slate-700 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Tracked Assets
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-white">
+                <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
                   {stats.assets.total}
                 </span>
-                <span className="text-xs text-emerald-400 font-semibold font-mono">Units</span>
+                <span className="text-xs text-emerald-700 font-semibold font-mono">Units</span>
               </div>
-              <div className="mt-2 text-[11px] text-slate-400">
+              <div className="mt-2 text-[11px] text-slate-500">
                 {stats.assets.available} Available • {stats.assets.maintenance} Maint
               </div>
             </div>
@@ -328,10 +328,10 @@ export default async function DashboardPage() {
         {/* LEVEL 2: ACTIVE MISSIONS OVERVIEW CARDS */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
               Active Expedition Field Campaigns
             </h2>
-            <Link href="/expeditions" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300">
+            <Link href="/expeditions" className="text-xs font-semibold text-sky-700 hover:text-sky-900 transition-colors">
               View All Missions ({expeditions.length}) →
             </Link>
           </div>
@@ -340,44 +340,44 @@ export default async function DashboardPage() {
             {expeditions.slice(0, 3).map((exp) => (
               <div
                 key={exp.id}
-                className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col justify-between hover:border-slate-700 transition-colors shadow-sm"
+                className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between hover:border-slate-300 hover:shadow-xs transition-all"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <span className="font-mono text-cyan-400 font-bold text-xs">
+                      <span className="font-mono text-sky-700 font-bold text-xs">
                         {exp.code}
                       </span>
-                      <h3 className="text-base font-bold text-white leading-tight">
+                      <h3 className="text-base font-bold text-slate-900 leading-tight">
                         {exp.name}
                       </h3>
                     </div>
                     <StatusBadge status={exp.status} type="expedition" />
                   </div>
 
-                  <p className="text-xs text-slate-300 line-clamp-2 mb-4 leading-relaxed">
+                  <p className="text-xs text-slate-600 line-clamp-2 mb-4 leading-relaxed">
                     {exp.description || "Operational scientific campaign in polar sector."}
                   </p>
 
-                  <div className="grid grid-cols-2 gap-2 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800/80 text-[11px]">
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px]">
                     <div>
                       <span className="text-slate-500 block text-[10px] uppercase font-semibold">Classification</span>
-                      <span className="font-mono font-medium text-slate-200">{exp.data_classification}</span>
+                      <span className="font-mono font-medium text-slate-800">{exp.data_classification}</span>
                     </div>
                     <div>
                       <span className="text-slate-500 block text-[10px] uppercase font-semibold">Window</span>
-                      <span className="font-mono text-slate-200">
+                      <span className="font-mono text-slate-800">
                         {new Date(exp.planned_start_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {new Date(exp.planned_end_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                   <span className="text-slate-500 text-[11px] font-mono">Phase: STATION OPS</span>
                   <Link
                     href={`/expeditions/${exp.code}`}
-                    className="font-semibold text-cyan-400 hover:text-cyan-300 text-xs"
+                    className="font-semibold text-sky-700 hover:text-sky-900 text-xs transition-colors"
                   >
                     Roster &amp; Gear →
                   </Link>
@@ -410,31 +410,31 @@ export default async function DashboardPage() {
         <WeatherTelemetryPanel weather={weatherTelemetry} />
 
         {/* LEVEL 4: OPERATIONAL ASSET REGISTRY TABLE (Progressive Disclosure) */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 shadow-lg">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">Operational Asset Registry</h2>
-                <span className="rounded bg-slate-800 px-2 py-0.5 text-xs font-mono text-slate-300">
+                <h2 className="text-lg font-bold text-slate-900">Operational Asset Registry</h2>
+                <span className="rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-xs font-mono text-slate-700">
                   {assets.length} Units Tracked
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Atomic state machine enforcing assignment, release, maintenance work orders, and retirement.
               </p>
             </div>
             <Link
               href="/assets"
-              className="rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs font-semibold text-cyan-400 hover:bg-slate-700 hover:text-white transition-colors self-start sm:self-auto"
+              className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50 hover:border-sky-300 transition-colors self-start sm:self-auto"
             >
               Open Full Asset Catalog →
             </Link>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950">
+          <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400 uppercase font-semibold">
+                <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 uppercase font-semibold text-[11px]">
                   <th className="py-2.5 px-4 font-mono">Asset Tag</th>
                   <th className="py-2.5 px-4">Nomenclature</th>
                   <th className="py-2.5 px-4">Category</th>
@@ -443,16 +443,16 @@ export default async function DashboardPage() {
                   <th className="py-2.5 px-4 text-right">Lifecycle</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {assets.slice(0, 6).map((asset) => (
-                  <tr key={asset.id} className="hover:bg-slate-900/40 transition-colors">
-                    <td className="py-2.5 px-4 font-mono font-bold text-cyan-400">
+                  <tr key={asset.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-2.5 px-4 font-mono font-bold text-sky-700">
                       {asset.asset_code}
                     </td>
-                    <td className="py-2.5 px-4 font-medium text-slate-200">
+                    <td className="py-2.5 px-4 font-medium text-slate-900">
                       {asset.name}
                     </td>
-                    <td className="py-2.5 px-4 text-slate-400">
+                    <td className="py-2.5 px-4 text-slate-600">
                       {asset.category}
                     </td>
                     <td className="py-2.5 px-4">
@@ -464,7 +464,7 @@ export default async function DashboardPage() {
                     <td className="py-2.5 px-4 text-right">
                       <Link
                         href={`/assets/${asset.asset_code}`}
-                        className="rounded bg-slate-800/80 px-2.5 py-1 text-[11px] font-semibold text-slate-200 hover:bg-cyan-500 hover:text-slate-950 transition-colors"
+                        className="rounded bg-slate-100 border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-sky-50 hover:text-sky-800 hover:border-sky-300 transition-colors"
                       >
                         Manage →
                       </Link>
@@ -477,7 +477,7 @@ export default async function DashboardPage() {
         </div>
       </main>
 
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
         POLARIS • National Centre for Polar &amp; Ocean Research (NCPOR) Management Foundation • SIH 2026
       </footer>
     </div>
