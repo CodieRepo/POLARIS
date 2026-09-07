@@ -98,22 +98,15 @@ async function runRbacUiSmoke() {
   async function loginAs(email: string, roleName: string) {
     console.log(`\n--- Testing ${roleName} in Browser (${email}) ---`);
     await context.clearCookies();
-    await page.goto(`${TARGET_URL}/login`, { waitUntil: 'networkidle' });
+    await page.goto(`${TARGET_URL}/login`, { waitUntil: 'domcontentloaded' });
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', 'Polaris@2026');
-    await page.click('button[type="submit"]');
     
-    // Wait for redirect to dashboard
-    try {
-      await page.waitForURL(`${TARGET_URL}/`, { timeout: 10000 });
-    } catch (e) {
-      const errorDiv = await page.$('.text-rose-300');
-      if (errorDiv) {
-        const txt = await errorDiv.textContent();
-        console.error(`  [LOGIN PAGE ERROR BANNER]: ${txt}`);
-      }
-      throw e;
-    }
+    await Promise.all([
+      page.waitForURL((url) => url.pathname === '/' || url.pathname === '', { timeout: 15000 }),
+      page.click('button[type="submit"]')
+    ]);
+    
     await page.waitForSelector('header', { timeout: 10000 });
     // Wait for the specific role badge to populate via AuthProvider
     await page.waitForSelector(`header span:has-text("${roleName}")`, { timeout: 10000 });

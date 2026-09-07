@@ -219,6 +219,69 @@ export async function POST(req: NextRequest) {
 
           if (cntErr) throw new Error(`Container update failed: ${cntErr.message}`);
           executionResult = { containerId: container.id, stage: container.transit_stage };
+        } else if (actionType === 'RECORD_TRAVERSE_CHECKIN') {
+          const missionId = String(payload.missionId);
+          const waypointCode = String(payload.waypointCode);
+          const latitude = Number(payload.latitude);
+          const longitude = Number(payload.longitude);
+          const remainingFuel = payload.remainingFuelLiters !== undefined && payload.remainingFuelLiters !== null
+            ? Number(payload.remainingFuelLiters)
+            : null;
+          const ambientTemp = payload.ambientTempC !== undefined && payload.ambientTempC !== null
+            ? Number(payload.ambientTempC)
+            : null;
+          const commsStatus = (payload.commsStatus as 'NOMINAL_HF' | 'IRIDIUM_RUDICS' | 'INMARSAT_BGAN' | 'DEGRADED_AURORAL' | 'BLACKOUT') || 'NOMINAL_HF';
+          const operationalStatus = String(payload.operationalStatus || 'NOMINAL');
+          const hazardNotes = payload.hazardAssessmentNotes ? String(payload.hazardAssessmentNotes) : null;
+          const checkinAt = String(payload.checkinAt || new Date().toISOString());
+
+          if (!missionId || !waypointCode || isNaN(latitude) || isNaN(longitude)) {
+            throw new Error('Invalid missionId, waypointCode, or geodetic coordinates');
+          }
+
+          const { data: checkin, error: cErr } = await supabase
+            .from('traverse_checkins')
+            .insert({
+              mission_id: missionId,
+              waypoint_code: waypointCode,
+              latitude,
+              longitude,
+              checkin_at: checkinAt,
+              remaining_fuel_liters: remainingFuel,
+              ambient_temp_c: ambientTemp,
+              comms_status: commsStatus,
+              operational_status: operationalStatus,
+              hazard_assessment_notes: hazardNotes,
+            })
+            .select()
+            .single();
+
+          if (cErr) throw new Error(`Traverse check-in sync failed: ${cErr.message}`);
+
+          // Reconcile mission status if DISPATCHED or OVERDUE
+          const { data: currentMission } = await supabase
+            .from('traverse_missions')
+            .select('status')
+            .eq('id', missionId)
+            .single();
+
+          if (currentMission?.status === 'DISPATCHED' || currentMission?.status === 'CHECKIN_OVERDUE') {
+            await supabase
+              .from('traverse_missions')
+              .update({
+                status: 'EN_ROUTE',
+                actual_departure_at: checkinAt,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', missionId);
+          }
+
+          executionResult = {
+            checkinId: checkin.id,
+            missionId,
+            waypointCode,
+            status: 'EN_ROUTE',
+          };
         } else {
           throw new Error(`Unsupported offline action type: ${actionType}`);
         }

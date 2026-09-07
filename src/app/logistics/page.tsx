@@ -15,6 +15,7 @@ export default function LogisticsPage() {
   const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [stageFilter, setStageFilter] = useState<string>("ALL");
   const [stationFilter, setStationFilter] = useState<string>("ALL");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     async function loadContainers() {
@@ -61,6 +62,14 @@ export default function LogisticsPage() {
   const filtered = containers.filter((c) => {
     if (stageFilter !== "ALL" && c.transitStage !== stageFilter) return false;
     if (stationFilter !== "ALL" && c.destinationStationCode !== stationFilter) return false;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      return (
+        c.containerCode.toLowerCase().includes(term) ||
+        c.manifestDescription.toLowerCase().includes(term) ||
+        c.containerType.toLowerCase().includes(term)
+      );
+    }
     return true;
   });
 
@@ -92,47 +101,58 @@ export default function LogisticsPage() {
     }
   };
 
+  const pipelineStages: { stage: LogisticsTransitStage; label: string; step: number; desc: string }[] = [
+    { stage: "GOA_MOBILIZATION", label: "Goa Mobilization", step: 1, desc: "Mormugao Port loading" },
+    { stage: "CAPE_TOWN_BUNKERING", label: "Cape Town Bunker", step: 2, desc: "Fuel & cold supplies" },
+    { stage: "SOUTHERN_OCEAN_TRANSIT", label: "Southern Ocean", step: 3, desc: "Active vessel transit" },
+    { stage: "ICE_SHELF_BARRIER", label: "Shelf Barrier", step: 4, desc: "Helicopter & crane offload" },
+    { stage: "STATION_DELIVERED", label: "Station Delivered", step: 5, desc: "In-situ base inventory" },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <PolarisHeader currentPath="/logistics" />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 space-y-6">
         {/* Navigation Breadcrumb */}
-        <div className="mb-4 flex items-center gap-2 text-xs text-slate-400">
-          <Link href="/" className="hover:text-cyan-400">
-            ← Command Dashboard
+        <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <Link href="/" className="hover:text-cyan-400 transition-colors">
+            ← Command Center
           </Link>
           <span>/</span>
-          <span className="font-mono text-cyan-400">Maritime &amp; Supply Chain Logistics</span>
+          <span className="font-bold text-cyan-400">Maritime Logistics &amp; Resupply Chain</span>
         </div>
 
         {/* Header Summary Banner */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 mb-8 shadow-xl">
+        <div className="rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-slate-950 p-6 sm:p-7 shadow-xl space-y-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/30">
-                  MARITIME EXPEDITION LOGISTICS
+                  MARITIME LOGISTICS
                 </span>
-                <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-mono font-bold text-emerald-400 border border-emerald-500/30">
-                  SCENARIO_LOGISTICS_MANIFEST (PostgreSQL public.cargo_containers)
+                <span className="text-xs text-slate-400 font-mono">
+                  Voyage Code: {voyage.voyageCode}
                 </span>
-                <span className="text-xs text-slate-400 font-mono">Voyage: {voyage.voyageCode}</span>
+                <span className="text-slate-600 hidden sm:inline">•</span>
+                <span className="text-xs text-emerald-400 font-mono">
+                  PostgreSQL `public.cargo_containers`
+                </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 Polar Freight Manifests &amp; Resupply Chain
               </h1>
-              <p className="mt-2 text-sm text-slate-300 max-w-3xl leading-relaxed">
-                Tracks ISO 20-foot shipping containers, breakbulk pallets, and hazardous material drums
+              <p className="max-w-3xl text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Tracks ISO 20-foot shipping containers, breakbulk pallets, and hazardous fuel drums
                 from Mormugao Port (Goa) via Cape Town bunkering to Antarctica ice shelf barrier offloading.
-                Data is persisted directly to the PostgreSQL system of record with transition capabilities.
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 min-w-[240px] text-xs font-mono">
+            {/* Active Vessel Card */}
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 min-w-[240px] text-xs font-mono shadow-lg shrink-0">
               <span className="text-slate-500 block uppercase font-bold text-[10px]">Active Chartered Vessel</span>
               <strong className="text-white text-sm block mt-0.5">{voyage.vesselName}</strong>
-              <div className="mt-2 flex justify-between text-slate-400 border-t border-slate-800/80 pt-2">
+              <div className="mt-2.5 flex justify-between text-slate-400 border-t border-slate-800/80 pt-2">
                 <span>Total Tonnage:</span>
                 <strong className="text-cyan-400">{voyage.totalTonnageMetricTons} MT</strong>
               </div>
@@ -141,7 +161,7 @@ export default function LogisticsPage() {
                 <strong className="text-white">{voyage.daysAtSea} Days</strong>
               </div>
               <div className="flex justify-between text-slate-400 mt-1">
-                <span>DB Status:</span>
+                <span>Sync Posture:</span>
                 <strong className={isLoading ? "text-amber-400" : "text-emerald-400"}>
                   {isLoading ? "SYNCING..." : "LIVE (PostgreSQL)"}
                 </strong>
@@ -149,32 +169,41 @@ export default function LogisticsPage() {
             </div>
           </div>
 
-          {/* Logistics Pipeline Stages Indicator */}
-          <div className="mt-8 pt-6 border-t border-slate-800/80">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-slate-400 block mb-3">
+          {/* Horizontal Operational Pipeline */}
+          <div className="border-t border-slate-800/80 pt-5 space-y-3">
+            <span className="text-xs font-mono uppercase tracking-wider font-bold text-slate-400 block">
               Official Polar Resupply Transit Pipeline
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-center text-xs font-mono">
-              <div className="p-2.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
-                <span className="text-[10px] block text-slate-500">STAGE 1</span>
-                <strong className="text-slate-300">GOA MOBILIZATION</strong>
-              </div>
-              <div className="p-2.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
-                <span className="text-[10px] block text-slate-500">STAGE 2</span>
-                <strong className="text-slate-300">CAPE TOWN BUNKER</strong>
-              </div>
-              <div className="p-2.5 rounded-lg border border-cyan-500/40 bg-cyan-950/20 text-cyan-400 font-bold shadow-sm">
-                <span className="text-[10px] block text-cyan-500">STAGE 3 (ACTIVE)</span>
-                <strong>SOUTHERN OCEAN</strong>
-              </div>
-              <div className="p-2.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
-                <span className="text-[10px] block text-slate-500">STAGE 4</span>
-                <strong className="text-slate-300">SHELF BARRIER</strong>
-              </div>
-              <div className="p-2.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
-                <span className="text-[10px] block text-slate-500">STAGE 5</span>
-                <strong className="text-slate-300">STATION DELIVERED</strong>
-              </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs font-mono">
+              {pipelineStages.map((ps) => {
+                const isActive = ps.stage === "SOUTHERN_OCEAN_TRANSIT";
+                return (
+                  <div
+                    key={ps.stage}
+                    className={`p-3 rounded-xl border transition-all ${
+                      isActive
+                        ? "border-cyan-500/40 bg-cyan-950/20 shadow-sm"
+                        : "border-slate-800 bg-slate-950/80 text-slate-400"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-slate-500">STAGE {ps.step}</span>
+                      {isActive && (
+                        <span className="rounded bg-cyan-500/20 px-1.5 py-0.2 text-[9px] font-bold text-cyan-400">
+                          ACTIVE
+                        </span>
+                      )}
+                    </div>
+                    <strong className={`block text-xs ${isActive ? "text-cyan-300 font-bold" : "text-slate-300"}`}>
+                      {ps.label}
+                    </strong>
+                    <span className="text-[10px] text-slate-500 mt-0.5 block font-sans truncate">
+                      {ps.desc}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -182,26 +211,39 @@ export default function LogisticsPage() {
         {/* Cargo Containers Table Section */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="text-sm font-mono uppercase tracking-wider font-bold text-slate-400">
-              Tracked Cargo Containers ({filtered.length})
-            </h2>
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <span>📦</span> Tracked Cargo Containers
+                <span className="rounded bg-slate-800 px-2 py-0.5 text-xs font-mono text-slate-300">
+                  {filtered.length} Units
+                </span>
+              </h2>
+            </div>
 
-            {/* Filters */}
+            {/* Filter Controls */}
             <div className="flex flex-wrap gap-2 text-xs font-mono">
+              <input
+                type="text"
+                placeholder="Search container / manifest..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 min-w-[200px]"
+              />
+
               <select
                 value={stationFilter}
                 onChange={(e) => setStationFilter(e.target.value)}
-                className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-white"
+                className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-white focus:outline-none focus:border-cyan-500"
               >
                 <option value="ALL">All Stations</option>
-                <option value="BHR">Bharati (BHR)</option>
-                <option value="MTR">Maitri (MTR)</option>
+                <option value="BHR">Bharati Base (BHR)</option>
+                <option value="MTR">Maitri Base (MTR)</option>
               </select>
 
               <select
                 value={stageFilter}
                 onChange={(e) => setStageFilter(e.target.value)}
-                className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-white"
+                className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-white focus:outline-none focus:border-cyan-500"
               >
                 <option value="ALL">All Transit Stages</option>
                 <option value="GOA_MOBILIZATION">Goa Mobilization</option>
@@ -213,88 +255,102 @@ export default function LogisticsPage() {
             </div>
           </div>
 
+          {/* Container Manifest Table */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900/80 text-slate-400 font-semibold">
+                  <tr className="border-b border-slate-800 bg-slate-900/80 text-slate-400 font-semibold font-mono">
                     <th className="py-3 px-4">Container ID</th>
                     <th className="py-3 px-4">Classification</th>
-                    <th className="py-3 px-4">Manifest Contents</th>
+                    <th className="py-3 px-4 font-sans">Manifest Contents</th>
                     <th className="py-3 px-4">Destination</th>
                     <th className="py-3 px-4">Gross Weight</th>
                     <th className="py-3 px-4">Priority</th>
-                    <th className="py-3 px-4">Transit Stage (System of Record)</th>
+                    <th className="py-3 px-4">Transit Stage</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-mono">
-                  {filtered.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-900/60 transition-colors">
-                      <td className="py-3 px-4 font-bold text-cyan-400">
-                        {c.containerCode}
-                      </td>
-                      <td className="py-3 px-4 text-slate-300">
-                        {c.containerType}
-                      </td>
-                      <td className="py-3 px-4 font-sans text-slate-200 max-w-xs">
-                        {c.manifestDescription}
-                      </td>
-                      <td className="py-3 px-4 font-bold text-white">
-                        {c.destinationStationCode}
-                      </td>
-                      <td className="py-3 px-4 text-slate-300">
-                        {c.totalGrossWeightKg.toLocaleString()} kg
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadge(
-                            c.priority
-                          )}`}
-                        >
-                          {c.priority}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          {can("LOGISTICS_UPDATE_STAGE") || (!role || role !== "VIEWER") ? (
-                            <select
-                              value={c.transitStage}
-                              disabled={updatingCode === c.containerCode}
-                              onChange={(e) => handleStageChange(c.containerCode, e.target.value as LogisticsTransitStage)}
-                              className={`rounded px-2 py-1 text-[11px] font-bold border ${getStageBadge(
-                                c.transitStage
-                              )} bg-slate-950 focus:outline-none cursor-pointer disabled:opacity-50`}
-                            >
-                              <option value="GOA_MOBILIZATION">GOA MOBILIZATION</option>
-                              <option value="CAPE_TOWN_BUNKERING">CAPE TOWN BUNKERING</option>
-                              <option value="SOUTHERN_OCEAN_TRANSIT">SOUTHERN OCEAN TRANSIT</option>
-                              <option value="ICE_SHELF_BARRIER">ICE SHELF BARRIER</option>
-                              <option value="STATION_DELIVERED">STATION DELIVERED</option>
-                            </select>
-                          ) : (
-                            <span
-                              className={`inline-block px-2 py-1 rounded text-[11px] font-bold border ${getStageBadge(
-                                c.transitStage
-                              )}`}
-                            >
-                              {c.transitStage.replace(/_/g, " ")}
-                            </span>
-                          )}
-                          {updatingCode === c.containerCode && (
-                            <span className="text-[10px] text-cyan-400 animate-pulse font-bold">
-                              Updating...
-                            </span>
-                          )}
-                        </div>
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
+                        No containers match the selected filters.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filtered.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-900/60 transition-colors">
+                        <td className="py-3 px-4 font-bold text-cyan-400">
+                          {c.containerCode}
+                        </td>
+                        <td className="py-3 px-4 text-slate-300">
+                          {c.containerType}
+                        </td>
+                        <td className="py-3 px-4 font-sans text-slate-200 max-w-xs leading-tight">
+                          {c.manifestDescription}
+                        </td>
+                        <td className="py-3 px-4 font-bold text-white">
+                          {c.destinationStationCode}
+                        </td>
+                        <td className="py-3 px-4 text-slate-300">
+                          {c.totalGrossWeightKg.toLocaleString()} kg
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadge(
+                              c.priority
+                            )}`}
+                          >
+                            {c.priority}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            {can("LOGISTICS_UPDATE_STAGE") || (!role || role !== "VIEWER") ? (
+                              <select
+                                value={c.transitStage}
+                                disabled={updatingCode === c.containerCode}
+                                onChange={(e) => handleStageChange(c.containerCode, e.target.value as LogisticsTransitStage)}
+                                className={`rounded px-2 py-1 text-[11px] font-bold border ${getStageBadge(
+                                  c.transitStage
+                                )} bg-slate-950 focus:outline-none cursor-pointer disabled:opacity-50`}
+                              >
+                                <option value="GOA_MOBILIZATION">GOA MOBILIZATION</option>
+                                <option value="CAPE_TOWN_BUNKERING">CAPE TOWN BUNKERING</option>
+                                <option value="SOUTHERN_OCEAN_TRANSIT">SOUTHERN OCEAN TRANSIT</option>
+                                <option value="ICE_SHELF_BARRIER">ICE SHELF BARRIER</option>
+                                <option value="STATION_DELIVERED">STATION DELIVERED</option>
+                              </select>
+                            ) : (
+                              <span
+                                className={`inline-block px-2 py-1 rounded text-[11px] font-bold border ${getStageBadge(
+                                  c.transitStage
+                                )}`}
+                              >
+                                {c.transitStage.replace(/_/g, " ")}
+                              </span>
+                            )}
+                            {updatingCode === c.containerCode && (
+                              <span className="text-[10px] text-cyan-400 animate-pulse font-bold">
+                                Updating...
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
       </main>
+
+      <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 mt-12">
+        POLARIS • National Centre for Polar &amp; Ocean Research (NCPOR) Management Foundation • SIH 2026
+      </footer>
     </div>
   );
 }
+

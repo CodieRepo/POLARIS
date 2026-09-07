@@ -33,6 +33,7 @@ import {
 import { FuelService } from "@/core/fuel/fuel-service";
 import type { StationWeather } from "@/core/weather/types";
 import type { OperationalReadinessResult } from "@/core/readiness/operational-readiness";
+import { TraverseMissionCommand } from "./traverse-mission-command";
 
 // Import OpenLayers default stylesheet for clean control rendering
 import "ol/ol.css";
@@ -78,7 +79,8 @@ type DecisionConsoleTab =
   | "FUEL"
   | "WEATHER"
   | "TRAVERSE"
-  | "HAZARDS";
+  | "HAZARDS"
+  | "MISSIONS";
 
 export default function PolarOperationalMap({
   stations,
@@ -800,6 +802,16 @@ export default function PolarOperationalMap({
               🧭 Traverse
             </button>
             <button
+              onClick={() => setActiveTab("MISSIONS")}
+              className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
+                activeTab === "MISSIONS"
+                  ? "bg-cyan-500 text-slate-950"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🎯 Missions
+            </button>
+            <button
               onClick={() => setActiveTab("HAZARDS")}
               className={`px-2.5 py-1 rounded transition-colors font-bold cursor-pointer ${
                 activeTab === "HAZARDS"
@@ -1141,6 +1153,15 @@ export default function PolarOperationalMap({
                     </div>
                   </div>
                 )}
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => setActiveTab("MISSIONS")}
+                    className="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 p-2.5 text-center text-xs font-bold text-slate-950 hover:from-cyan-500 hover:to-cyan-400 transition cursor-pointer shadow-lg shadow-cyan-500/10"
+                  >
+                    🚀 Open Field Mission Command Console →
+                  </button>
+                </div>
               </div>
             )}
 
@@ -1210,7 +1231,14 @@ export default function PolarOperationalMap({
               </div>
             )}
 
-            {/* 6. SELECTED STATION DOSSIER TAB */}
+            {/* 6. MISSIONS TAB (Field Mission Command Console) */}
+            {activeTab === "MISSIONS" && (
+              <TraverseMissionCommand
+                onFocusCoordinates={handleFocusCoordinates}
+              />
+            )}
+
+            {/* 7. SELECTED STATION DOSSIER TAB */}
             {activeTab === "STATION" && selectedStation && (
               <div className="space-y-4">
                 <div className="flex justify-between items-start border-b border-slate-800 pb-2">

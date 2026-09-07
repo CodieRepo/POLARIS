@@ -8,7 +8,8 @@ export type OfflineActionType =
   | 'SUBMIT_SITREP'
   | 'LOG_FUEL_DIP'
   | 'LOG_MAINTENANCE'
-  | 'UPDATE_CONTAINER';
+  | 'UPDATE_CONTAINER'
+  | 'RECORD_TRAVERSE_CHECKIN';
 
 export type MutationStatus = 'PENDING' | 'SYNCING' | 'SYNCED' | 'FAILED';
 

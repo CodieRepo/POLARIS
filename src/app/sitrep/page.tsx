@@ -224,23 +224,23 @@ export default function SitrepPage() {
         {/* Navigation Breadcrumb */}
         <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-2">
-            <Link href="/" className="hover:text-cyan-400">
+            <Link href="/" className="hover:text-cyan-400 transition-colors">
               ← Command Dashboard
             </Link>
             <span>/</span>
-            <span className="font-mono text-cyan-400">Daily Station Commander SITREPs</span>
+            <span className="font-mono text-cyan-400">Daily Station SITREPs</span>
           </div>
           <button
             onClick={() => window.print()}
-            className="rounded bg-slate-900 border border-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-white font-mono cursor-pointer"
+            className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:text-white font-mono cursor-pointer transition-colors shadow"
           >
-            🖨️ Print / Export PDF
+            🖨️ Print / Export Form 104 PDF
           </button>
         </div>
 
         {/* Success Banner */}
         {successBanner && (
-          <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-4 text-xs font-mono text-emerald-300 flex justify-between items-center">
+          <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-4 text-xs font-mono text-emerald-300 flex justify-between items-center shadow-lg">
             <span>✅ {successBanner}</span>
             <button
               onClick={() => setSuccessBanner(null)}
@@ -268,7 +268,7 @@ export default function SitrepPage() {
               </h1>
               <p className="mt-2 text-sm text-slate-300 max-w-3xl leading-relaxed">
                 Official daily operational dispatches recorded by Station Leaders to NCPOR Headquarters, Goa.
-                Submissions are stored in PostgreSQL (`daily_sitreps`) with a deterministic SHA-256 document integrity hash for tamper verification.
+                Submissions are stored in PostgreSQL (<code className="text-cyan-400 font-mono">daily_sitreps</code>) with a deterministic SHA-256 document integrity hash for tamper verification.
               </p>
             </div>
 
@@ -286,7 +286,7 @@ export default function SitrepPage() {
         {/* SITREPs List */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-mono uppercase tracking-wider font-bold text-slate-400">
+            <h2 className="text-xs font-mono uppercase tracking-wider font-bold text-slate-400">
               Persisted Official Dispatches ({sitreps.length})
             </h2>
             <span className="text-xs text-slate-500 font-mono">
@@ -295,11 +295,11 @@ export default function SitrepPage() {
           </div>
 
           {loading ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-sm font-mono text-slate-400">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center text-sm font-mono text-slate-400">
               Loading dispatches from PostgreSQL...
             </div>
           ) : sitreps.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-sm font-mono text-slate-400">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center text-sm font-mono text-slate-400">
               No SITREPs recorded yet. Click &ldquo;+ File Daily SITREP&rdquo; to create the first dispatch.
             </div>
           ) : (
@@ -309,64 +309,64 @@ export default function SitrepPage() {
                 return (
                   <div
                     key={doc.id}
-                    className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 hover:border-slate-700 transition-colors shadow-lg space-y-4"
+                    className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 hover:border-slate-700 transition-colors shadow-xl space-y-4"
                   >
                     {/* SITREP Card Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-sm font-black text-cyan-400">
+                        <span className="rounded bg-cyan-500/10 px-2 py-0.5 font-mono text-xs font-black text-cyan-400 border border-cyan-500/30">
                           {doc.stationCode}
                         </span>
-                        <span className="text-sm font-bold text-white">
+                        <span className="text-base font-bold text-white">
                           {doc.stationName}
                         </span>
                         <span className="text-xs text-slate-400 font-mono">
-                          • Date: {doc.reportDate}
+                          • Dispatch Date: <strong className="text-slate-200">{doc.reportDate}</strong>
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold border ${getStatusBadge(
+                          className={`px-3 py-1 rounded-lg text-xs font-mono font-bold border ${getStatusBadge(
                             doc.outdoorStatus
                           )}`}
                         >
-                          CLEARANCE: {doc.outdoorStatus.replace("_", " ")}
+                          CLEARANCE: {doc.outdoorStatus.replace(/_/g, " ")}
                         </span>
                       </div>
                     </div>
 
                     {/* Metrics Breakdown */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
-                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                        <span className="text-slate-500 block text-[10px] uppercase">Commander</span>
-                        <span className="text-slate-200 font-bold">{doc.commanderName}</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                      <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+                        <span className="text-slate-500 block text-[10px] uppercase font-bold">Reporting Commander</span>
+                        <span className="text-slate-200 font-bold text-sm">{doc.commanderName}</span>
                       </div>
 
-                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                        <span className="text-slate-500 block text-[10px] uppercase">Headcount</span>
-                        <span className="text-white font-bold">
-                          {doc.headcount.total} pers ({doc.headcount.winterOver} WO / {doc.headcount.summerScience} Sci)
+                      <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+                        <span className="text-slate-500 block text-[10px] uppercase font-bold">Personnel Headcount</span>
+                        <span className="text-white font-bold text-sm">
+                          {doc.headcount.total} <span className="text-xs font-normal text-slate-400">({doc.headcount.winterOver} WO / {doc.headcount.summerScience} Sci)</span>
                         </span>
                       </div>
 
-                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                        <span className="text-slate-500 block text-[10px] uppercase">Fuel Burned (24h)</span>
-                        <span className="text-amber-400 font-bold">
-                          {doc.fuelConsumed24hLiters} L (Gen: {doc.generatorRuntimeHours}h)
+                      <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+                        <span className="text-slate-500 block text-[10px] uppercase font-bold">24h Fuel Burned</span>
+                        <span className="text-amber-400 font-bold text-sm">
+                          {doc.fuelConsumed24hLiters} L <span className="text-xs font-normal text-slate-400">(Gen: {doc.generatorRuntimeHours}h)</span>
                         </span>
                       </div>
 
-                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                        <span className="text-slate-500 block text-[10px] uppercase">24h Weather Extremes</span>
-                        <span className="text-cyan-400 font-bold">
-                          {doc.weatherSummary.minTemp24hC}°C to {doc.weatherSummary.maxTemp24hC}°C • {doc.weatherSummary.peakWindKmh} km/h
+                      <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+                        <span className="text-slate-500 block text-[10px] uppercase font-bold">24h Weather Extremes</span>
+                        <span className="text-cyan-400 font-bold text-sm">
+                          {doc.weatherSummary.minTemp24hC}°C to {doc.weatherSummary.maxTemp24hC}°C
                         </span>
                       </div>
                     </div>
 
                     {/* Operational Remarks */}
-                    <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 text-xs leading-relaxed text-slate-300">
+                    <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800/80 text-xs leading-relaxed text-slate-300">
                       <strong className="text-cyan-400 block mb-1 font-mono uppercase text-[10px]">
                         Commander Operational Dispatch Remarks:
                       </strong>
@@ -374,11 +374,11 @@ export default function SitrepPage() {
                     </div>
 
                     {/* Cryptographic Document Integrity Hash Bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] font-mono text-slate-400 pt-3 border-t border-slate-800/80 bg-slate-950/40 px-3 py-2 rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] font-mono text-slate-400 pt-3 border-t border-slate-800/80 bg-slate-950/60 px-4 py-3 rounded-xl">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500 uppercase text-[10px] font-bold">Document Integrity Hash (SHA-256):</span>
-                          <span className="text-cyan-400 font-mono break-all">{doc.integrityHash}</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-slate-500 uppercase text-[10px] font-bold">Document Integrity (SHA-256):</span>
+                          <span className="text-cyan-400 font-mono break-all font-semibold">{doc.integrityHash}</span>
                         </div>
                         <div className="text-[10px] text-slate-500">
                           Signer: {doc.signerIdentity} • Timestamp: {doc.signedOffAt}
@@ -388,7 +388,7 @@ export default function SitrepPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         {verification ? (
                           <span
-                            className={`px-2.5 py-1 rounded text-[10px] font-bold font-mono border ${
+                            className={`px-3 py-1 rounded-lg text-xs font-bold font-mono border ${
                               verification.isValid
                                 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                                 : "bg-rose-500/10 text-rose-400 border-rose-500/30"
@@ -400,7 +400,7 @@ export default function SitrepPage() {
                           <button
                             onClick={() => handleVerifyIntegrity(doc.id)}
                             disabled={verifyingId === doc.id}
-                            className="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 text-[10px] font-bold font-mono border border-slate-700 cursor-pointer disabled:opacity-50"
+                            className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 text-xs font-bold font-mono border border-slate-700 cursor-pointer disabled:opacity-50 transition-colors"
                           >
                             {verifyingId === doc.id ? "Verifying..." : "Verify Integrity"}
                           </button>
@@ -429,7 +429,7 @@ export default function SitrepPage() {
                 </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-slate-400 hover:text-white text-sm"
+                  className="text-slate-400 hover:text-white text-sm cursor-pointer"
                 >
                   ✕
                 </button>
@@ -442,7 +442,7 @@ export default function SitrepPage() {
                     <select
                       value={selectedStation}
                       onChange={(e) => handleStationChange(e.target.value as "BHR" | "MTR" | "HMD")}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white font-mono"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white font-mono focus:border-cyan-500 focus:outline-none"
                     >
                       <option value="BHR">Bharati Station (Larsemann Hills)</option>
                       <option value="MTR">Maitri Station (Schirmacher Oasis)</option>
@@ -457,7 +457,7 @@ export default function SitrepPage() {
                       required
                       value={commanderName}
                       onChange={(e) => setCommanderName(e.target.value)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -470,7 +470,7 @@ export default function SitrepPage() {
                       required
                       value={winterOver}
                       onChange={(e) => setWinterOver(parseInt(e.target.value) || 0)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -480,7 +480,7 @@ export default function SitrepPage() {
                       required
                       value={summerScience}
                       onChange={(e) => setSummerScience(parseInt(e.target.value) || 0)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -490,7 +490,7 @@ export default function SitrepPage() {
                       required
                       value={transientAircrew}
                       onChange={(e) => setTransientAircrew(parseInt(e.target.value) || 0)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -503,7 +503,7 @@ export default function SitrepPage() {
                       required
                       value={fuelConsumed}
                       onChange={(e) => setFuelConsumed(parseFloat(e.target.value) || 0)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -513,7 +513,7 @@ export default function SitrepPage() {
                       required
                       value={generatorHours}
                       onChange={(e) => setGeneratorHours(parseFloat(e.target.value) || 0)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -521,7 +521,7 @@ export default function SitrepPage() {
                     <select
                       value={outdoorStatus}
                       onChange={(e) => setOutdoorStatus(e.target.value as OutdoorClearanceStatus)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-2 py-2 text-white"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-800 px-2 py-2 text-white focus:border-cyan-500 focus:outline-none"
                     >
                       <option value="GREEN_NORMAL">GREEN: Normal</option>
                       <option value="YELLOW_RESTRICTED">YELLOW: Restricted</option>
@@ -537,11 +537,11 @@ export default function SitrepPage() {
                     required
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white leading-relaxed"
+                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-white leading-relaxed focus:border-cyan-500 focus:outline-none"
                   />
                 </div>
 
-                <div className="rounded bg-slate-950 p-3 border border-slate-800 text-[11px] text-slate-400">
+                <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800 text-[11px] text-slate-400">
                   <strong className="text-cyan-400 block mb-0.5 font-mono">Cryptographic Document Integrity:</strong>
                   On submission, the report payload will be canonicalized and hashed via SHA-256. The digest will be committed to `daily_sitreps.integrity_hash` to detect any post-dispatch alteration.
                 </div>
@@ -550,14 +550,14 @@ export default function SitrepPage() {
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="rounded-lg bg-slate-800 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-700"
+                    className="rounded-lg bg-slate-800 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-700 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="rounded-lg bg-cyan-500 px-4 py-2 font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+                    className="rounded-lg bg-cyan-500 px-5 py-2 font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50 cursor-pointer shadow-lg shadow-cyan-500/20"
                   >
                     {submitting ? "Hashing & Committing..." : "Commit & Dispatch SITREP"}
                   </button>

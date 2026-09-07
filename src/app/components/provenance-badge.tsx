@@ -14,36 +14,48 @@ export function ProvenanceBadge({
   size = "xs",
   showDot = true,
 }: ProvenanceBadgeProps) {
-  let label = tier || type || "UNKNOWN";
+  let label = tier || type || "INTERNAL";
   let colorStyle = "bg-slate-800/80 text-slate-300 border-slate-700/60";
+  let symbol = "●";
 
-  if (type === "OBSERVED" || tier === "AUTHORITATIVE_OBSERVED") {
-    label = "OBSERVED";
+  const raw = (tier || type || "").toString().toUpperCase();
+
+  if (raw === "OBSERVED" || raw === "AUTHORITATIVE_OBSERVED" || raw === "AUTHORITATIVE_REAL" || raw === "REAL") {
+    label = "REAL IN-SITU";
     colorStyle = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-  } else if (type === "COMPOSITE" || tier === "COMPOSITE_OBSERVED") {
-    label = "COMPOSITE OBSERVED";
+    symbol = "●";
+  } else if (raw === "COMPOSITE" || raw === "COMPOSITE_OBSERVED") {
+    label = "COMPOSITE OBS";
     colorStyle = "bg-teal-500/10 text-teal-300 border-teal-500/30";
-  } else if (type === "MODELLED" || tier === "VERIFIED_MODEL") {
-    label = "MODELLED";
-    colorStyle = "bg-cyan-500/10 text-cyan-300 border-cyan-500/30";
-  } else if (type === "CACHED" || tier === "CACHED_OBSERVED") {
+    symbol = "◐";
+  } else if (raw === "MODELLED" || raw === "VERIFIED_MODEL" || raw === "EXTERNAL_REAL" || raw === "EXTERNAL") {
+    label = "EXTERNAL MODEL";
+    colorStyle = "bg-sky-500/10 text-sky-300 border-sky-500/30";
+    symbol = "●";
+  } else if (raw === "CACHED" || raw === "CACHED_OBSERVED") {
     label = "CACHED";
     colorStyle = "bg-amber-500/10 text-amber-300 border-amber-500/30";
-  } else if (type === "BASELINE" || tier === "OFFLINE_CLIMATIC_BASELINE") {
-    label = "BASELINE";
+    symbol = "○";
+  } else if (raw === "BASELINE" || raw === "OFFLINE_CLIMATIC_BASELINE") {
+    label = "CLIMATIC BASELINE";
     colorStyle = "bg-purple-500/10 text-purple-300 border-purple-500/30";
-  } else if (type === "DERIVED" || tier === "DERIVED") {
-    label = "DERIVED HEURISTIC";
+    symbol = "◌";
+  } else if (raw === "DERIVED" || raw === "DERIVED_HEURISTIC" || raw === "DERIVED_SPATIAL") {
+    label = raw.includes("SPATIAL") ? "DERIVED SPATIAL" : "DERIVED HEURISTIC";
     colorStyle = "bg-indigo-500/10 text-indigo-300 border-indigo-500/30";
-  } else if (type === "DERIVED_SPATIAL" || tier === "DERIVED_SPATIAL") {
-    label = "DERIVED SPATIAL";
-    colorStyle = "bg-indigo-500/10 text-indigo-300 border-indigo-500/30";
-  } else if (type === "REFERENCE_GEOMETRY" || tier === "REFERENCE_GEOMETRY" || tier === "SIMPLIFIED_BASEMAP") {
+    symbol = "◆";
+  } else if (raw === "SIMULATED") {
+    label = "SIMULATED";
+    colorStyle = "bg-amber-500/10 text-amber-300 border-amber-500/30";
+    symbol = "◌";
+  } else if (raw === "REFERENCE_GEOMETRY" || raw === "SIMPLIFIED_BASEMAP") {
     label = "REFERENCE GEOMETRY";
     colorStyle = "bg-slate-700/30 text-slate-300 border-slate-600/40";
-  } else if (type === "HISTORICAL_REFERENCE" || tier === "HISTORICAL_REFERENCE") {
-    label = "HISTORICAL REFERENCE";
+    symbol = "◬";
+  } else if (raw === "HISTORICAL_REFERENCE" || raw === "HISTORICAL") {
+    label = "HISTORICAL";
     colorStyle = "bg-amber-500/10 text-amber-300 border-amber-500/30";
+    symbol = "◷";
   }
 
   const textSizes = {
@@ -55,8 +67,9 @@ export function ProvenanceBadge({
   return (
     <span
       className={`inline-flex items-center gap-1 rounded font-mono font-bold uppercase tracking-wider border ${textSizes[size]} ${colorStyle}`}
+      title={`Data Provenance Class: ${label}`}
     >
-      {showDot && <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />}
+      {showDot && <span className="text-[10px] opacity-80">{symbol}</span>}
       {label}
     </span>
   );
@@ -74,7 +87,7 @@ export function SourceHealthIndicator({ health }: SourceHealthIndicatorProps) {
   if (health === "STALE") {
     style = "bg-amber-500/10 text-amber-400 border-amber-500/30";
     dot = "bg-amber-400";
-    label = "STALE DATA";
+    label = "DATA DELAYED";
   } else if (health === "FALLBACK") {
     style = "bg-purple-500/10 text-purple-300 border-purple-500/30";
     dot = "bg-purple-400";
@@ -82,15 +95,16 @@ export function SourceHealthIndicator({ health }: SourceHealthIndicatorProps) {
   } else if (health === "DATA_UNAVAILABLE") {
     style = "bg-rose-500/10 text-rose-400 border-rose-500/30";
     dot = "bg-rose-400";
-    label = "DATA UNAVAILABLE";
+    label = "UNAVAILABLE";
   }
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${style}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider ${style}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      HEALTH: {label}
+      SOURCE: {label}
     </span>
   );
 }
+

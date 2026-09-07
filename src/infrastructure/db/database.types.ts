@@ -1302,6 +1302,167 @@ export type Database = {
           },
         ]
       }
+      traverse_checkins: {
+        Row: {
+          ambient_temp_c: number | null
+          checkin_at: string
+          comms_status: Database["public"]["Enums"]["comms_status"]
+          created_at: string
+          hazard_assessment_notes: string | null
+          id: string
+          latitude: number
+          longitude: number
+          mission_id: string
+          operational_status: string
+          recorded_by: string | null
+          remaining_fuel_liters: number | null
+          waypoint_code: string
+        }
+        Insert: {
+          ambient_temp_c?: number | null
+          checkin_at?: string
+          comms_status?: Database["public"]["Enums"]["comms_status"]
+          created_at?: string
+          hazard_assessment_notes?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          mission_id: string
+          operational_status?: string
+          recorded_by?: string | null
+          remaining_fuel_liters?: number | null
+          waypoint_code: string
+        }
+        Update: {
+          ambient_temp_c?: number | null
+          checkin_at?: string
+          comms_status?: Database["public"]["Enums"]["comms_status"]
+          created_at?: string
+          hazard_assessment_notes?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          mission_id?: string
+          operational_status?: string
+          recorded_by?: string | null
+          remaining_fuel_liters?: number | null
+          waypoint_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traverse_checkins_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "traverse_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traverse_missions: {
+        Row: {
+          aborted_at: string | null
+          actual_departure_at: string | null
+          cancelled_at: string | null
+          checkin_interval_hours: number
+          completed_at: string | null
+          corridor_id: string
+          created_at: string
+          created_by: string | null
+          destination_station_id: string | null
+          expedition_id: string
+          id: string
+          lead_asset_id: string
+          lead_person_id: string
+          mission_code: string
+          operational_notes: string | null
+          origin_station_id: string
+          scheduled_departure_at: string
+          status: Database["public"]["Enums"]["traverse_mission_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          aborted_at?: string | null
+          actual_departure_at?: string | null
+          cancelled_at?: string | null
+          checkin_interval_hours?: number
+          completed_at?: string | null
+          corridor_id: string
+          created_at?: string
+          created_by?: string | null
+          destination_station_id?: string | null
+          expedition_id: string
+          id?: string
+          lead_asset_id: string
+          lead_person_id: string
+          mission_code: string
+          operational_notes?: string | null
+          origin_station_id: string
+          scheduled_departure_at: string
+          status?: Database["public"]["Enums"]["traverse_mission_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          aborted_at?: string | null
+          actual_departure_at?: string | null
+          cancelled_at?: string | null
+          checkin_interval_hours?: number
+          completed_at?: string | null
+          corridor_id?: string
+          created_at?: string
+          created_by?: string | null
+          destination_station_id?: string | null
+          expedition_id?: string
+          id?: string
+          lead_asset_id?: string
+          lead_person_id?: string
+          mission_code?: string
+          operational_notes?: string | null
+          origin_station_id?: string
+          scheduled_departure_at?: string
+          status?: Database["public"]["Enums"]["traverse_mission_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traverse_missions_destination_station_id_fkey"
+            columns: ["destination_station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traverse_missions_expedition_id_fkey"
+            columns: ["expedition_id"]
+            isOneToOne: false
+            referencedRelation: "expeditions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traverse_missions_lead_asset_id_fkey"
+            columns: ["lead_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traverse_missions_lead_person_id_fkey"
+            columns: ["lead_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traverse_missions_origin_station_id_fkey"
+            columns: ["origin_station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weather_telemetry_history: {
         Row: {
           apparent_temp_c: number
@@ -1449,6 +1610,12 @@ export type Database = {
         | "ISO_20FT_REEFER"
         | "BREAKBULK_PALLET"
         | "HAZMAT_DRUM"
+      comms_status:
+        | "NOMINAL_HF"
+        | "IRIDIUM_RUDICS"
+        | "INMARSAT_BGAN"
+        | "DEGRADED_AURORAL"
+        | "BLACKOUT"
       criticality_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
       data_classification:
         | "AUTHORITATIVE_REAL"
@@ -1514,6 +1681,14 @@ export type Database = {
       telemetry_classification: "PHYSICAL_TELEMETRY" | "SIMULATED_TELEMETRY"
       telemetry_quality: "GOOD" | "SUSPECT" | "BAD" | "SIMULATED"
       telemetry_source: "MODBUS" | "MQTT" | "SNMP" | "NMEA" | "VIRTUAL"
+      traverse_mission_status:
+        | "PLANNED"
+        | "DISPATCHED"
+        | "EN_ROUTE"
+        | "CHECKIN_OVERDUE"
+        | "COMPLETED"
+        | "ABORTED"
+        | "CANCELLED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1668,6 +1843,13 @@ export const Constants = {
         "BREAKBULK_PALLET",
         "HAZMAT_DRUM",
       ],
+      comms_status: [
+        "NOMINAL_HF",
+        "IRIDIUM_RUDICS",
+        "INMARSAT_BGAN",
+        "DEGRADED_AURORAL",
+        "BLACKOUT",
+      ],
       criticality_level: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
       data_classification: [
         "AUTHORITATIVE_REAL",
@@ -1742,6 +1924,15 @@ export const Constants = {
       telemetry_classification: ["PHYSICAL_TELEMETRY", "SIMULATED_TELEMETRY"],
       telemetry_quality: ["GOOD", "SUSPECT", "BAD", "SIMULATED"],
       telemetry_source: ["MODBUS", "MQTT", "SNMP", "NMEA", "VIRTUAL"],
+      traverse_mission_status: [
+        "PLANNED",
+        "DISPATCHED",
+        "EN_ROUTE",
+        "CHECKIN_OVERDUE",
+        "COMPLETED",
+        "ABORTED",
+        "CANCELLED",
+      ],
     },
   },
 } as const
