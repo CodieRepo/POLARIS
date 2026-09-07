@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import { get as getProjection } from "ol/proj";
@@ -34,6 +35,22 @@ import { FuelService } from "@/core/fuel/fuel-service";
 import type { StationWeather } from "@/core/weather/types";
 import type { OperationalReadinessResult } from "@/core/readiness/operational-readiness";
 import { TraverseMissionCommand } from "./traverse-mission-command";
+
+// Dynamic import for Leaflet tactical GIS map (prevents SSR window errors)
+const LeafletOperationalMap = dynamic(
+  () => import("./leaflet-operational-map"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative w-full h-[620px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-mono text-slate-500">
+        <div className="flex flex-col items-center gap-2">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-sky-600 border-t-transparent" />
+          <span>Mounting Leaflet.js Tactical GIS Engine...</span>
+        </div>
+      </div>
+    ),
+  }
+);
 
 // Import OpenLayers default stylesheet for clean control rendering
 import "ol/ol.css";
@@ -100,6 +117,7 @@ export default function PolarOperationalMap({
   const [selectedCorridor, setSelectedCorridor] = useState<TraverseCorridor | null>(null);
   const [selectedHazard, setSelectedHazard] = useState<HazardZone | null>(null);
 
+  const [mapEngine, setMapEngine] = useState<"OPENLAYERS_POLAR" | "LEAFLET_TACTICAL">("OPENLAYERS_POLAR");
   const [activeViewMode, setActiveViewMode] = useState<"ANTARCTICA" | "ARCTIC">("ANTARCTICA");
   const [activeTab, setActiveTab] = useState<DecisionConsoleTab>("READINESS");
 
@@ -534,42 +552,75 @@ export default function PolarOperationalMap({
 
         {/* Global Projection & Sector Switchers */}
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-          <button
-            onClick={() => setActiveViewMode("ANTARCTICA")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
-              activeViewMode === "ANTARCTICA"
-                ? "bg-sky-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
-            }`}
-          >
-            Antarctic Grid (EPSG:3031)
-          </button>
-          <button
-            onClick={() => setActiveViewMode("ARCTIC")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
-              activeViewMode === "ARCTIC"
-                ? "bg-sky-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
-            }`}
-          >
-            🌐 Arctic Inset (Ny-Ålesund, Svalbard)
-          </button>
+          {/* Dual Map Engine Switcher */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button
+              onClick={() => {
+                setMapEngine("OPENLAYERS_POLAR");
+                setTimeout(() => olMapInstance.current?.updateSize(), 50);
+              }}
+              className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all cursor-pointer ${
+                mapEngine === "OPENLAYERS_POLAR"
+                  ? "bg-white text-sky-700 shadow-xs border border-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              title="Authoritative South Polar Stereographic Projection (OpenLayers EPSG:3031)"
+            >
+              🌐 OpenLayers (EPSG:3031)
+            </button>
+            <button
+              onClick={() => setMapEngine("LEAFLET_TACTICAL")}
+              className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all cursor-pointer ${
+                mapEngine === "LEAFLET_TACTICAL"
+                  ? "bg-white text-sky-700 shadow-xs border border-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              title="Tactical Global Cartographic GIS Engine (Leaflet.js)"
+            >
+              🗺️ Leaflet.js (Tactical GIS)
+            </button>
+          </div>
 
-          {activeViewMode === "ANTARCTICA" && (
-            <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2">
+          {mapEngine === "OPENLAYERS_POLAR" && (
+            <>
               <button
-                onClick={handleResetSouthPole}
-                className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer"
+                onClick={() => setActiveViewMode("ANTARCTICA")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                  activeViewMode === "ANTARCTICA"
+                    ? "bg-sky-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
+                }`}
               >
-                Center Pole
+                Antarctic Grid (EPSG:3031)
               </button>
               <button
-                onClick={handleFitStations}
-                className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer"
+                onClick={() => setActiveViewMode("ARCTIC")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                  activeViewMode === "ARCTIC"
+                    ? "bg-sky-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
+                }`}
               >
-                Fit Stations
+                🌐 Arctic Inset (Ny-Ålesund, Svalbard)
               </button>
-            </div>
+
+              {activeViewMode === "ANTARCTICA" && (
+                <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2">
+                  <button
+                    onClick={handleResetSouthPole}
+                    className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer"
+                  >
+                    Center Pole
+                  </button>
+                  <button
+                    onClick={handleFitStations}
+                    className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer"
+                  >
+                    Fit Stations
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -578,7 +629,26 @@ export default function PolarOperationalMap({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left 8 Columns: Dominant Polar GIS Map Canvas */}
         <div className="lg:col-span-8 relative">
-          {activeViewMode === "ANTARCTICA" ? (
+          {mapEngine === "LEAFLET_TACTICAL" ? (
+            <LeafletOperationalMap
+              stations={stations}
+              weatherTelemetry={weatherTelemetry}
+              selectedStation={selectedStation}
+              onSelectStation={setSelectedStation}
+              onSelectCorridor={(corr) => {
+                setSelectedCorridor(corr);
+                setActiveTab("TRAVERSE");
+              }}
+              onSelectHazard={(haz) => {
+                setSelectedHazard(haz);
+                setActiveTab("HAZARDS");
+              }}
+              showSeaIce={showSeaIce}
+              showTraverseRoutes={showTraverseRoutes}
+              showHazards={showHazards}
+              showStations={showStations}
+            />
+          ) : activeViewMode === "ANTARCTICA" ? (
             <div className="relative w-full h-[620px] rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shadow-xs">
               <div ref={mapRef} className="w-full h-full" />
 
