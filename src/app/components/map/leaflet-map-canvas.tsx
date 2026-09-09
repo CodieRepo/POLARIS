@@ -98,17 +98,25 @@ export default function LeafletMapCanvas({
       attributionControl: true,
     });
 
-    // Clean, high-contrast institutional basemap (CartoDB Positron)
+    // Clean, institutional light gray basemap (ESRI World Light Gray Canvas - watermark-free, no API key required)
     const baseTileLayer = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
       {
-        subdomains: "abcd",
-        maxZoom: 19,
+        maxZoom: 16,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          '&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, &copy; OpenStreetMap contributors',
       }
     );
     baseTileLayer.addTo(map);
+
+    const labelsLayer = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+      {
+        maxZoom: 16,
+        pane: "shadowPane",
+      }
+    );
+    labelsLayer.addTo(map);
 
     // Metric scale line
     L.control.scale({ imperial: false, position: "bottomleft", maxWidth: 120 }).addTo(map);

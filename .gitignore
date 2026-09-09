@@ -40,6 +40,14 @@ yarn-error.log*
 pre_cleanup_backup.json
 # .env.example is intentionally tracked
 
+# MOSDAC credentials & scientific data downloads
+scripts/mosdac/config.json
+data/
+*.h5
+*.hdf5
+*.nc
+MOSDAC Data Download/
+
 # vercel
 .vercel
 
