@@ -1,0 +1,8 @@
+MOSDAC/
+data/
+scripts/mosdac/config.json
+*.h5
+*.hdf5
+*.nc
+*.grd
+backups/
