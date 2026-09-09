@@ -1,9 +1,9 @@
 // ==============================================================================
 // POLARIS Service Worker - Offline-First App Shell & Progressive Sync
-// Version: polaris-v2.0.0
+// Version: polaris-v2.1.0
 // ==============================================================================
 
-const CACHE_NAME = 'polaris-shell-v2.0.0';
+const CACHE_NAME = 'polaris-shell-v2.1.0';
 
 const PRECACHE_ASSETS = [
   '/',

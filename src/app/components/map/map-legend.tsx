@@ -92,6 +92,31 @@ export function MapLegend({ isOpen, onClose }: MapLegendProps) {
           </div>
         </div>
 
+        {/* ISRO Oceansat Scatterometer Winds */}
+        <div>
+          <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1.5">
+            ISRO Satellite Winds (MOSDAC)
+          </span>
+          <div className="grid grid-cols-2 gap-1 text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+              <span className="text-slate-700">&lt; 8 m/s (Breeze)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
+              <span className="text-slate-700">8–14 m/s (Moderate)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span className="text-slate-700">14–20 m/s (Gale)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span>
+              <span className="text-slate-700">&gt; 20 m/s (Storm)</span>
+            </div>
+          </div>
+        </div>
+
         {/* Data Provenance Hierarchy */}
         <div className="border-t border-slate-200 pt-2 text-[10px]">
           <span className="text-[9px] text-slate-500 uppercase font-bold block mb-1">

@@ -43,9 +43,11 @@ pre_cleanup_backup.json
 # MOSDAC credentials & scientific data downloads
 scripts/mosdac/config.json
 data/
+MOSDAC/
 *.h5
 *.hdf5
 *.nc
+*.grd
 MOSDAC Data Download/
 
 # vercel

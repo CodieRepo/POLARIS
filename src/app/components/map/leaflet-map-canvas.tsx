@@ -16,6 +16,7 @@ import {
   createMaritimeVoyageLayerGroup,
   createGeodesicBaselineLayer,
   createLeafletSeaIceLayer,
+  createMosdacWindsLayerGroup,
 } from "./map-layers";
 import { createStationIcon, createStationPopupHtml } from "./map-markers";
 import { MapControls } from "./map-controls";
@@ -55,6 +56,7 @@ export default function LeafletMapCanvas({
   // Layer references
   const coastlineLayerRef = useRef<L.Polygon | null>(null);
   const seaIceLayerRef = useRef<L.TileLayer.WMS | null>(null);
+  const mosdacWindsGroupRef = useRef<L.LayerGroup | null>(null);
   const stationsGroupRef = useRef<L.LayerGroup | null>(null);
   const traverseGroupRef = useRef<L.LayerGroup | null>(null);
   const hazardsGroupRef = useRef<L.LayerGroup | null>(null);
@@ -73,6 +75,7 @@ export default function LeafletMapCanvas({
   const [visibility, setVisibility] = useState<LayerVisibilityState>({
     coastline: true,
     seaIce: true,
+    mosdacWinds: true,
     stations: true,
     traverseRoutes: true,
     hazards: true,
@@ -128,6 +131,9 @@ export default function LeafletMapCanvas({
     const seaIceLayer = createLeafletSeaIceLayer(0.55);
     seaIceLayerRef.current = seaIceLayer;
 
+    const mosdacWindsGroup = createMosdacWindsLayerGroup();
+    mosdacWindsGroupRef.current = mosdacWindsGroup;
+
     const traverseGroup = createTraverseLayerGroup(onSelectCorridor);
     traverseGroupRef.current = traverseGroup;
 
@@ -150,6 +156,7 @@ export default function LeafletMapCanvas({
 
     // Attach initial layers based on visibility
     if (visibility.seaIce) seaIceLayer.addTo(map);
+    if (visibility.mosdacWinds) mosdacWindsGroup.addTo(map);
     if (visibility.coastline) coastlineLayer.addTo(map);
     if (visibility.geodesicVector) geodesicGroup.addTo(map);
     if (visibility.traverseRoutes) traverseGroup.addTo(map);
@@ -209,6 +216,11 @@ export default function LeafletMapCanvas({
     if (seaIceLayerRef.current) {
       if (visibility.seaIce) seaIceLayerRef.current.addTo(map);
       else seaIceLayerRef.current.remove();
+    }
+    // ISRO MOSDAC Winds
+    if (mosdacWindsGroupRef.current) {
+      if (visibility.mosdacWinds) mosdacWindsGroupRef.current.addTo(map);
+      else mosdacWindsGroupRef.current.remove();
     }
     // Traverse
     if (traverseGroupRef.current) {

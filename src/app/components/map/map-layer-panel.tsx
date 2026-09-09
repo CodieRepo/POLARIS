@@ -68,6 +68,18 @@ export function MapLayerPanel({
               className="rounded accent-sky-600 cursor-pointer"
             />
           </label>
+          <label className="flex items-center justify-between p-1 rounded hover:bg-slate-50 cursor-pointer mt-1">
+            <div>
+              <span className="text-slate-700 font-medium block">ISRO MOSDAC Winds</span>
+              <span className="text-[9px] text-slate-400">Oceansat Ku-band Scatterometer</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={visibility.mosdacWinds}
+              onChange={() => onToggleLayer("mosdacWinds")}
+              className="rounded accent-sky-600 cursor-pointer"
+            />
+          </label>
         </div>
 
         {/* 3. OPERATIONAL GIS */}

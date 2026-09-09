@@ -220,4 +220,68 @@ export function createGeodesicBaselineLayer(
   return group;
 }
 
+// 6. ISRO Oceansat Ku-band Scatterometer Wind Vectors (MOSDAC SAC Ahmedabad)
+import mosdacWindsPayload from "@/core/spatial/mosdac-winds.json";
+
+interface MosdacWindVector {
+  lat: number;
+  lon: number;
+  speedMs: number;
+  speedKnots: number;
+  directionDeg: number;
+}
+
+export function createMosdacWindsLayerGroup(): L.LayerGroup {
+  const group = L.layerGroup();
+  const data = mosdacWindsPayload as {
+    metadata: {
+      source: string;
+      mission: string;
+      product: string;
+      provenance: string;
+    };
+    vectors: MosdacWindVector[];
+  };
+
+  data.vectors.forEach((vec) => {
+    let color = "#06b6d4"; // <8 m/s: calm breeze (cyan)
+    if (vec.speedMs >= 20) color = "#e11d48"; // >20 m/s: gale / storm (rose/red)
+    else if (vec.speedMs >= 14) color = "#d97706"; // 14-20 m/s: strong gale / Roaring Forties (amber)
+    else if (vec.speedMs >= 8) color = "#0d9488"; // 8-14 m/s: moderate (teal)
+
+    const svgIcon = L.divIcon({
+      className: "mosdac-wind-arrow",
+      html: `
+        <div style="transform: rotate(${vec.directionDeg}deg); width: 14px; height: 14px; display: flex; align-items: center; justify-content: center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L19 21L12 17L5 21L12 2Z" fill="${color}" stroke="#ffffff" stroke-width="1.2" opacity="0.85"/>
+          </svg>
+        </div>
+      `,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+
+    const marker = L.marker([vec.lat, vec.lon], { icon: svgIcon });
+    marker.bindTooltip(`
+      <div style="font-family: system-ui, sans-serif; font-size: 11px; min-width: 170px; color: #0f172a;">
+        <div style="font-weight: bold; color: #0284c7; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 4px;">
+          🛰️ ISRO Oceansat Scatterometer
+        </div>
+        <div>Wind Speed: <strong>${vec.speedMs} m/s (${vec.speedKnots} kts)</strong></div>
+        <div>Bearing: <strong>${vec.directionDeg}°</strong></div>
+        <div>Coordinates: <strong>${vec.lat}°, ${vec.lon}°</strong></div>
+        <div style="color: #059669; font-size: 9px; font-weight: 700; margin-top: 4px; text-transform: uppercase;">
+          ● AUTHENTIC SATELLITE (ISRO MOSDAC)
+        </div>
+      </div>
+    `, { sticky: true });
+
+    group.addLayer(marker);
+  });
+
+  return group;
+}
+
 export { createLeafletSeaIceLayer };
+

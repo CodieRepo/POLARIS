@@ -26,6 +26,7 @@ export type MapSector = "ANTARCTICA" | "ARCTIC" | "MARITIME";
 export interface LayerVisibilityState {
   readonly coastline: boolean;
   readonly seaIce: boolean;
+  readonly mosdacWinds: boolean;
   readonly stations: boolean;
   readonly traverseRoutes: boolean;
   readonly hazards: boolean;
