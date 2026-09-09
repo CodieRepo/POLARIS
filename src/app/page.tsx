@@ -165,7 +165,7 @@ export default async function DashboardPage() {
                 <span className="text-slate-300 hidden sm:inline">•</span>
                 <span className="text-xs text-emerald-700 font-mono flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  PostgreSQL System of Record Active
+                  Central Mission Registry Active
                 </span>
               </div>
 
@@ -420,7 +420,7 @@ export default async function DashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Atomic state machine enforcing assignment, release, maintenance work orders, and retirement.
+                Master equipment inventory managing assignment, field deployment, maintenance schedules, and lifecycle status.
               </p>
             </div>
             <Link

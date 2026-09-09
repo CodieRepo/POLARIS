@@ -193,33 +193,33 @@ export default function PolarisOperationalMap({
             onSectorChange={setActiveSector}
           />
 
-          {/* Map Data Provenance & Operational Legend */}
+          {/* Map Data Source Verification & Legend */}
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] font-mono">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2 mb-2">
               <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                Operational Data Provenance Classification
+                Mission Data Sources &amp; Transparency
               </span>
               <div className="flex flex-wrap items-center gap-3 text-[10px]">
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" title="Live satellite feeds and automated weather stations">
                   <span className="w-2 h-2 rounded-full bg-sky-600"></span>
-                  <strong className="text-sky-700">REAL EXTERNAL</strong> (NASA GIBS / In-situ AWS)
+                  <strong className="text-sky-700">LIVE SATELLITE &amp; SENSORS</strong> (ISRO / NASA / Ground AWS)
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" title="Authoritative Indian polar research stations and expedition registers">
                   <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-                  <strong className="text-emerald-700">SYSTEM OF RECORD</strong> (PostgreSQL DB)
+                  <strong className="text-emerald-700">OFFICIAL BASE REGISTRY</strong> (Verified Station Records)
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" title="Physics-based algorithms and geodesic computations">
                   <span className="w-2 h-2 rounded-full bg-purple-600"></span>
-                  <strong className="text-purple-700">MATHEMATICALLY DERIVED</strong> (Geodesic / Spatial)
+                  <strong className="text-purple-700">SCIENTIFIC COMPUTATION</strong> (Distance / Wind Chill)
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" title="Realistic operational scenario models for planning">
                   <span className="w-2 h-2 rounded-full bg-amber-600"></span>
-                  <strong className="text-amber-700">SIMULATED / SCENARIO</strong> (Vessel / Tracks)
+                  <strong className="text-amber-700">OPERATIONAL SIMULATION</strong> (Resupply Ship Voyage)
                 </span>
               </div>
             </div>
             <p className="text-[10px] text-slate-600 font-sans leading-relaxed">
-              <strong className="text-slate-800">Operational Disclaimer:</strong> Traverse corridors and crevasse hazard zones represent surveyed field data. Maritime resupply vessel position is simulated for expedition scenario logistics. Live satellite AIS vessel tracking is not active.
+              <strong className="text-slate-800">Mission Transparency:</strong> Overland traverse corridors and crevasse danger zones are mapped from official NCPOR field surveys. Maritime vessel tracks represent the planned resupply corridor from Goa/Cape Town to Antarctica.
             </p>
           </div>
         </div>

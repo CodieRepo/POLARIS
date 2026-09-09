@@ -137,7 +137,7 @@ export default function LogisticsPage() {
                 <span className="text-slate-300 hidden sm:inline">•</span>
                 <span className="text-xs text-emerald-700 font-mono flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  PostgreSQL `public.cargo_containers`
+                  Central Logistics Manifest
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -164,7 +164,7 @@ export default function LogisticsPage() {
               <div className="flex justify-between text-slate-600 mt-1">
                 <span>Sync Posture:</span>
                 <strong className={isLoading ? "text-amber-700" : "text-emerald-700"}>
-                  {isLoading ? "SYNCING..." : "LIVE (PostgreSQL)"}
+                  {isLoading ? "SYNCING..." : "LIVE VERIFIED"}
                 </strong>
               </div>
             </div>

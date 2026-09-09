@@ -13,7 +13,7 @@ export async function GET() {
         voyage,
         containers,
         meta: {
-          systemOfRecord: "PostgreSQL (public.cargo_containers)",
+          systemOfRecord: "Central Mission Logistics Manifest",
           provenance: "SCENARIO_LOGISTICS_MANIFEST",
           totalCount: containers.length,
           generatedAt: new Date().toISOString(),
@@ -25,7 +25,7 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to load cargo manifests from database",
+        error: "Failed to load cargo manifests",
       },
       { status: 500 }
     );

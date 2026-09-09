@@ -117,16 +117,16 @@ export function MapLegend({ isOpen, onClose }: MapLegendProps) {
           </div>
         </div>
 
-        {/* Data Provenance Hierarchy */}
+        {/* Mission Data Sources */}
         <div className="border-t border-slate-200 pt-2 text-[10px]">
           <span className="text-[9px] text-slate-500 uppercase font-bold block mb-1">
-            Data Provenance Classification
+            Data Source Classification
           </span>
           <div className="grid grid-cols-2 gap-1 text-[10px]">
-            <span className="text-sky-700 font-bold">● REAL EXTERNAL</span>
-            <span className="text-emerald-700 font-bold">● SYSTEM OF RECORD</span>
-            <span className="text-purple-700 font-bold">● MATHEMATICAL DERIVED</span>
-            <span className="text-amber-700 font-bold">● SIMULATED SCENARIO</span>
+            <span className="text-sky-700 font-bold">● LIVE SATELLITE</span>
+            <span className="text-emerald-700 font-bold">● OFFICIAL RECORD</span>
+            <span className="text-purple-700 font-bold">● CALCULATED METRICS</span>
+            <span className="text-amber-700 font-bold">● SIMULATED LOGISTICS</span>
           </div>
         </div>
       </div>

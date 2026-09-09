@@ -147,7 +147,7 @@ export function FuelAutonomyWidget({ fuelProfiles: initialProfiles }: FuelAutono
         setFuelProfiles(json.profiles);
       }
       setShowDipModal(false);
-      setDipSuccessMessage(`Dip measurement for ${dipTankCode} recorded to PostgreSQL. Autonomy recalculated.`);
+      setDipSuccessMessage(`Dip measurement for ${dipTankCode} recorded to station logs. Autonomy recalculated.`);
       setTimeout(() => setDipSuccessMessage(null), 5000);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to record dip reading");
@@ -173,7 +173,7 @@ export function FuelAutonomyWidget({ fuelProfiles: initialProfiles }: FuelAutono
             Station Fuel Reserves &amp; Operational Autonomy
           </h2>
           <span className="text-[11px] text-slate-500 font-mono">
-            Database: `public.station_fuel_tanks` • Formula: Days = Balance / Daily Burn
+            Source: Station Tank Sensor Log • Formula: Days = Current Balance / Daily Burn Rate
           </span>
         </div>
 

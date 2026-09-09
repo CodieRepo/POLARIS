@@ -91,8 +91,9 @@ export function OperationalAlertBanner({ alerts: initialAlerts }: OperationalAle
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto text-xs font-mono">
-          <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
-            PostgreSQL: `public.operational_alerts`
+          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline-flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
+            Station Alerts Telemetry
           </span>
           <button
             onClick={() => setExpanded(!expanded)}

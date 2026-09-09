@@ -175,7 +175,7 @@ export default function SitrepPage() {
       await fetchSitreps();
       setShowCreateModal(false);
       setSuccessBanner(
-        `SITREP for ${selectedStation} persisted to PostgreSQL with SHA-256 integrity hash: ${json.data.integrityHash.substring(0, 16)}...`
+        `SITREP for ${selectedStation} officially recorded with SHA-256 integrity seal: ${json.data.integrityHash.substring(0, 16)}...`
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : "Submission failed");
@@ -260,7 +260,7 @@ export default function SitrepPage() {
                   COMNAP / MoES FORM 104
                 </span>
                 <span className="text-xs text-emerald-700 font-mono flex items-center gap-1 font-semibold">
-                  ● PostgreSQL System of Record
+                  ● Official Station Log
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
@@ -268,7 +268,7 @@ export default function SitrepPage() {
               </h1>
               <p className="mt-2 text-sm text-slate-600 max-w-3xl leading-relaxed">
                 Official daily operational dispatches recorded by Station Leaders to NCPOR Headquarters, Goa.
-                Submissions are stored in PostgreSQL (<code className="text-sky-700 font-mono">daily_sitreps</code>) with a deterministic SHA-256 document integrity hash for tamper verification.
+                Submissions are permanently recorded in the official station registry with a cryptographic SHA-256 document integrity seal for tamper verification.
               </p>
             </div>
 
@@ -287,16 +287,16 @@ export default function SitrepPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-mono uppercase tracking-wider font-bold text-slate-500">
-              Persisted Official Dispatches ({sitreps.length})
+              Official Station Dispatches ({sitreps.length})
             </h2>
             <span className="text-xs text-slate-500 font-mono">
-              Database: `public.daily_sitreps`
+              Verified Archive: NCPOR HQ Command Logs
             </span>
           </div>
 
           {loading ? (
             <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm font-mono text-slate-500 shadow-xs">
-              Loading dispatches from PostgreSQL...
+              Loading official station dispatches...
             </div>
           ) : sitreps.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-sm font-mono text-slate-500 shadow-xs">

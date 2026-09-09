@@ -75,7 +75,7 @@ export default async function ExpeditionsPage() {
             <span className="text-3xl mb-2 block">🧭</span>
             <h3 className="text-base font-bold text-slate-900">No Expeditions Logged</h3>
             <p className="text-xs text-slate-500 mt-1">
-              No active or planned polar campaigns found in the PostgreSQL system of record.
+              No active or planned polar campaigns found in the official mission registry.
             </p>
           </div>
         ) : (

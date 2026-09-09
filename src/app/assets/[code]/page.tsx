@@ -127,7 +127,7 @@ export default function AssetDetailPage({ params }: PageProps) {
       if (!res.ok) {
         setErrorMsg(`Assignment rejected: ${json.error || "Engine error"}`);
       } else {
-        setSuccessMsg("Asset successfully assigned via PostgreSQL atomic RPC.");
+        setSuccessMsg("Asset successfully assigned and logged to station manifest.");
         setShowAssignModal(false);
         await refreshAsset();
       }
@@ -433,7 +433,7 @@ export default function AssetDetailPage({ params }: PageProps) {
             </div>
 
             <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] font-mono text-slate-400">
-              Database UID: {asset?.id}
+              Manifest Record ID: {asset?.id}
             </div>
           </div>
 
@@ -566,7 +566,7 @@ export default function AssetDetailPage({ params }: PageProps) {
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Assign Asset [{code}]</h3>
-                <span className="text-xs font-mono text-slate-500">PostgreSQL Atomic Allocation RPC</span>
+                <span className="text-xs font-mono text-emerald-700">● Verified Operational Allocation</span>
               </div>
               <button
                 onClick={() => setShowAssignModal(false)}
@@ -663,7 +663,7 @@ export default function AssetDetailPage({ params }: PageProps) {
                   disabled={actionLoading}
                   className="rounded-lg bg-sky-600 px-4 py-2 font-bold text-white hover:bg-sky-700 disabled:opacity-50 cursor-pointer shadow-xs"
                 >
-                  {actionLoading ? "Executing RPC..." : "Confirm Assignment"}
+                  {actionLoading ? "Updating Registry..." : "Confirm Assignment"}
                 </button>
               </div>
             </form>

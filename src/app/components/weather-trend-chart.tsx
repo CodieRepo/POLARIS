@@ -95,8 +95,8 @@ export function WeatherTrendChart({ trends }: WeatherTrendChartProps) {
           </h2>
           <span className="text-[11px] text-slate-500 font-mono">
             {hasSufficientData
-              ? `Source: public.weather_telemetry_history (${points.length} authentic AWS points logged)`
-              : "Zero fabrication policy: trend renders only with genuine persisted observations"}
+              ? `Source: Station AWS Sensor Telemetry (${points.length} authentic readings logged)`
+              : "Authentic data policy: trend renders only with genuine station sensor observations"}
           </span>
         </div>
 
@@ -162,7 +162,7 @@ export function WeatherTrendChart({ trends }: WeatherTrendChartProps) {
             INSUFFICIENT HISTORICAL DATA (Logging in progress)
           </span>
           <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed">
-            POLARIS strictly prohibits synthesizing artificial weather curves. Real in-situ meteorological observations from NCPOR AWS are actively logged to PostgreSQL (`weather_telemetry_history`). A minimum of 2 historical observations are required to render an authentic trend.
+            POLARIS strictly prohibits synthesizing artificial weather curves. Real in-situ meteorological observations from NCPOR Automatic Weather Stations are actively logged to station archives. A minimum of 2 historical observations are required to render an authentic trend.
           </p>
           <div className="flex justify-center items-center gap-4 text-xs font-mono text-slate-500 pt-2 border-t border-slate-200">
             <span>Persisted Points: <strong className="text-sky-700">{points.length}</strong></span>

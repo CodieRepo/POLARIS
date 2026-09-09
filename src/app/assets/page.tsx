@@ -175,14 +175,15 @@ export default function AssetInventoryPage() {
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-600">
               Master Equipment Registry ({filteredAssets.length} of {assets.length})
             </span>
-            <span className="text-[11px] font-mono text-slate-400">
-              PostgreSQL `public.assets`
+            <span className="text-[11px] font-mono text-emerald-700 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Central Equipment Manifest
             </span>
           </div>
 
           {loading ? (
             <div className="p-12 text-center text-sm font-mono text-slate-500">
-              Loading polar asset registry from PostgreSQL...
+              Loading polar equipment and asset inventory...
             </div>
           ) : filteredAssets.length === 0 ? (
             <div className="p-12 text-center text-sm text-slate-500">

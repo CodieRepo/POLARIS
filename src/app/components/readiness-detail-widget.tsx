@@ -53,12 +53,12 @@ export function ReadinessDetailWidget({ readiness }: ReadinessModalBreakdownProp
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="rounded bg-sky-50 px-2 py-0.5 text-xs font-bold text-sky-800 border border-sky-200 font-mono">
-              POLARIS HEURISTIC ENGINE
+              POLARIS MISSION READINESS AUDIT
             </span>
             <ProvenanceBadge tier={readiness.overallQualityStatus} size="xs" />
           </div>
           <h2 className="text-xl font-bold text-slate-900">
-            POLARIS Operational Readiness Heuristic
+            POLARIS Station Operational Readiness Score
           </h2>
           <p className="text-xs text-amber-800 font-medium mt-0.5">
             ⚠ {readiness.disclaimer}
@@ -134,10 +134,10 @@ export function ReadinessDetailWidget({ readiness }: ReadinessModalBreakdownProp
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-            <span>🔍</span> Explainable Deductions &amp; Environmental Aggregation Audit
+            <span>🔍</span> Detailed Score Deductions &amp; Assessment Audit
           </h3>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-sky-800 border border-slate-300">
-            AGGREGATION: WORST_CASE_ACTIVE_STATION
+            ASSESSMENT: HIGHEST-RISK STATION FACTORED
           </span>
         </div>
 
