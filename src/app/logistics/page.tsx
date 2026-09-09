@@ -131,8 +131,11 @@ export default function LogisticsPage() {
                 <span className="rounded-md bg-sky-50 px-2.5 py-0.5 text-xs font-mono font-bold text-sky-800 border border-sky-200">
                   MARITIME LOGISTICS
                 </span>
+                <span className="rounded-md bg-amber-50 px-2.5 py-0.5 text-xs font-mono font-bold text-amber-800 border border-amber-300">
+                  🟡 OPERATIONAL SIMULATION MODEL
+                </span>
                 <span className="text-xs text-slate-500 font-mono">
-                  Voyage Code: {voyage.voyageCode}
+                  Voyage: {voyage.voyageCode}
                 </span>
                 <span className="text-slate-300 hidden sm:inline">•</span>
                 <span className="text-xs text-emerald-700 font-mono flex items-center gap-1.5">

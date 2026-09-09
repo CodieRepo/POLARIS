@@ -29,20 +29,29 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 border-b border-slate-200 pb-4">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              🟢 REAL-TIME IN-SITU SENSORS
+            </span>
+            <span className="text-[10px] font-mono text-slate-500">
+              Pipeline: In-situ AWS Satellite Uplink (15m Polling)
+            </span>
+          </div>
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span>❄</span> Polar Meteorological Telemetry &amp; Provenance Feeds
+            <span>❄</span> Polar Meteorological Ground Telemetry Feeds
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Field-level transparency distinguishing Authoritative In-Situ Observations from High-Resolution Numerical Models.
+            Physical ground truth observations captured via satellite telemetry from automated weather stations deployed at Bharati, Maitri, and Himadri.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold text-slate-600">
-            Coverage: Bharati, Maitri, Himadri
+            Active: BHR, MTR, HMD
           </span>
           <span className="text-[11px] text-slate-300">•</span>
           <span className="text-[11px] text-slate-500 italic">
-            DGT Historical Reference
+            DGT Historical Archive
           </span>
         </div>
       </div>

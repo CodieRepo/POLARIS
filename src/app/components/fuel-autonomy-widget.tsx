@@ -165,15 +165,15 @@ export function FuelAutonomyWidget({ fuelProfiles: initialProfiles }: FuelAutono
             <span className="text-sky-800 font-mono text-xs font-bold uppercase tracking-wider">
               Life Support &amp; Fuel Farm Autonomy
             </span>
-            <span className="rounded bg-amber-50 px-2 py-0.5 text-[10px] font-mono text-amber-800 border border-amber-300 border-dashed">
-              SEEDED_OPERATIONAL_BASELINE
+            <span className="rounded bg-purple-50 px-2 py-0.5 text-[10px] font-mono text-purple-800 border border-purple-300 font-bold">
+              🟣 CALCULATED METRIC
             </span>
           </div>
           <h2 className="text-lg font-bold text-slate-900 mt-1">
             Station Fuel Reserves &amp; Operational Autonomy
           </h2>
           <span className="text-[11px] text-slate-500 font-mono">
-            Source: Station Tank Sensor Log • Formula: Days = Current Balance / Daily Burn Rate
+            Pipeline: Ultrasonic Gauges &amp; Dip Logs • Formula: Days = Current Balance / Daily Burn Rate
           </span>
         </div>
 

@@ -89,13 +89,16 @@ export function WeatherTrendChart({ trends }: WeatherTrendChartProps) {
                 6h DELTA: BASELINE
               </span>
             )}
+            <span className="rounded bg-slate-100 text-slate-800 border border-slate-300 px-2 py-0.5 text-[10px] font-mono font-bold">
+              🔵 PAST 24H SENSOR ARCHIVE
+            </span>
           </div>
           <h2 className="text-lg font-bold text-slate-900 mt-1">
             Polar Atmospheric Observations &amp; Pressure Slope
           </h2>
           <span className="text-[11px] text-slate-500 font-mono">
             {hasSufficientData
-              ? `Source: Station AWS Sensor Telemetry (${points.length} authentic readings logged)`
+              ? `Pipeline: Historic AWS Sensor Telemetry (${points.length} authentic readings • Zero synthetic curves)`
               : "Authentic data policy: trend renders only with genuine station sensor observations"}
           </span>
         </div>

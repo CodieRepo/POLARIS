@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { OfflineStatusBadge } from "./offline-status-badge";
 import { useAuth } from "@/infrastructure/auth/auth-provider";
+import { DataProvenanceModal } from "./data-provenance-modal";
 
 interface HeaderProps {
   currentPath?: string;
@@ -12,6 +13,7 @@ interface HeaderProps {
 export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
   const { user, role, isAuthenticated } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [originModalOpen, setOriginModalOpen] = useState(false);
 
   const navItems = [
     { label: "Command Center", href: "/" },
@@ -60,6 +62,14 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setOriginModalOpen(true)}
+              className="text-slate-600 hover:text-sky-800 flex items-center gap-1 font-mono text-[10px] bg-white border border-slate-200 hover:border-sky-300 rounded px-2 py-0.5 transition-all cursor-pointer shadow-2xs"
+              title="View Real-Time vs Past vs Simulated Data Origin Guide"
+            >
+              <span>🔍</span>
+              <span>Data Origin Guide</span>
+            </button>
             <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Mission Systems Online
@@ -177,6 +187,12 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
           })}
         </div>
       )}
+
+      {/* Global Data Origin & Pipelines Modal */}
+      <DataProvenanceModal
+        isOpen={originModalOpen}
+        onClose={() => setOriginModalOpen(false)}
+      />
     </header>
   );
 }

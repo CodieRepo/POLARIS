@@ -7,6 +7,7 @@ import PolarOperationalMap from "./components/polar-operational-map";
 import { WeatherTelemetryPanel } from "./components/weather-telemetry-panel";
 import { ReadinessDetailWidget } from "./components/readiness-detail-widget";
 import { OperationalAlertBanner } from "./components/operational-alert-banner";
+import { DataProvenanceBanner } from "./components/data-provenance-banner";
 import { FuelAutonomyWidget } from "./components/fuel-autonomy-widget";
 import { WeatherTrendChart } from "./components/weather-trend-chart";
 import { createServerClient } from "@/infrastructure/db/supabase-server";
@@ -217,6 +218,9 @@ export default async function DashboardPage() {
         {/* ATTENTION REQUIRED (Active Operational Alerts) */}
         <OperationalAlertBanner alerts={operationalAlerts} />
 
+        {/* DATA PROVENANCE & REALTIME VS SIMULATED TRANSPARENCY BANNER */}
+        <DataProvenanceBanner />
+
         {/* LEVEL 1: GLOBAL SITUATION GRID (6 meaningful cards) */}
         <div>
           <div className="flex items-center justify-between mb-3">
@@ -228,98 +232,140 @@ export default async function DashboardPage() {
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {/* 1. Active Expeditions */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Expeditions
-              </span>
-              <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
-                  {stats.expeditions.active}
-                </span>
-                <span className="text-xs text-emerald-700 font-semibold font-mono">Active</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                    Expeditions
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200" title="Official Sanctioned Mission Register">
+                    OFFICIAL
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
+                    {stats.expeditions.active}
+                  </span>
+                  <span className="text-xs text-emerald-700 font-semibold font-mono">Active</span>
+                </div>
               </div>
-              <div className="mt-2 text-[11px] text-slate-500">
+              <div className="mt-2 text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
                 {stats.expeditions.total} campaigns logged
               </div>
             </div>
 
             {/* 2. Permanent Bases */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Research Stations
-              </span>
-              <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
-                  {stats.stations.active}
-                </span>
-                <span className="text-xs text-sky-700 font-semibold font-mono">Bases</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                    Research Bases
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200" title="Real-Time Ground In-Situ Weather Stations">
+                    LIVE AWS
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
+                    {stats.stations.active}
+                  </span>
+                  <span className="text-xs text-sky-700 font-semibold font-mono">Bases</span>
+                </div>
               </div>
-              <div className="mt-2 text-[11px] text-slate-500 truncate">
+              <div className="mt-2 text-[11px] text-slate-500 truncate border-t border-slate-100 pt-1.5">
                 BHR • MTR • HMD
               </div>
             </div>
 
             {/* 3. Operational Alerts */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Active Alerts
-              </span>
-              <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-amber-700 tabular-nums">
-                  {operationalAlerts.filter((a) => a.status === "ACTIVE").length}
-                </span>
-                <span className="text-xs text-amber-700 font-semibold font-mono">Watch</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                    Active Alerts
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200" title="Real-Time Automated Anomaly Watcher">
+                    REALTIME
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-amber-700 tabular-nums">
+                    {operationalAlerts.filter((a) => a.status === "ACTIVE").length}
+                  </span>
+                  <span className="text-xs text-amber-700 font-semibold font-mono">Watch</span>
+                </div>
               </div>
-              <div className="mt-2 text-[11px] text-slate-500">
+              <div className="mt-2 text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
                 Weather &amp; Maint queues
               </div>
             </div>
 
             {/* 4. Fuel Autonomy */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Fuel Autonomy
-              </span>
-              <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 tabular-nums">
-                  {avgDaysAutonomy}d
-                </span>
-                <span className="text-xs text-emerald-700 font-semibold font-mono">Normal</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                    Fuel Autonomy
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-50 text-purple-800 border border-purple-200" title="Calculated: Days = Remaining Fuel ÷ Daily Burn Rate">
+                    CALCULATED
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 tabular-nums">
+                    {avgDaysAutonomy}d
+                  </span>
+                  <span className="text-xs text-emerald-700 font-semibold font-mono">Normal</span>
+                </div>
               </div>
-              <div className="mt-2 text-[11px] text-slate-500">
-                Life-support buffer
+              <div className="mt-2 text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
+                Days = Balance ÷ Burn
               </div>
             </div>
 
             {/* 5. Maritime Resupply */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Resupply Vessel
-              </span>
-              <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-sky-700 tabular-nums">
-                  {activeVoyage.daysAtSea}d
-                </span>
-                <span className="text-xs text-sky-700 font-semibold font-mono">At Sea</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                    Resupply Ship
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200" title="Operational Logistics Simulation Scenario">
+                    SIMULATED
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-sky-700 tabular-nums">
+                    {activeVoyage.daysAtSea}d
+                  </span>
+                  <span className="text-xs text-sky-700 font-semibold font-mono">At Sea</span>
+                </div>
               </div>
-              <div className="mt-2 text-[11px] text-slate-500 truncate">
+              <div className="mt-2 text-[11px] text-slate-500 truncate border-t border-slate-100 pt-1.5">
                 {activeVoyage.vesselName.split(" (")[0]}
               </div>
             </div>
 
             {/* 6. Tracked Assets */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Tracked Assets
-              </span>
-              <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
-                  {stats.assets.total}
-                </span>
-                <span className="text-xs text-emerald-700 font-semibold font-mono">Units</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                    Tracked Assets
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200" title="Station Ground Equipment Master Manifest">
+                    MANIFEST
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tabular-nums">
+                    {stats.assets.total}
+                  </span>
+                  <span className="text-xs text-emerald-700 font-semibold font-mono">Units</span>
+                </div>
               </div>
-              <div className="mt-2 text-[11px] text-slate-500">
-                {stats.assets.available} Available • {stats.assets.maintenance} Maint
+              <div className="mt-2 text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
+                {stats.assets.available} Ready • {stats.assets.maintenance} Maint
               </div>
             </div>
           </div>
