@@ -98,7 +98,7 @@ export function WeatherTrendChart({ trends }: WeatherTrendChartProps) {
           </h2>
           <span className="text-[11px] text-slate-500 font-mono">
             {hasSufficientData
-              ? `Pipeline: Historic AWS Sensor Telemetry (${points.length} authentic readings • Zero synthetic curves)`
+              ? `Pipeline: Meteorological Trend Telemetry (${points.length} data points)`
               : "Authentic data policy: trend renders only with genuine station sensor observations"}
           </span>
         </div>

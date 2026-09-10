@@ -176,7 +176,7 @@ export default async function DashboardPage() {
 
               <p className="max-w-3xl text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Central command suite for Indian Antarctic (Bharati, Maitri) and Arctic (Himadri) scientific missions.
-                Continuously tracks asset lifecycle states, life-support fuel reserves, synoptic meteorological trends, and resupply logistics.
+                Manages asset lifecycle states, life-support fuel reserves, synoptic meteorological observations, and resupply logistics.
               </p>
             </div>
 
@@ -261,8 +261,8 @@ export default async function DashboardPage() {
                   <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                     Research Bases
                   </span>
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200" title="Real-Time Ground In-Situ Weather Stations">
-                    LIVE AWS
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200" title="NCPOR Ground Weather Stations — fetched on demand, cached 15 min">
+                    AWS OBS
                   </span>
                 </div>
                 <div className="mt-2 flex items-baseline gap-1.5">
@@ -284,8 +284,8 @@ export default async function DashboardPage() {
                   <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                     Active Alerts
                   </span>
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200" title="Real-Time Automated Anomaly Watcher">
-                    REALTIME
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200" title="Threshold alerts evaluated on each page request">
+                    ON-RENDER
                   </span>
                 </div>
                 <div className="mt-2 flex items-baseline gap-1.5">

@@ -65,7 +65,7 @@ export function PolarisHeader({ currentPath = "/" }: HeaderProps) {
             <button
               onClick={() => setOriginModalOpen(true)}
               className="text-slate-600 hover:text-sky-800 flex items-center gap-1 font-mono text-[10px] bg-white border border-slate-200 hover:border-sky-300 rounded px-2 py-0.5 transition-all cursor-pointer shadow-2xs"
-              title="View Real-Time vs Past vs Simulated Data Origin Guide"
+              title="View Observed vs Past vs Simulated Data Origin Guide"
             >
               <span>🔍</span>
               <span>Data Origin Guide</span>

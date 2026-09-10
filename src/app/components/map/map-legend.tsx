@@ -123,7 +123,7 @@ export function MapLegend({ isOpen, onClose }: MapLegendProps) {
             Data Source Classification
           </span>
           <div className="grid grid-cols-2 gap-1 text-[10px]">
-            <span className="text-sky-700 font-bold">● LIVE SATELLITE</span>
+            <span className="text-sky-700 font-bold">● SATELLITE DATA</span>
             <span className="text-emerald-700 font-bold">● OFFICIAL RECORD</span>
             <span className="text-purple-700 font-bold">● CALCULATED METRICS</span>
             <span className="text-amber-700 font-bold">● SIMULATED LOGISTICS</span>

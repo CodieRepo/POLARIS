@@ -135,30 +135,30 @@ export default function ProvenancePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* 1. REAL-TIME */}
+            {/* 1. NEAR-REAL-TIME */}
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-900">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  1. REAL-TIME TELEMETRY (Live Physical Data)
+                  1. NEAR-REAL-TIME OBSERVATIONS (On-Demand Fetch)
                 </span>
                 <span className="text-[10px] font-mono text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded">
-                  LIVE STREAM
+                  ON-DEMAND
                 </span>
               </div>
               <div className="text-xs text-slate-700 space-y-2">
                 <div>
-                  <strong className="text-slate-900 block">What is Real-Time:</strong>
+                  <strong className="text-slate-900 block">What is fetched from external sensors:</strong>
                   <ul className="list-disc list-inside mt-0.5 space-y-1 text-slate-600">
                     <li><strong>Bharati &amp; Maitri Ground AWS:</strong> Surface temperature, barometric pressure, relative humidity, and 10m wind velocity.</li>
                     <li><strong>Himadri Arctic AWS:</strong> Ny-Ålesund, Svalbard high-latitude in-situ ground sensors.</li>
-                    <li><strong>ISRO Oceansat-2 Corridor Winds:</strong> 670 spatial wind vectors along 50°S–70°S Southern Ocean voyage corridor.</li>
-                    <li><strong>Automated Alert Watcher:</strong> Real-time blizzard and katabatic wind threshold evaluation.</li>
+                    <li><strong>ISRO Oceansat-2 Corridor Winds:</strong> 670 spatial wind vectors along 50°S–70°S Southern Ocean voyage corridor (static reference dataset).</li>
+                    <li><strong>Alert Threshold Evaluator:</strong> Blizzard and wind threshold checks evaluated on each page request.</li>
                   </ul>
                 </div>
                 <div className="border-t border-emerald-200/60 pt-2 font-mono text-[11px]">
                   <span className="text-slate-500 block font-bold uppercase text-[10px]">How It Ingests (Pipeline):</span>
-                  <span className="text-emerald-900">Satellite telemetry uplink from Campbell Scientific AWS stations → NCPOR Data Portal → ISRO MOSDAC Open Access earth observation archive.</span>
+                  <span className="text-emerald-900">Server-side fetch from NCPOR Data Portal → 15 min in-memory cache → 2 hr max staleness → Open-Meteo model fallback → Offline seasonal baseline.</span>
                 </div>
               </div>
             </div>

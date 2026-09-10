@@ -165,9 +165,9 @@ export default function LogisticsPage() {
                 <strong className="text-slate-900 tabular-nums">{voyage.daysAtSea} Days</strong>
               </div>
               <div className="flex justify-between text-slate-600 mt-1">
-                <span>Sync Posture:</span>
+                <span>Data Posture:</span>
                 <strong className={isLoading ? "text-amber-700" : "text-emerald-700"}>
-                  {isLoading ? "SYNCING..." : "LIVE VERIFIED"}
+                  {isLoading ? "LOADING..." : "DB LOADED"}
                 </strong>
               </div>
             </div>

@@ -109,7 +109,7 @@ export default function ExpeditionDetailPage() {
         <PolarisHeader currentPath="/expeditions" />
         <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-500">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-sky-600 border-t-transparent mb-4" />
-          <p className="text-xs font-mono">Synchronizing Mission Telemetry [{code}]...</p>
+          <p className="text-xs font-mono">Loading Mission Data [{code}]...</p>
         </div>
       </div>
     );

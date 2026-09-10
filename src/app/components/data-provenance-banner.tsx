@@ -36,25 +36,25 @@ export function DataProvenanceBanner() {
 
         {/* 4 Provenance Stream Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-          {/* 1. REAL-TIME */}
+          {/* 1. NEAR-REAL-TIME */}
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-emerald-900">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                REAL-TIME TELEMETRY
+                NEAR-REAL-TIME OBSERVATIONS
               </span>
               <span className="text-[10px] font-mono text-emerald-800 font-semibold bg-emerald-100/70 px-1.5 py-0.5 rounded">
-                LIVE
+                OBSERVED
               </span>
             </div>
             <p className="text-xs text-slate-800 font-semibold">
-              Ground AWS Sensors &amp; ISRO Satellite
+              Ground AWS Sensors (on-demand fetch)
             </p>
             <p className="text-[11px] text-slate-600 leading-snug">
-              Physical temperature, pressure, wind velocity from Bharati, Maitri, Himadri + ISRO Oceansat-2 corridor scatterometer winds.
+              Physical temperature, pressure, wind velocity from Bharati, Maitri, Himadri AWS stations.
             </p>
             <span className="text-[10px] font-mono text-emerald-800 block pt-1 border-t border-emerald-200/60">
-              Pipeline: Automated Satellite Uplink
+              Pipeline: Server-side fetch → 15 min in-memory cache
             </span>
           </div>
 

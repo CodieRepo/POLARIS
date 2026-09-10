@@ -172,7 +172,7 @@ export default function PolarisOperationalMap({
         <div className="flex items-center gap-3 text-xs font-mono">
           <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-slate-600 hidden md:flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Real-time Telemetry &amp; Satellite Layer Active</span>
+            <span>Station Observations &amp; Satellite Layers Active</span>
           </div>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function PolarisOperationalMap({
               <div className="flex flex-wrap items-center gap-3 text-[10px]">
                 <span className="flex items-center gap-1.5" title="Live satellite feeds and automated weather stations">
                   <span className="w-2 h-2 rounded-full bg-sky-600"></span>
-                  <strong className="text-sky-700">LIVE SATELLITE &amp; SENSORS</strong> (ISRO / NASA / Ground AWS)
+                  <strong className="text-sky-700">SATELLITE &amp; SENSOR DATA</strong> (ISRO / NASA / Ground AWS)
                 </span>
                 <span className="flex items-center gap-1.5" title="Authoritative Indian polar research stations and expedition registers">
                   <span className="w-2 h-2 rounded-full bg-emerald-600"></span>

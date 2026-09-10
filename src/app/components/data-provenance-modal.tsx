@@ -19,20 +19,20 @@ export function DataProvenanceModal({ isOpen, onClose }: DataProvenanceModalProp
       id: "aws-weather",
       name: "Ground Weather Telemetry",
       category: "REALTIME",
-      categoryLabel: "Real-Time Telemetry",
+      categoryLabel: "Near-Real-Time Observations",
       categoryColor: "bg-emerald-50 text-emerald-800 border-emerald-300",
       categoryDot: "bg-emerald-500",
       coverage: "Bharati (Antarctica), Maitri (Antarctica), Himadri (Arctic)",
       source: "NCPOR In-Situ Automatic Weather Stations (Campbell Scientific AWS)",
       pipeline: "Satellite Telemetry Uplink → NCPOR Open Access API → In-memory Cache (15m TTL)",
-      howItWorks: "Ground sensors physically measure surface temperature, atmospheric pressure, relative humidity, and 10m anemometer wind velocity in real-time.",
+      howItWorks: "Ground sensors physically measure surface temperature, atmospheric pressure, relative humidity, and 10m anemometer wind velocity and publish periodic observations.",
       whyItMatters: "Direct ground truth is critical in polar regions; synthetic models often miss localized Antarctic katabatic wind events.",
     },
     {
       id: "mosdac-winds",
       name: "Southern Ocean Wind Vectors",
       category: "REALTIME",
-      categoryLabel: "Real-Time / Recent Satellite",
+      categoryLabel: "Satellite Reference Dataset",
       categoryColor: "bg-cyan-50 text-cyan-800 border-cyan-300",
       categoryDot: "bg-cyan-500",
       coverage: "India-to-Antarctica Corridor (50°S to 70°S)",
@@ -167,7 +167,7 @@ export function DataProvenanceModal({ isOpen, onClose }: DataProvenanceModalProp
               POLARIS Data Origin &amp; Integrity Charter
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
-              Transparent disclosure of every data stream: distinguishing <strong>Real-Time Physical Sensors</strong>,{" "}
+              Transparent disclosure of every data stream: distinguishing <strong>On-Demand Physical Sensors</strong>,{" "}
               <strong>Historical Archives</strong>, <strong>Operational Simulations</strong>, and{" "}
               <strong>Deterministic Mathematical Calculations</strong>.
             </p>
@@ -193,10 +193,10 @@ export function DataProvenanceModal({ isOpen, onClose }: DataProvenanceModalProp
           >
             <div className="flex items-center gap-1.5 mb-1">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <strong className="text-xs font-bold text-emerald-900">REAL-TIME</strong>
+              <strong className="text-xs font-bold text-emerald-900">OBSERVED</strong>
             </div>
-            <span className="text-[11px] text-emerald-800 block">Live Physical Telemetry</span>
-            <span className="text-[10px] text-slate-500 mt-0.5 block">AWS Sensors &amp; ISRO Satellite</span>
+            <span className="text-[11px] text-emerald-800 block">On-Demand Physical Observations</span>
+            <span className="text-[10px] text-slate-500 mt-0.5 block">AWS Sensors (NCPOR)</span>
           </div>
 
           <div

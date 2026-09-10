@@ -32,10 +32,10 @@ export function WeatherTelemetryPanel({ weather }: WeatherTelemetryPanelProps) {
           <div className="flex items-center gap-2 mb-1">
             <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              🟢 REAL-TIME IN-SITU SENSORS
+              🟢 NCPOR IN-SITU AWS OBSERVATIONS
             </span>
             <span className="text-[10px] font-mono text-slate-500">
-              Pipeline: In-situ AWS Satellite Uplink (15m Polling)
+              Pipeline: NCPOR AWS → server fetch on request → 15 min cache
             </span>
           </div>
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
